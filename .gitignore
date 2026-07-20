@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Environments and local secrets
+.venv/
+venv/
+.env
+.env.*
+
+# Generated benchmark artifacts
+async_vla_benchmark/outputs/
+
+# Models and datasets
+checkpoints/
+datasets/
+*.pt
+*.pth
+*.safetensors
+
+# macOS and editors
+.DS_Store
+.vscode/
+.idea/

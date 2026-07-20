@@ -1,0 +1,29 @@
+repository: huggingface/lerobot
+repository_revision: null
+policy_checkpoint: lerobot/pi05_libero_finetuned
+checkpoint_revision: null
+dataset_repo: HuggingFaceVLA/libero
+dataset_revision: null
+device: cuda
+mujoco_backend: egl
+policy_n_action_steps: 10
+control_mode: relative
+eval_batch_size: 1
+max_parallel_tasks: 1
+seeds: [0, 1, 2, 3, 4]
+task_candidates:
+  spatial: {suite: libero_spatial, task_ids: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}
+  goal: {suite: libero_goal, task_ids: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}
+  long: {suite: libero_10, task_ids: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}
+latency_profiles:
+  ideal: {use_measured_native_latency: false, added_latency_ms: 0}
+  native: {use_measured_native_latency: true, added_latency_ms: 0}
+  native_plus_300: {use_measured_native_latency: true, added_latency_ms: 300}
+  native_plus_700: {use_measured_native_latency: true, added_latency_ms: 700}
+execution_horizons: [2, 5, 10]
+rtc:
+  enabled: true
+  execution_horizon: 10
+  max_guidance_weight: 10.0
+  prefix_attention_schedule: EXP
+  request_threshold_actions: 5
