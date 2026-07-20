@@ -27,7 +27,7 @@ def git_commit(path):
     return result.stdout.strip() if result.returncode == 0 else None
 
 
-def main():
+def main(output_dir: Path | None = None):
     packages = {name: package(name) for name in ("lerobot", "torch", "mujoco", "robosuite", "libero")}
     metadata = {
         "status": "not_ready",
@@ -58,7 +58,7 @@ def main():
         metadata["deviations"].append("No pinned LeRobot Git checkout is importable.")
     if not metadata["cuda_available"]:
         metadata["deviations"].append("CUDA is unavailable; experiments cannot run here.")
-    output = ROOT / "outputs" / "environment.json"
+    output = (output_dir or ROOT / "outputs") / "environment.json"
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(metadata, indent=2) + "\n")
     print(json.dumps(metadata, indent=2))
@@ -66,4 +66,9 @@ def main():
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--output-dir", type=Path)
+    args = parser.parse_args()
+    raise SystemExit(main(args.output_dir))

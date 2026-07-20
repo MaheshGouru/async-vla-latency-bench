@@ -16,9 +16,12 @@ from async_vla_benchmark.benchmark.policy import load_pi05_policy, load_pre_post
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=Path, required=True)
+    parser.add_argument("--output-dir", type=Path)
     args = parser.parse_args()
 
     cfg = load_config(args.config)
+    if args.output_dir:
+        cfg.output_dir = args.output_dir
     if not cfg.checkpoint_revision:
         raise ValueError("checkpoint_revision must be pinned before task selection")
 

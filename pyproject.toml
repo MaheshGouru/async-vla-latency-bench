@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "async-vla-benchmark"
+version = "0.1.0"
+description = "Days 1-3 π0.5-LIBERO asynchronous VLA latency benchmark"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy",
+    "pyyaml",
+]
+
+[project.optional-dependencies]
+modal = [
+    "modal",
+    "pandas",
+    "pyarrow",
+    "matplotlib",
+    "pytest",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["async_vla_benchmark*"]

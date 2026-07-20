@@ -28,6 +28,9 @@ The core benchmark package is implemented. The remaining risks are:
 3. Parquet output schemas and the result validator have not been exercised on real
    benchmark episodes.
 4. `make_figures.py` requires `matplotlib` and validated summaries.
+5. The Modal deployment (`modal_app.py` / `Dockerfile.modal`) has been added but has
+   not been built, deployed, or run on a GPU worker. Image build issues with LeRobot,
+   robosuite, or LIBERO may require Dockerfile edits on the target host.
 
 ## Test status
 

@@ -5,6 +5,7 @@ import argparse
 import json
 from dataclasses import asdict, dataclass
 from pathlib import Path
+from typing import Any
 
 from async_vla_benchmark.benchmark.config import BenchmarkConfig, load_config
 from async_vla_benchmark.benchmark.environment import get_task_info, make_libero_env
@@ -157,6 +158,7 @@ def _run_experiment(cfg: BenchmarkConfig, plans: list[EpisodePlan], args) -> int
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=Path, required=True)
+    parser.add_argument("--output-dir", type=Path)
     parser.add_argument("--experiment", choices=("core", "horizon_sweep"), required=True)
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--task", action="append")
@@ -171,6 +173,9 @@ def main():
         parser.error("--resume and --overwrite are mutually exclusive")
 
     cfg = load_config(args.config)
+    if args.output_dir:
+        cfg.output_dir = args.output_dir
+        cfg.selected_tasks_file = str(cfg.output_dir / "summaries" / "selected_tasks.json")
     default_tasks = _selected_tasks_from_file(Path(cfg.selected_tasks_file))
     tasks = args.task if args.task else default_tasks
     if not tasks:

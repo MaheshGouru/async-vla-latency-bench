@@ -78,6 +78,11 @@ PYTHONPATH=. python async_vla_benchmark/scripts/run_benchmark.py \
   --task libero_spatial:0 --task libero_goal:0
 ```
 
+## Running on Modal
+
+A complete Modal deployment is included for remote GPU execution. See `docs/MODAL.md`
+for setup, deploy, and run instructions.
+
 ## Current environment status
 
 The macOS development host used for this workspace does not have `lerobot`, `libero`,

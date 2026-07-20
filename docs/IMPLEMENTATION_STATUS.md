@@ -27,6 +27,8 @@ scaffolding and are not evidence of completed experiments.
 - [x] Complete production episode execution and output logging.
 - [x] Implement inspect_setup, task selection, profiling, benchmark, validation, figure, and test-runner scripts.
 - [x] Implement latency, action-age, naive-queue, horizon, RTC, and reproducibility tests.
+- [x] Add `--output-dir` overrides to all CLI scripts for Modal volume mounting.
+- [x] Create `modal_app.py`, `Dockerfile.modal`, and `docs/MODAL.md` for remote GPU execution.
 
 ## Validation and experiments
 

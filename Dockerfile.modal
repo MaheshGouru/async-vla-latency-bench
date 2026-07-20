@@ -1,0 +1,45 @@
+# Docker image for running the Days 1-3 benchmark on Modal.
+# Edit the ARG values (or pass --build-arg) to pin LeRobot, robosuite, and LIBERO.
+ARG CUDA_VERSION=12.1.0
+FROM nvidia/cuda:${CUDA_VERSION}-cudnn8-devel-ubuntu22.04
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    MUJOCO_GL=egl \
+    PYOPENGL_PLATFORM=egl
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    python3.10 \
+    python3-pip \
+    libgl1-mesa-glx \
+    libgl1-mesa-dev \
+    libegl1-mesa-dev \
+    libglew-dev \
+    libosmesa6-dev \
+    libglib2.0-0 \
+    patchelf \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.10 1 \
+    && python -m pip install --upgrade pip wheel setuptools
+
+ARG LEROBOT_COMMIT=main
+ARG ROBOSUITE_COMMIT=master
+ARG LIBERO_COMMIT=master
+
+# Install LeRobot with the pi0.5 extra. If `lerobot` does not expose a `libero`
+# extra, install libero and robosuite explicitly from their git repositories.
+RUN python -m pip install \
+    "lerobot[pi] @ git+https://github.com/huggingface/lerobot.git@${LEROBOT_COMMIT}"
+
+RUN python -m pip install \
+    "robosuite @ git+https://github.com/ARISE-Initiative/robosuite.git@${ROBOSUITE_COMMIT}"
+
+RUN python -m pip install \
+    "libero @ git+https://github.com/Lifelong-Robot-Learning-Community/LIBERO.git@${LIBERO_COMMIT}"
+
+COPY . /root/async-vla-latency-bench
+WORKDIR /root/async-vla-latency-bench
+RUN python -m pip install .
