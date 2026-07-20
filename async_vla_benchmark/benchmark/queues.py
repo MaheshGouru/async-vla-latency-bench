@@ -13,6 +13,7 @@ class QueuedAction:
     chunk_action_index: int
     source_observation_id: str
     source_observation_step: int
+    raw_value: Any = None
 
 
 class ActionQueue:
@@ -49,8 +50,6 @@ class ActionQueue:
         if request_id != self.outstanding_request_id:
             raise RuntimeError("response does not match the outstanding request")
         incoming = list(actions)
-        if len(incoming) < self.horizon:
-            raise ValueError("returned chunk is shorter than configured horizon")
         self.discarded_old_actions += len(self._items)
         self._items.clear()
         self._items.extend(incoming[: self.horizon])

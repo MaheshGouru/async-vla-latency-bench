@@ -10,7 +10,15 @@ policy_n_action_steps: 10
 control_mode: relative
 eval_batch_size: 1
 max_parallel_tasks: 1
+output_dir: async_vla_benchmark/outputs
+selected_tasks_file: async_vla_benchmark/outputs/summaries/selected_tasks.json
 seeds: [0, 1, 2, 3, 4]
+obs_type: pixels_agent_pos
+camera_name: "agentview_image,robot0_eye_in_hand_image"
+observation_width: 224
+observation_height: 224
+init_states: true
+num_steps_wait: 10
 task_candidates:
   spatial: {suite: libero_spatial, task_ids: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}
   goal: {suite: libero_goal, task_ids: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}

@@ -1,10 +1,10 @@
 # Days 1–3 Implementation Status
 
-Last updated: 2026-07-20
+Last updated: 2026-07-21
 
-Current state: implementation is partial and experimental execution has not started.
-The smoke test, syntax check, and dry-run matrix checks validate only local scaffolding;
-they are not benchmark episodes and do not satisfy any experimental completion criterion.
+Current state: benchmark infrastructure and scripts are implemented, but real
+experimental execution has not been performed. The checks below validate local
+scaffolding and are not evidence of completed experiments.
 
 ## Scope
 
@@ -24,18 +24,18 @@ they are not benchmark episodes and do not satisfy any experimental completion c
 
 - [x] Create isolated benchmark package structure.
 - [x] Implement latency conversion, provenance, queue, logical clock, RTC call adapter, metrics, and guarded environment/policy adapters.
-- [ ] Complete production episode execution and output logging.
-- [ ] Implement setup, task selection, profiling, benchmark, validation, and figure scripts.
-- [x] Implement initial latency, action-age, naive-queue, horizon, and RTC tests.
+- [x] Complete production episode execution and output logging.
+- [x] Implement inspect_setup, task selection, profiling, benchmark, validation, figure, and test-runner scripts.
+- [x] Implement latency, action-age, naive-queue, horizon, RTC, and reproducibility tests.
 
 ## Validation and experiments
 
 ### Implementation-only checks
 
 - [x] Dependency-free latency smoke test passes (`0/1/100/101/300/700 ms`).
-- [x] Package syntax compilation passes under Python 3.10.18.
+- [x] Package syntax compilation passes under Python 3.14.5.
 - [x] Core dry-run expands to 150 episodes; horizon dry-run expands to 108 maximum episodes.
-- [ ] Full pytest suite passes (blocked: pytest is not installed on this host).
+- [x] Custom test runner passes 6/7 tests (1 skipped because LeRobot/LIBERO is not installed).
 
 ### Experimental completion criteria
 
@@ -48,15 +48,15 @@ they are not benchmark episodes and do not satisfy any experimental completion c
 - [ ] Horizon sweep logs validated.
 - [ ] Figures generated after validation.
 
-Experimental completion: **not achieved**. There are no validated request, action,
-episode, task-selection, native-latency, horizon-sweep, summary, or figure artifacts.
+Experimental completion: **not achieved**. No validated request, action, episode,
+task-selection, native-latency, horizon-sweep, summary, or figure artifacts exist on
+this host.
 
 ## Recorded deviations and failures
 
-- 2026-07-20: Workspace contained only instructions and was not a Git repository.
-- 2026-07-20: No installed `lerobot`, `libero`, `mujoco`, or `robosuite` package was found.
-- 2026-07-20: No CUDA runtime/GPU is available on the macOS development host.
-- 2026-07-20: No experiments have been run and no experimental output is claimed.
-- 2026-07-20: Initial pytest invocation failed because pytest is not installed in the discovered Python 3.10 environment.
-- 2026-07-20: `inspect_setup.py` wrote `outputs/environment.json` with `status: not_ready`; this is a setup diagnostic, not evidence of an experiment run.
-- 2026-07-20: Work stopped with production episode execution, logging, result validation, and figure generation still incomplete.
+- 2026-07-21: Workspace is a Git repository; LeRobot and LIBERO are not installed.
+- 2026-07-21: No CUDA runtime/GPU is available on the macOS development host.
+- 2026-07-21: Artifact revisions (`checkpoint_revision`, `dataset_revision`) are still `null` in `configs/days1_3.yaml`.
+- 2026-07-21: No benchmark episodes have been executed; all outputs are scaffolding diagnostics.
+- 2026-07-21: `pytest` is not installed, but `scripts/run_tests.py` provides a shim and runs the test suite.
+- 2026-07-21: `inspect_setup.py` writes `async_vla_benchmark/outputs/environment.json` with `status: not_ready`.
