@@ -4,7 +4,8 @@ Edit the *COMMIT constants below, then deploy with:
 
     modal deploy modal_app.py
 
-Run a pipeline step from your local machine with:
+Dispatch a pipeline step from your local machine with (this only submits the
+job and returns a call_id immediately; it does not wait for it to finish):
 
     modal run modal_app.py::main --command select
     modal run modal_app.py::main --command profile
@@ -12,10 +13,15 @@ Run a pipeline step from your local machine with:
     modal run modal_app.py::main --command validate
     modal run modal_app.py::main --command figures
 
+Then poll for the result with:
+
+    modal run modal_app.py::main --command status --call-id <call_id>
+
 Prerequisites:
 - A Modal account and the `modal` Python package installed locally.
 - A Modal Secret named `hf-token` containing `HF_TOKEN=<your HuggingFace token>`.
-- Pinned LeRobot / robosuite / LIBERO commits set below.
+- Pinned LeRobot commit set below. robosuite/mujoco/bddl come from LeRobot's
+  own `[libero]` extra (the `hf-libero` PyPI package) and are not pinned here.
 """
 
 from pathlib import Path
@@ -23,11 +29,9 @@ from pathlib import Path
 import modal
 
 # ---------------------------------------------------------------------------
-# Pin these before deploying. Image rebuild is required when they change.
+# Pin this before deploying. Image rebuild is required when it changes.
 # ---------------------------------------------------------------------------
 LEROOT_COMMIT = "main"          # e.g. "a1b2c3d"
-ROBOSUITE_COMMIT = "master"     # e.g. "v1.4.1"
-LIBERO_COMMIT = "master"        # e.g. "v0.0.1"
 
 VOLUME_NAME = "async-vla-benchmark-outputs"
 MOUNT_PATH = Path("/data/outputs")
@@ -37,18 +41,13 @@ image = modal.Image.from_dockerfile(
     Path(__file__).parent / "Dockerfile.modal",
     build_args={
         "LEROBOT_COMMIT": LEROOT_COMMIT,
-        "ROBOSUITE_COMMIT": ROBOSUITE_COMMIT,
-        "LIBERO_COMMIT": LIBERO_COMMIT,
     },
-)
-
-volume = modal.Volume.from_name(VOLUME_NAME, create_if_missing=True)
-
-# Mount the local config directory so config edits do not require an image rebuild.
-config_mount = modal.Mount.from_local_dir(
+).add_local_dir(
     "async_vla_benchmark/configs",
     remote_path="/root/async-vla-latency-bench/async_vla_benchmark/configs",
 )
+
+volume = modal.Volume.from_name(VOLUME_NAME, create_if_missing=True)
 
 app = modal.App("async-vla-benchmark", image=image)
 
@@ -60,18 +59,13 @@ def _run_script(argv: list[str]):
 
     cmd = [sys.executable, "-m"] + argv
     print(f"running: {' '.join(cmd)}")
-    result = subprocess.run(cmd, check=False, text=True, capture_output=True)
-    if result.stdout:
-        print(result.stdout)
-    if result.stderr:
-        print(result.stderr, file=sys.stderr)
+    result = subprocess.run(cmd, check=False)
     return result.returncode
 
 
 @app.function(
-    gpu="T4",
+    gpu="A10G",
     volumes={str(MOUNT_PATH): volume},
-    mounts=[config_mount],
     secrets=[modal.Secret.from_name("hf-token")],
     timeout=20 * 60,
 )
@@ -83,11 +77,10 @@ def inspect_setup():
 
 
 @app.function(
-    gpu="T4",
+    gpu="A10G",
     volumes={str(MOUNT_PATH): volume},
-    mounts=[config_mount],
     secrets=[modal.Secret.from_name("hf-token")],
-    timeout=60 * 60,
+    timeout=4 * 60 * 60,
 )
 def select_tasks():
     """Run ideal-sync episodes and write selected_tasks.json to the volume."""
@@ -103,9 +96,8 @@ def select_tasks():
 
 
 @app.function(
-    gpu="T4",
+    gpu="A10G",
     volumes={str(MOUNT_PATH): volume},
-    mounts=[config_mount],
     secrets=[modal.Secret.from_name("hf-token")],
     timeout=60 * 60,
 )
@@ -127,9 +119,8 @@ def profile_latency(warmup: int = 10, measured: int = 100):
 
 
 @app.function(
-    gpu="T4",
+    gpu="A10G",
     volumes={str(MOUNT_PATH): volume},
-    mounts=[config_mount],
     secrets=[modal.Secret.from_name("hf-token")],
     timeout=2 * 60 * 60,
 )
@@ -155,9 +146,8 @@ def run_benchmark(experiment: str = "core", tasks: str = ""):
 
 
 @app.function(
-    gpu="T4",
+    gpu="A10G",
     volumes={str(MOUNT_PATH): volume},
-    mounts=[config_mount],
     secrets=[modal.Secret.from_name("hf-token")],
     timeout=30 * 60,
 )
@@ -173,9 +163,8 @@ def validate_results():
 
 
 @app.function(
-    gpu="T4",
+    gpu="A10G",
     volumes={str(MOUNT_PATH): volume},
-    mounts=[config_mount],
     secrets=[modal.Secret.from_name("hf-token")],
     timeout=30 * 60,
 )
@@ -190,28 +179,43 @@ def make_figures():
     )
 
 
-@app.local_entrypoint
+@app.local_entrypoint()
 def main(
     command: str,
     experiment: str = "core",
     tasks: str = "",
     warmup: int = 10,
     measured: int = 100,
+    call_id: str = "",
 ):
-    """Dispatch a benchmark pipeline step to Modal from your local machine."""
-    if command == "inspect":
-        inspect_setup.remote()
-    elif command == "select":
-        select_tasks.remote()
-    elif command == "profile":
-        profile_latency.remote(warmup, measured)
-    elif command == "run":
-        run_benchmark.remote(experiment, tasks)
-    elif command == "validate":
-        validate_results.remote()
-    elif command == "figures":
-        make_figures.remote()
-    else:
+    """Dispatch a benchmark pipeline step to Modal from your local machine.
+
+    Uses `.spawn()` rather than `.remote()` so the local process only needs to
+    survive submitting the call, not the whole run: `.remote()` blocks on an
+    open RPC for the entire remote execution, and a local process/session
+    getting killed mid-wait cancels that RPC (and the remote job with it) even
+    under `modal run --detach`. `.spawn()` returns a call_id immediately; poll
+    it later with `--command status --call-id <id>` from a fresh short-lived
+    process.
+    """
+    dispatch = {
+        "inspect": lambda: inspect_setup.spawn(),
+        "select": lambda: select_tasks.spawn(),
+        "profile": lambda: profile_latency.spawn(warmup, measured),
+        "run": lambda: run_benchmark.spawn(experiment, tasks),
+        "validate": lambda: validate_results.spawn(),
+        "figures": lambda: make_figures.spawn(),
+    }
+    if command == "status":
+        if not call_id:
+            raise ValueError("--call-id is required for the status command")
+        result = modal.FunctionCall.from_id(call_id).get(timeout=5)
+        print(f"result={result}")
+        return
+    if command not in dispatch:
         raise ValueError(
-            f"unknown command {command}; choose inspect/select/profile/run/validate/figures"
+            f"unknown command {command}; choose inspect/select/profile/run/validate/figures/status"
         )
+    call = dispatch[command]()
+    print(f"dispatched {command}; call_id={call.object_id}")
+    print(f"poll with: modal run modal_app.py::main --command status --call-id {call.object_id}")
