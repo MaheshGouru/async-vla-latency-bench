@@ -13,3 +13,13 @@ def test_horizon_and_threshold(horizon, threshold):
     assert queue.request_threshold == threshold
     queue.startup(actions(10))
     assert len(queue) == horizon
+
+
+def test_explicit_request_threshold_overrides_default():
+    queue = ActionQueue(10, request_threshold=7)
+    assert queue.request_threshold == 7
+
+
+def test_explicit_request_threshold_is_clamped_to_horizon():
+    queue = ActionQueue(2, request_threshold=5)
+    assert queue.request_threshold == 2

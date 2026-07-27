@@ -144,6 +144,7 @@ def _run_experiment(cfg: BenchmarkConfig, plans: list[EpisodePlan], args) -> int
             seed=plan.seed,
             use_rtc=(plan.strategy == "rtc"),
             rtc_execution_horizon=cfg.rtc.execution_horizon,
+            request_threshold_actions=cfg.rtc.request_threshold_actions,
             device=cfg.device,
         )
         summaries.append(summary)

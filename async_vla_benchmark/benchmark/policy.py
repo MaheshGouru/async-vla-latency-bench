@@ -83,6 +83,27 @@ def _libero_state_vector(observation: Any) -> Any:
     )
 
 
+def _correct_libero_image_orientation(pixels: Any) -> Any:
+    """Flip each camera image on both axes to match the orientation the checkpoint
+    was trained on.
+
+    LeRobot's `LiberoEnv._format_raw_obs` (the path that builds policy observations)
+    hands out the raw MuJoCo/EGL camera buffer unmodified, which comes out rotated
+    180 degrees. `LiberoEnv.render()` corrects for this with `image[::-1, ::-1]`
+    ("flip both H and W for visualization") but that correction is never applied to
+    the observation the policy actually sees. Verified by comparing a captured
+    `agentview`/wrist frame against the matching episode in the checkpoint's own
+    training data (`HuggingFaceVLA/libero`): both cameras were flipped on both axes
+    relative to training, which explains confident-but-wrong actions (near-zero
+    LIBERO success despite well-formed, non-degenerate action chunks).
+    """
+    import numpy as np
+
+    # `[::-1, ::-1]` alone produces a negative-stride view, which torch.from_numpy
+    # (used downstream in LeRobot's batch conversion) can't wrap directly.
+    return {name: np.ascontiguousarray(image[::-1, ::-1]) for name, image in pixels.items()}
+
+
 def preprocess_observation(preprocessor: Any, observation: Any, task_instruction: str) -> Any:
     """Build the input batch expected by the policy preprocessor."""
     # LiberoEnv observations use raw gym-style keys ("pixels", "robot_state"). The
@@ -95,6 +116,7 @@ def preprocess_observation(preprocessor: Any, observation: Any, task_instruction
     from lerobot.envs.utils import preprocess_observation as to_lerobot_batch
 
     raw = dict(observation)
+    raw["pixels"] = _correct_libero_image_orientation(observation["pixels"])
     raw["agent_pos"] = _libero_state_vector(observation)
     raw.pop("robot_state", None)
     batch = to_lerobot_batch(raw)

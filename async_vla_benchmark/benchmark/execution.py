@@ -109,6 +109,7 @@ class EpisodeRunner:
         *,
         use_rtc: bool = False,
         rtc_execution_horizon: int = 10,
+        request_threshold_actions: Optional[int] = None,
         max_steps: Optional[int] = None,
         device: str = "cuda",
     ) -> None:
@@ -128,7 +129,7 @@ class EpisodeRunner:
         self.control_frequency_hz = resolve_control_frequency_hz(env)
         self.control_period_seconds = 1.0 / self.control_frequency_hz
         self.clock = EventClock(self.control_period_seconds)
-        self.queue = ActionQueue(fixed_horizon)
+        self.queue = ActionQueue(fixed_horizon, request_threshold=request_threshold_actions)
         self.max_steps = max_steps if max_steps is not None else get_max_episode_steps(env)
 
         self.observations: list[ObservationRef] = []
@@ -494,6 +495,7 @@ def run_episode(
     seed: int,
     use_rtc: bool = False,
     rtc_execution_horizon: int = 10,
+    request_threshold_actions: Optional[int] = None,
     device: str = "cuda",
 ) -> dict[str, Any]:
     """High-level entry point to run one episode and write artifacts."""
@@ -510,6 +512,7 @@ def run_episode(
         output_dir=output_dir,
         use_rtc=use_rtc,
         rtc_execution_horizon=rtc_execution_horizon,
+        request_threshold_actions=request_threshold_actions,
         device=device,
     )
     return runner.run(seed)
