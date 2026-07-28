@@ -28,6 +28,12 @@ def load_pi05_policy(checkpoint: str, revision: str, n_action_steps: int = 10, d
     config = PI05Config.from_pretrained(checkpoint, revision=revision)
     config.device = device
     config.n_action_steps = n_action_steps
+    # The checkpoint's own config.json bakes in compile_model=True, compile_mode="max-autotune",
+    # which re-runs torch.compile's full Inductor autotune search from scratch on every process
+    # start (Modal containers are ephemeral, so the Inductor cache never persists). That autotune
+    # search stalled every prior run for 20+ minutes before reaching a single LIBERO episode.
+    # Eval/inference doesn't need compiled sample_actions/forward, so disable it.
+    config.compile_model = False
     policy = PI05Policy.from_pretrained(checkpoint, revision=revision, config=config)
     policy.to(device)
     policy.eval()
@@ -42,11 +48,78 @@ def load_pre_post_processors(policy: Any, checkpoint: str, revision: str | None 
     return make_pre_post_processors(policy.config, pretrained_path=checkpoint, pretrained_revision=revision)
 
 
+def _quat_to_axisangle(quat: Any) -> Any:
+    """Convert a robosuite-style (x, y, z, w) quaternion to a 3D axis-angle vector.
+
+    Matches robosuite.utils.transform_utils.quat2axisangle, which is the convention
+    the `lerobot/pi05_libero_finetuned` training data (via OpenPI's LIBERO state
+    definition) was built on.
+    """
+    import math
+    import numpy as np
+
+    quat = np.array(quat, dtype=np.float64, copy=True)
+    quat[3] = min(1.0, max(-1.0, quat[3]))
+    den = math.sqrt(1.0 - quat[3] * quat[3])
+    if math.isclose(den, 0.0):
+        return np.zeros(3, dtype=np.float32)
+    return ((quat[:3] * 2.0 * math.acos(quat[3])) / den).astype(np.float32)
+
+
+def _libero_state_vector(observation: Any) -> Any:
+    """Build the 8-dim [eef_pos(3), eef_axisangle(3), gripper_qpos(2)] state vector
+    that `lerobot/pi05_libero_finetuned` expects as `observation.state`."""
+    import numpy as np
+
+    robot_state = observation["robot_state"]
+    eef = robot_state["eef"]
+    gripper = robot_state["gripper"]
+    return np.concatenate(
+        [
+            np.asarray(eef["pos"], dtype=np.float32),
+            _quat_to_axisangle(eef["quat"]),
+            np.asarray(gripper["qpos"], dtype=np.float32),
+        ]
+    )
+
+
+def _correct_libero_image_orientation(pixels: Any) -> Any:
+    """Flip each camera image on both axes to match the orientation the checkpoint
+    was trained on.
+
+    LeRobot's `LiberoEnv._format_raw_obs` (the path that builds policy observations)
+    hands out the raw MuJoCo/EGL camera buffer unmodified, which comes out rotated
+    180 degrees. `LiberoEnv.render()` corrects for this with `image[::-1, ::-1]`
+    ("flip both H and W for visualization") but that correction is never applied to
+    the observation the policy actually sees. Verified by comparing a captured
+    `agentview`/wrist frame against the matching episode in the checkpoint's own
+    training data (`HuggingFaceVLA/libero`): both cameras were flipped on both axes
+    relative to training, which explains confident-but-wrong actions (near-zero
+    LIBERO success despite well-formed, non-degenerate action chunks).
+    """
+    import numpy as np
+
+    # `[::-1, ::-1]` alone produces a negative-stride view, which torch.from_numpy
+    # (used downstream in LeRobot's batch conversion) can't wrap directly.
+    return {name: np.ascontiguousarray(image[::-1, ::-1]) for name, image in pixels.items()}
+
+
 def preprocess_observation(preprocessor: Any, observation: Any, task_instruction: str) -> Any:
     """Build the input batch expected by the policy preprocessor."""
-    # The LeRobot preprocessor expects a dict that can be converted to an EnvTransition.
-    # For LIBERO, the raw observation has pixels/robot_state and a list-style task prompt.
-    batch = dict(observation)
+    # LiberoEnv observations use raw gym-style keys ("pixels", "robot_state"). The
+    # LeRobot processor pipeline's batch_to_transition only recognizes keys prefixed
+    # with "observation.", so route through LeRobot's own env-observation converter
+    # before handing the batch to the preprocessor. "agent_pos" is the key that
+    # converter maps to the canonical `observation.state`; the checkpoint's own
+    # `observation.robot_state` is not one of its trained-on features, so drop it
+    # rather than pass through an unrecognized key.
+    from lerobot.envs.utils import preprocess_observation as to_lerobot_batch
+
+    raw = dict(observation)
+    raw["pixels"] = _correct_libero_image_orientation(observation["pixels"])
+    raw["agent_pos"] = _libero_state_vector(observation)
+    raw.pop("robot_state", None)
+    batch = to_lerobot_batch(raw)
     if "task" not in batch:
         batch["task"] = [task_instruction]
     return preprocessor(batch)

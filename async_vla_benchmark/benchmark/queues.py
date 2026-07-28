@@ -17,17 +17,20 @@ class QueuedAction:
 
 
 class ActionQueue:
-    def __init__(self, horizon: int):
+    def __init__(self, horizon: int, request_threshold: Optional[int] = None):
         if horizon <= 0:
             raise ValueError("horizon must be positive")
+        if request_threshold is not None and request_threshold <= 0:
+            raise ValueError("request_threshold must be positive")
         self.horizon = horizon
+        self.request_threshold = (
+            min(request_threshold, horizon)
+            if request_threshold is not None
+            else math.ceil(horizon / 2)
+        )
         self._items: Deque[QueuedAction] = deque()
         self.outstanding_request_id: Optional[str] = None
         self.discarded_old_actions = 0
-
-    @property
-    def request_threshold(self) -> int:
-        return math.ceil(self.horizon / 2)
 
     def __len__(self) -> int:
         return len(self._items)

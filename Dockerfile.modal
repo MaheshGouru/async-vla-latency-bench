@@ -11,8 +11,11 @@ ENV DEBIAN_FRONTEND=noninteractive \
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
-    python3.10 \
-    python3-pip \
+    gnupg \
+    dirmngr \
+    software-properties-common \
+    build-essential \
+    cmake \
     libgl1-mesa-glx \
     libgl1-mesa-dev \
     libegl1-mesa-dev \
@@ -20,25 +23,49 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libosmesa6-dev \
     libglib2.0-0 \
     patchelf \
+    && add-apt-repository -y ppa:deadsnakes/ppa \
+    && apt-get update && apt-get install -y --no-install-recommends \
+    python3.12 \
+    python3.12-dev \
+    python3.12-venv \
     && rm -rf /var/lib/apt/lists/*
 
-RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.10 1 \
+RUN python3.12 -m ensurepip --upgrade \
+    && update-alternatives --install /usr/bin/python python /usr/bin/python3.12 1 \
+    && update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.12 1 \
     && python -m pip install --upgrade pip wheel setuptools
 
 ARG LEROBOT_COMMIT=main
-ARG ROBOSUITE_COMMIT=master
-ARG LIBERO_COMMIT=master
 
-# Install LeRobot with the pi0.5 extra. If `lerobot` does not expose a `libero`
-# extra, install libero and robosuite explicitly from their git repositories.
+# Install LeRobot with the pi0.5 and libero extras. Do NOT install `libero` or
+# `robosuite` directly from their raw GitHub repos: the upstream
+# Lifelong-Robot-Learning/LIBERO setup.py has a packaging bug (its top-level
+# `libero` package directory has no __init__.py, so setuptools' find_packages()
+# silently produces an empty wheel with no importable code) and its pinned
+# robosuite/mujoco versions do not match what current robosuite@master installs.
+# LeRobot's own `[libero]` extra instead depends on `hf-libero`, a properly
+# packaged PyPI distribution (still imported as `libero`) with matching,
+# mutually-compatible robosuite/mujoco/bddl pins baked in.
 RUN python -m pip install \
-    "lerobot[pi] @ git+https://github.com/huggingface/lerobot.git@${LEROBOT_COMMIT}"
+    "lerobot[pi,libero] @ git+https://github.com/huggingface/lerobot.git@${LEROBOT_COMMIT}"
 
-RUN python -m pip install \
-    "robosuite @ git+https://github.com/ARISE-Initiative/robosuite.git@${ROBOSUITE_COMMIT}"
-
-RUN python -m pip install \
-    "libero @ git+https://github.com/Lifelong-Robot-Learning-Community/LIBERO.git@${LIBERO_COMMIT}"
+# libero.libero's __init__.py prompts interactively (`input()`) the first time
+# it runs if ~/.libero/config.yaml does not exist yet, which hangs/fails in a
+# non-interactive container. Pre-create the config at build time so every
+# container starts with it already present. `import libero` (top-level) is
+# safe here; only `libero.libero` triggers the prompt, and we avoid importing it.
+RUN python -c "\
+import libero, os, yaml; \
+root = os.path.join(os.path.dirname(libero.__file__), 'libero'); \
+cfg = { \
+    'benchmark_root': root, \
+    'bddl_files': os.path.join(root, 'bddl_files'), \
+    'init_states': os.path.join(root, 'init_files'), \
+    'datasets': os.path.join(root, '../datasets'), \
+    'assets': os.path.join(root, 'assets'), \
+}; \
+os.makedirs(os.path.expanduser('~/.libero'), exist_ok=True); \
+yaml.dump(cfg, open(os.path.expanduser('~/.libero/config.yaml'), 'w'))"
 
 COPY . /root/async-vla-latency-bench
 WORKDIR /root/async-vla-latency-bench

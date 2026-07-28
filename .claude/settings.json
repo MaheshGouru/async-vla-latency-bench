@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(nvidia-smi)",
+      "Bash(python3 -c \"import torch; print\\(torch.__version__, torch.cuda.is_available\\(\\)\\)\")",
+      "Bash(modal --version)",
+      "Bash(modal profile *)",
+      "Bash(modal secret *)"
+    ]
+  }
+}

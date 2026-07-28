@@ -1,7 +1,7 @@
 repository: huggingface/lerobot
 repository_revision: null
 policy_checkpoint: lerobot/pi05_libero_finetuned
-checkpoint_revision: null
+checkpoint_revision: "main"
 dataset_repo: HuggingFaceVLA/libero
 dataset_revision: null
 device: cuda
@@ -34,4 +34,4 @@ rtc:
   execution_horizon: 10
   max_guidance_weight: 10.0
   prefix_attention_schedule: EXP
-  request_threshold_actions: 5
+  request_threshold_actions: 8
