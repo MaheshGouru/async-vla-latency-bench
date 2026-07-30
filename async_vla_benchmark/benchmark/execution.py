@@ -7,7 +7,7 @@ from typing import Any, Optional
 import numpy as np
 
 from .environment import get_max_episode_steps, resolve_control_frequency_hz
-from .latency import LatencyProfile, request_delay_steps
+from .latency import LatencyProfile, latency_to_delay_steps, request_delay_steps
 from .metrics import mean_continuity, percentile
 from .policy import timed_request
 from .queues import ActionQueue, QueuedAction
@@ -170,19 +170,41 @@ class EpisodeRunner:
         self.observations.append(ref)
         return ref
 
+    def _estimate_inference_delay_steps(self) -> int:
+        """Estimate this request's arrival delay for RTC guidance, before it's measured.
+
+        The true latency of *this* request isn't known until it completes, so RTC's
+        guidance needs an a-priori estimate instead. We use the mean of this episode's
+        already-measured request latencies as a stand-in for the native inference cost
+        (falling back to 0 for the very first real request, which has no prior
+        measurement yet) and run it through the same `LatencyProfile` math used to
+        compute the ground-truth delay after the fact, so the guided chunk and the
+        eventual truncation are consistent with each other.
+        """
+        import statistics
+
+        if not self.requests:
+            return 0
+        prior_native_latency_ms = statistics.mean(
+            r["measured_request_latency_ms"] for r in self.requests
+        )
+        expected_latency_ms = self.latency_profile.logical_latency_ms(prior_native_latency_ms)
+        return latency_to_delay_steps(expected_latency_ms, self.control_period_seconds)
+
     def _start_request(self, obs: Any, source_obs: ObservationRef, prev_raw_remainder: Optional[np.ndarray] = None) -> PendingRequest:
         """Run the policy synchronously and schedule a logically-delayed response."""
         request_id = self._new_request_id()
         self.queue.begin_request(request_id)
 
         execution_horizon = self.rtc_execution_horizon if self.use_rtc else None
+        estimated_delay_steps = self._estimate_inference_delay_steps() if self.use_rtc else 0
         raw_chunk, processed_chunk, timing = timed_request(
             self.policy,
             self.preprocessor,
             self.postprocessor,
             obs,
             self.task_instruction,
-            delay_steps=0,  # delay is simulated after measurement
+            delay_steps=estimated_delay_steps,
             previous_chunk_remainder=prev_raw_remainder,
             execution_horizon=execution_horizon,
             use_rtc=self.use_rtc,
