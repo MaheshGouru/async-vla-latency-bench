@@ -463,6 +463,7 @@ class EpisodeRunner:
             "fixed_horizon": self.fixed_horizon,
             "success": success,
             "environment_steps": environment_steps,
+            "timed_out": environment_steps >= self.max_steps,
             "logical_completion_time_seconds": environment_steps * self.control_period_seconds,
             "wall_clock_runtime_seconds": self._wall_clock_runtime_seconds,
             "number_of_policy_requests": len(self.requests),
