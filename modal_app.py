@@ -31,7 +31,7 @@ import modal
 # ---------------------------------------------------------------------------
 # Pin this before deploying. Image rebuild is required when it changes.
 # ---------------------------------------------------------------------------
-LEROOT_COMMIT = "main"          # e.g. "a1b2c3d"
+LEROOT_COMMIT = "2aba372b4e217cc47db28e0f836859b20d1456c9"  # resolved from main on 2026-07-30
 
 VOLUME_NAME = "async-vla-benchmark-outputs"
 MOUNT_PATH = Path("/data/outputs")
