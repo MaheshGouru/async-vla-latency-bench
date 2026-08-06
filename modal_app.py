@@ -33,6 +33,11 @@ import modal
 # ---------------------------------------------------------------------------
 LEROOT_COMMIT = "2aba372b4e217cc47db28e0f836859b20d1456c9"  # resolved from main on 2026-07-30
 
+# Pin separately from LIBERO-plus's own history; only used by the
+# libero_plus-flavored image below, never by the default `image`. Matches the
+# SHA lerobot's own docker/Dockerfile.benchmark.libero_plus pins.
+LIBERO_PLUS_SHA = "4976dc3"
+
 VOLUME_NAME = "async-vla-benchmark-outputs"
 MOUNT_PATH = Path("/data/outputs")
 CONFIG_PATH = Path("/root/async-vla-latency-bench/async_vla_benchmark/configs/days1_3.yaml")
@@ -41,6 +46,22 @@ image = modal.Image.from_dockerfile(
     Path(__file__).parent / "Dockerfile.modal",
     build_args={
         "LEROBOT_COMMIT": LEROOT_COMMIT,
+    },
+).add_local_dir(
+    "async_vla_benchmark/configs",
+    remote_path="/root/async-vla-latency-bench/async_vla_benchmark/configs",
+)
+
+# Separate image for LIBERO-plus (OOD perturbation) diagnostics/runs. Never
+# used as the default `app` image: hf-libero (used by `image` above) and the
+# LIBERO-plus fork both install as the top-level `libero` package, so they
+# cannot coexist in one image. Only functions that explicitly pass
+# `image=image_libero_plus` use this.
+image_libero_plus = modal.Image.from_dockerfile(
+    Path(__file__).parent / "Dockerfile.modal.libero_plus",
+    build_args={
+        "LEROBOT_COMMIT": LEROOT_COMMIT,
+        "LIBERO_PLUS_SHA": LIBERO_PLUS_SHA,
     },
 ).add_local_dir(
     "async_vla_benchmark/configs",
@@ -122,7 +143,7 @@ def profile_latency(warmup: int = 10, measured: int = 100):
     gpu="A100-40GB",
     volumes={str(MOUNT_PATH): volume},
     secrets=[modal.Secret.from_name("hf-token")],
-    timeout=6 * 60 * 60,
+    timeout=10 * 60 * 60,
 )
 def run_benchmark(
     experiment: str = "core",
@@ -244,6 +265,35 @@ def diagnose_raw_action_scale(
 
 
 @app.function(
+    image=image_libero_plus,
+    gpu="A100-40GB",
+    volumes={str(MOUNT_PATH): volume},
+    secrets=[modal.Secret.from_name("hf-token")],
+    timeout=20 * 60,
+)
+def diagnose_libero_plus(suite: str = "libero_spatial", task_id: int = 0, seed: int = 0):
+    """Smoke-test the LIBERO-plus (OOD perturbation) env build and check
+    whether task_classification.json's `id` field matches LeRobot's task_id
+    indexing, before trusting it for the OOD x delay factorial. Runs against
+    image_libero_plus, not the default image."""
+    return _run_script(
+        [
+            "async_vla_benchmark.scripts.diagnose_libero_plus",
+            "--config",
+            str(CONFIG_PATH),
+            "--output-dir",
+            str(MOUNT_PATH),
+            "--suite",
+            suite,
+            "--task-id",
+            str(task_id),
+            "--seed",
+            str(seed),
+        ]
+    )
+
+
+@app.function(
     gpu="A100-40GB",
     volumes={str(MOUNT_PATH): volume},
     secrets=[modal.Secret.from_name("hf-token")],
@@ -338,6 +388,7 @@ def main(
         "diagnose": lambda: diagnose_observation.spawn(suite, task_id, seed),
         "diagnose_scale": lambda: diagnose_action_scale.spawn(suite, task_id, seed),
         "diagnose_raw_scale": lambda: diagnose_raw_action_scale.spawn(suite, task_id, seed),
+        "diagnose_libero_plus": lambda: diagnose_libero_plus.spawn(suite, task_id, seed),
     }
     if command == "status":
         if not call_id:
@@ -349,7 +400,7 @@ def main(
         raise ValueError(
             "unknown command "
             f"{command}; choose inspect/select/profile/run/validate/figures/"
-            "diagnose/diagnose_scale/diagnose_raw_scale/status"
+            "diagnose/diagnose_scale/diagnose_raw_scale/diagnose_libero_plus/status"
         )
     call = dispatch[command]()
     print(f"dispatched {command}; call_id={call.object_id}")

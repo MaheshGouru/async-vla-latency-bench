@@ -77,7 +77,7 @@ def _load_policy_and_processors(cfg: BenchmarkConfig):
     return policy, preprocessor, postprocessor
 
 
-def _run_experiment(cfg: BenchmarkConfig, plans: list[EpisodePlan], args) -> int:
+def _run_experiment(cfg: BenchmarkConfig, tagged_plans: list[tuple[str, EpisodePlan]], args) -> int:
     output_dir = cfg.output_dir
     ensure_dir(output_dir / "requests")
     ensure_dir(output_dir / "actions")
@@ -88,11 +88,30 @@ def _run_experiment(cfg: BenchmarkConfig, plans: list[EpisodePlan], args) -> int
     preprocessor = None
     postprocessor = None
     env_cache: dict[str, Any] = {}
-    summaries = []
+    summaries_by_experiment: dict[str, list] = {}
+    core_summaries_by_episode_id: dict[str, dict] = {}
 
-    for plan in plans:
+    for experiment_name, plan in tagged_plans:
         episode_id = _episode_id(plan)
         episode_json = output_dir / "episodes" / f"{episode_id}.json"
+
+        # horizon_sweep's h=10 rows are, for shared (task, seed, strategy,
+        # profile), literally the same episode the core experiment already
+        # ran (spec §16: "may reuse validated runs from the core
+        # experiment"). Re-running them wastes compute and, worse, silently
+        # overwrites core's raw episode/request/action files (both write to
+        # the same episode_id-keyed paths). Reuse core's result instead of
+        # re-executing: check this run's own core results first, then fall
+        # back to an already-written episode file from a prior run.
+        if experiment_name == "horizon_sweep" and plan.fixed_horizon == 10:
+            reused = core_summaries_by_episode_id.get(episode_id)
+            if reused is None and episode_json.exists():
+                reused = json.loads(episode_json.read_text())
+            if reused is not None:
+                summaries_by_experiment.setdefault(experiment_name, []).append(reused)
+                print(f"reused {episode_id} from core: success={reused['success']} [{experiment_name}]")
+                continue
+
         if args.resume and episode_json.exists() and not args.overwrite:
             print(f"skip {episode_id}: already completed")
             continue
@@ -147,12 +166,17 @@ def _run_experiment(cfg: BenchmarkConfig, plans: list[EpisodePlan], args) -> int
             request_threshold_actions=cfg.rtc.request_threshold_actions,
             device=cfg.device,
         )
-        summaries.append(summary)
-        print(f"completed {episode_id}: success={summary['success']} steps={summary['environment_steps']}")
+        summaries_by_experiment.setdefault(experiment_name, []).append(summary)
+        if experiment_name == "core":
+            core_summaries_by_episode_id[episode_id] = summary
+        print(
+            f"completed {episode_id}: success={summary['success']} "
+            f"steps={summary['environment_steps']} [{experiment_name}]"
+        )
 
-    # Write aggregate summaries
-    if summaries:
-        write_json(output_dir / "summaries" / f"{args.experiment}_summaries.json", summaries)
+    # Write aggregate summaries, one file per experiment represented in this run.
+    for experiment_name, summaries in summaries_by_experiment.items():
+        write_json(output_dir / "summaries" / f"{experiment_name}_summaries.json", summaries)
     return 0
 
 
@@ -160,7 +184,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path)
-    parser.add_argument("--experiment", choices=("core", "horizon_sweep"), required=True)
+    parser.add_argument("--experiment", choices=("core", "horizon_sweep", "all"), required=True)
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--task", action="append")
     parser.add_argument("--seed", type=int, action="append")
@@ -183,17 +207,31 @@ def main():
         raise ValueError(
             "no tasks selected; run select_tasks.py first or pass one or more --task suite:id"
         )
-    seeds = args.seed or ([0, 1, 2, 3, 4] if args.experiment == "core" else [0, 1, 2])
-    plans = core_plans(tasks, seeds) if args.experiment == "core" else horizon_plans(tasks, seeds)
+    core_seeds = args.seed or [0, 1, 2, 3, 4]
+    horizon_seeds = args.seed or [0, 1, 2]
+    if args.experiment == "core":
+        tagged_plans = [("core", p) for p in core_plans(tasks, core_seeds)]
+    elif args.experiment == "horizon_sweep":
+        tagged_plans = [("horizon_sweep", p) for p in horizon_plans(tasks, horizon_seeds)]
+    else:
+        # Run both plan sets in one policy-load session (one container), so every
+        # episode across both experiments shares identical hardware/runtime conditions.
+        tagged_plans = [("core", p) for p in core_plans(tasks, core_seeds)] + [
+            ("horizon_sweep", p) for p in horizon_plans(tasks, horizon_seeds)
+        ]
     filters = {
         "strategy": args.strategy,
         "latency_profile": args.latency_profile,
         "fixed_horizon": args.fixed_horizon,
     }
-    selected = [p for p in plans if all(value is None or getattr(p, key) == value for key, value in filters.items())]
+    selected = [
+        (name, p)
+        for name, p in tagged_plans
+        if all(value is None or getattr(p, key) == value for key, value in filters.items())
+    ]
     if args.dry_run:
-        for index, plan in enumerate(selected, 1):
-            print(index, asdict(plan))
+        for index, (name, plan) in enumerate(selected, 1):
+            print(index, name, asdict(plan))
         print(f"planned_episodes={len(selected)}")
         return 0
     return _run_experiment(cfg, selected, args)

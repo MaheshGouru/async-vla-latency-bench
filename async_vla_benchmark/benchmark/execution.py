@@ -384,6 +384,16 @@ class EpisodeRunner:
         )
 
     def run(self, seed: int) -> dict[str, Any]:
+        # π0.5's flow-matching action sampling draws noise from torch's global RNG
+        # (lerobot.policies.common.flow_matching.sample_noise calls torch.normal with
+        # no `generator=`), independent of the environment seed. Without this, two
+        # runs of the identical (task, strategy, profile, horizon, seed) diverge from
+        # the very first policy request, even though env.reset(seed=...) is itself
+        # deterministic. Seeding here ties the whole episode's RNG stream to the same
+        # seed already used for env determinism, without touching LeRobot internals.
+        import torch
+
+        torch.manual_seed(seed)
         obs, info = self.env.reset(seed=seed)
         done = False
         success = False
