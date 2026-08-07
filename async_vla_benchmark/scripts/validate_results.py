@@ -16,18 +16,33 @@ def _load_parquet(path: Path) -> list[dict]:
     return pd.read_parquet(path).to_dict("records")
 
 
+_RAW_TIMESTAMP_FIELDS = (
+    "observation_capture_time",
+    "preprocessing_start_time",
+    "preprocessing_end_time",
+    "inference_start_time",
+    "inference_end_time",
+    "postprocessing_end_time",
+    "request_complete_time",
+)
+
+
 def _check_request_timestamps(requests: list[dict]) -> list[str]:
+    """Check monotonicity of the raw per-stage timestamps, when present.
+
+    Persisted per-episode request records only carry the derived `_ms`
+    latency fields (spec section 10's request-provenance schema:
+    measured_request_latency_ms, model_latency_ms, etc.) -- the raw absolute
+    timestamps this check wants are a `native_latency.csv`-only concern
+    (spec section 7), produced by profile_latency.py's dedicated
+    measurement pass, not by run_benchmark.py's episode execution. Skip
+    gracefully rather than KeyError when a request record doesn't carry them.
+    """
     errors = []
     for r in requests:
-        times = [
-            ("observation_capture_time", r["observation_capture_time"]),
-            ("preprocessing_start_time", r["preprocessing_start_time"]),
-            ("preprocessing_end_time", r["preprocessing_end_time"]),
-            ("inference_start_time", r["inference_start_time"]),
-            ("inference_end_time", r["inference_end_time"]),
-            ("postprocessing_end_time", r["postprocessing_end_time"]),
-            ("request_complete_time", r["request_complete_time"]),
-        ]
+        if not all(field in r for field in _RAW_TIMESTAMP_FIELDS):
+            continue
+        times = [(field, r[field]) for field in _RAW_TIMESTAMP_FIELDS]
         for i in range(len(times) - 1):
             if times[i][1] > times[i + 1][1]:
                 errors.append(
@@ -41,7 +56,14 @@ def _check_delay_conversion(requests: list[dict], control_period_seconds: float)
     errors = []
     for r in requests:
         total_ms = r["measured_request_latency_ms"] + r["added_latency_ms"]
-        expected = math.ceil(total_ms / (control_period_seconds * 1000.0))
+        # The "ideal" latency profile forces logical delay_steps=0 by design
+        # (spec section 8/12), regardless of the measured wall-clock model
+        # runtime -- that runtime is still recorded (measured_request_latency_ms)
+        # for reference, it just doesn't feed into the ceil() conversion.
+        if r.get("latency_profile") == "ideal":
+            expected = 0
+        else:
+            expected = math.ceil(total_ms / (control_period_seconds * 1000.0))
         if expected != r["delay_steps"]:
             errors.append(
                 f"request {r['request_id']}: delay_steps {r['delay_steps']} != expected {expected} "
@@ -55,7 +77,10 @@ def _check_action_records(actions: list[dict], chunk_ids: set, request_source_id
     for a in actions:
         if a["action_age_steps"] < 0:
             errors.append(f"action {a['control_step']}: negative action age")
-        if a["queue_depth_before"] < 1 or a["queue_depth_after"] < 0:
+        # queue_depth_before == 0 is the expected, correct value for a hold
+        # action (the queue ran dry before this step's pop) -- only negative
+        # depths are actually invalid.
+        if a["queue_depth_before"] < 0 or a["queue_depth_after"] < 0:
             errors.append(f"action {a['control_step']}: invalid queue depth")
         if not a["is_hold_action"]:
             if a["chunk_id"] not in chunk_ids:
@@ -68,14 +93,35 @@ def _check_action_records(actions: list[dict], chunk_ids: set, request_source_id
 
 
 def _check_outstanding_overlap(requests: list[dict]) -> list[str]:
-    """Ensure at most one request is logically outstanding at any control step."""
+    """Ensure at most one request is logically outstanding at any control step.
+
+    Excludes "ideal"-profile requests: they resolve synchronously with zero
+    logical delay by design (request_step == response_available_step), which
+    includes the naive_async/rtc startup seed request issued and resolved
+    before the main control loop begins (see EpisodeRunner.run()). Two
+    requests sharing the same request_step -- the synchronous startup seed
+    and the first real request -- is expected there, not a concurrency bug;
+    the runtime's actual one-outstanding-request invariant is enforced
+    directly by ActionQueue.begin_request()'s RuntimeError.
+    """
     errors = []
     events = []
     for r in requests:
+        if r.get("latency_profile") == "ideal":
+            continue
         events.append((r["request_step"], +1, r["request_id"]))
-        events.append((r["response_available_step"] + 1, -1, r["request_id"]))
-    events.sort(key=lambda x: (x[0], -x[1]))
-    active = 1
+        # No "+1": the request is no longer outstanding *at*
+        # response_available_step itself (EpisodeRunner.run()'s loop calls
+        # _take_available() before _maybe_request() each iteration, so a
+        # response due this step is already resolved before a new request
+        # for this same step could be submitted).
+        events.append((r["response_available_step"], -1, r["request_id"]))
+    # At a tied step, process the resolution (-1) before a new request's
+    # start (+1) -- matches the runtime's actual resolve-then-request order
+    # within one control_step, so a same-step handoff isn't miscounted as
+    # two requests briefly overlapping.
+    events.sort(key=lambda x: (x[0], x[1]))
+    active = 0
     for step, delta, req_id in events:
         active += delta
         if active > 1:
@@ -84,13 +130,25 @@ def _check_outstanding_overlap(requests: list[dict]) -> list[str]:
     return errors
 
 
+def _is_missing_chunk_id(chunk_id) -> bool:
+    """True for a hold action's absent chunk_id.
+
+    Hold actions store chunk_id=None, but a parquet round-trip through
+    pandas/pyarrow's nullable string dtype reads missing values back as
+    float('nan'), not None -- `chunk_id is None` alone misses them.
+    """
+    if chunk_id is None:
+        return True
+    return isinstance(chunk_id, float) and math.isnan(chunk_id)
+
+
 def _check_horizon(actions: list[dict], fixed_horizon: int) -> list[str]:
     """Ensure no chunk contributes more than fixed_horizon executed actions in a row."""
     from itertools import groupby
 
     errors = []
     for chunk_id, group in groupby(actions, key=lambda a: a["chunk_id"]):
-        if chunk_id is None:
+        if _is_missing_chunk_id(chunk_id):
             continue
         count = sum(1 for _ in group)
         if count > fixed_horizon:

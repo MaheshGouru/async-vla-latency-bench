@@ -1,0 +1,20 @@
+[
+  {
+    "suite": "libero_spatial",
+    "task_id": 0,
+    "task_name": "pick_up_the_black_bowl_between_the_plate_and_the_ramekin_and_place_it_on_the_plate",
+    "language_instruction": "pick up the black bowl between the plate and the ramekin and place it on the plate"
+  },
+  {
+    "suite": "libero_goal",
+    "task_id": 0,
+    "task_name": "open_the_middle_drawer_of_the_cabinet",
+    "language_instruction": "open the middle drawer of the cabinet"
+  },
+  {
+    "suite": "libero_10",
+    "task_id": 0,
+    "task_name": "LIVING_ROOM_SCENE2_put_both_the_alphabet_soup_and_the_tomato_sauce_in_the_basket",
+    "language_instruction": "put both the alphabet soup and the tomato sauce in the basket"
+  }
+]

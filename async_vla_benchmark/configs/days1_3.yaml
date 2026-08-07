@@ -1,7 +1,7 @@
 repository: huggingface/lerobot
 repository_revision: null
 policy_checkpoint: lerobot/pi05_libero_finetuned
-checkpoint_revision: "main"
+checkpoint_revision: "8e174154ef5f6c60a8da12ae99c303d8963138c1"  # main as of 2026-08-06; weights unchanged since 2025-10-01 upload
 dataset_repo: HuggingFaceVLA/libero
 dataset_revision: null
 device: cuda

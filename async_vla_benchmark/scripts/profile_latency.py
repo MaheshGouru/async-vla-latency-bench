@@ -2,6 +2,7 @@
 """Profile native π0.5-LIBERO end-to-end request latency."""
 
 import argparse
+import json
 import math
 import random
 import statistics
@@ -10,7 +11,7 @@ from pathlib import Path
 import numpy as np
 
 from async_vla_benchmark.benchmark.config import load_config
-from async_vla_benchmark.benchmark.environment import get_task_info, make_libero_env
+from async_vla_benchmark.benchmark.environment import get_task_info, make_libero_env, resolve_control_frequency_hz
 from async_vla_benchmark.benchmark.latency import LatencyProfile
 from async_vla_benchmark.benchmark.logging import ensure_dir, write_csv, write_json
 from async_vla_benchmark.benchmark.metrics import percentile
@@ -127,7 +128,7 @@ def main():
     summary = _summarize(records)
     summary["warmup_requests"] = args.warmup_requests
     summary["measured_requests"] = args.measured_requests
-    summary["control_frequency_hz"] = 1.0 / (env.control_freq if hasattr(env, "control_freq") else 20.0)
+    summary["control_frequency_hz"] = resolve_control_frequency_hz(env)
 
     ensure_dir(cfg.output_dir / "summaries")
     ensure_dir(cfg.output_dir / "figures")

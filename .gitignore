@@ -11,9 +11,6 @@ venv/
 .env
 .env.*
 
-# Generated benchmark artifacts
-async_vla_benchmark/outputs/
-
 # Models and datasets
 checkpoints/
 datasets/
