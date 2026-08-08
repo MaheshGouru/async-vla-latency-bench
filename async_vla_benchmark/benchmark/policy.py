@@ -11,6 +11,40 @@ def _maybe_cuda_sync():
             torch.cuda.synchronize()
     except ImportError:
         pass
+    return None
+
+
+def _cuda_available() -> bool:
+    try:
+        import torch
+    except ImportError:
+        return False
+    return torch.cuda.is_available()
+
+
+def _new_cuda_events():
+    """Create a (start, end) CUDA event pair for GPU-side inference timing.
+
+    Spec §7 requires both a GPU event time and the complete wall-clock request
+    time to be recorded; wall-clock alone cannot show whether the measurement
+    was actually synchronized. Returns (None, None) off CUDA.
+    """
+    if not _cuda_available():
+        return None, None
+    import torch
+
+    return torch.cuda.Event(enable_timing=True), torch.cuda.Event(enable_timing=True)
+
+
+def _cuda_event_elapsed_ms(start_event, end_event):
+    """Elapsed GPU time between two recorded events, in ms.
+
+    Must be called only after a synchronize(), which is what makes the value
+    meaningful -- an unsynchronized read would race the still-running kernels.
+    """
+    if start_event is None or end_event is None:
+        return None
+    return float(start_event.elapsed_time(end_event))
 
 
 def load_pi05_policy(checkpoint: str, revision: str, n_action_steps: int = 10, device: str = "cuda") -> Any:
@@ -146,8 +180,13 @@ def timed_request(
     batch = preprocess_observation(preprocessor, observation, task_instruction)
     preprocessing_end_ns = time.perf_counter_ns()
 
+    # Spec §7: synchronize before the measured inference, time it with CUDA
+    # events as well as the wall clock, then synchronize after.
     _maybe_cuda_sync()
+    cuda_start_event, cuda_end_event = _new_cuda_events()
     inference_start_ns = time.perf_counter_ns()
+    if cuda_start_event is not None:
+        cuda_start_event.record()
     with torch.no_grad():
         if use_rtc:
             raw_chunk = predict_rtc_chunk(
@@ -159,8 +198,13 @@ def timed_request(
             )
         else:
             raw_chunk = policy.predict_action_chunk(batch)
+    if cuda_end_event is not None:
+        cuda_end_event.record()
     _maybe_cuda_sync()
     inference_end_ns = time.perf_counter_ns()
+    # Read the events only after the synchronize above; that ordering is what
+    # the validator's CUDA-synchronization check asserts.
+    gpu_event_ms = _cuda_event_elapsed_ms(cuda_start_event, cuda_end_event)
 
     postprocessing_start_ns = time.perf_counter_ns()
     processed = postprocessor(raw_chunk)
@@ -190,6 +234,11 @@ def timed_request(
         "model_latency_ms": (inference_end_ns - inference_start_ns) / 1e6,
         "postprocessing_latency_ms": (postprocessing_end_ns - inference_end_ns) / 1e6,
         "request_latency_ms": (request_complete_ns - observation_capture_ns) / 1e6,
+        # Spec §7: GPU event time alongside the wall-clock request time.
+        # None off CUDA; cuda_synchronized records that the surrounding
+        # synchronize() calls ran, which is what makes the event time valid.
+        "gpu_event_ms": gpu_event_ms,
+        "cuda_synchronized": gpu_event_ms is not None,
     }
     return raw_chunk, processed, timing
 

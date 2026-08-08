@@ -1,0 +1,16 @@
+suite,task_id,task_name,language_instruction,seed,success,episode_steps,selected
+libero_spatial,0,pick_up_the_black_bowl_between_the_plate_and_the_ramekin_and_place_it_on_the_plate,pick up the black bowl between the plate and the ramekin and place it on the plate,0,True,81,True
+libero_spatial,0,pick_up_the_black_bowl_between_the_plate_and_the_ramekin_and_place_it_on_the_plate,pick up the black bowl between the plate and the ramekin and place it on the plate,1,True,79,True
+libero_spatial,0,pick_up_the_black_bowl_between_the_plate_and_the_ramekin_and_place_it_on_the_plate,pick up the black bowl between the plate and the ramekin and place it on the plate,2,True,79,True
+libero_spatial,0,pick_up_the_black_bowl_between_the_plate_and_the_ramekin_and_place_it_on_the_plate,pick up the black bowl between the plate and the ramekin and place it on the plate,3,True,75,True
+libero_spatial,0,pick_up_the_black_bowl_between_the_plate_and_the_ramekin_and_place_it_on_the_plate,pick up the black bowl between the plate and the ramekin and place it on the plate,4,True,81,True
+libero_goal,0,open_the_middle_drawer_of_the_cabinet,open the middle drawer of the cabinet,0,True,114,True
+libero_goal,0,open_the_middle_drawer_of_the_cabinet,open the middle drawer of the cabinet,1,True,119,True
+libero_goal,0,open_the_middle_drawer_of_the_cabinet,open the middle drawer of the cabinet,2,True,127,True
+libero_goal,0,open_the_middle_drawer_of_the_cabinet,open the middle drawer of the cabinet,3,True,145,True
+libero_goal,0,open_the_middle_drawer_of_the_cabinet,open the middle drawer of the cabinet,4,True,134,True
+libero_10,0,LIVING_ROOM_SCENE2_put_both_the_alphabet_soup_and_the_tomato_sauce_in_the_basket,put both the alphabet soup and the tomato sauce in the basket,0,True,242,True
+libero_10,0,LIVING_ROOM_SCENE2_put_both_the_alphabet_soup_and_the_tomato_sauce_in_the_basket,put both the alphabet soup and the tomato sauce in the basket,1,True,252,True
+libero_10,0,LIVING_ROOM_SCENE2_put_both_the_alphabet_soup_and_the_tomato_sauce_in_the_basket,put both the alphabet soup and the tomato sauce in the basket,2,True,243,True
+libero_10,0,LIVING_ROOM_SCENE2_put_both_the_alphabet_soup_and_the_tomato_sauce_in_the_basket,put both the alphabet soup and the tomato sauce in the basket,3,True,251,True
+libero_10,0,LIVING_ROOM_SCENE2_put_both_the_alphabet_soup_and_the_tomato_sauce_in_the_basket,put both the alphabet soup and the tomato sauce in the basket,4,False,520,True

@@ -76,6 +76,7 @@ The audit must verify:
 - paired seeds;
 - missing or invalid runs.
 
+
 Stop if a correctness failure can change the scientific conclusions.
 
 ---

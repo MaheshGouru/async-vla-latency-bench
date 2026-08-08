@@ -58,14 +58,23 @@ PYTHONPATH=. python async_vla_benchmark/scripts/run_benchmark.py \
   --config async_vla_benchmark/configs/days1_3.yaml --experiment core
 ```
 
-6. Validate and make figures:
+6. Validate, aggregate, and make figures:
 
 ```bash
 PYTHONPATH=. python async_vla_benchmark/scripts/validate_results.py \
   --output-dir async_vla_benchmark/outputs
+PYTHONPATH=. python async_vla_benchmark/scripts/aggregate_results.py \
+  --config async_vla_benchmark/configs/days1_3.yaml \
+  --output-dir async_vla_benchmark/outputs
 PYTHONPATH=. python async_vla_benchmark/scripts/make_figures.py \
   --output-dir async_vla_benchmark/outputs
 ```
+
+`aggregate_results.py` rebuilds `summaries/{episodes,requests,horizon_sweep}.csv` from the
+per-episode artifacts, which are authoritative. Run it after any partial or sharded run:
+`run_benchmark.py` merges into the aggregate JSONs at the end of a run, so two concurrent
+jobs can interleave their read-modify-write and drop each other's rows. Rebuilding from
+`episodes/` and `requests/` recovers the full set regardless of how runs were sharded.
 
 ## Dry-run and tests
 
@@ -83,8 +92,35 @@ PYTHONPATH=. python async_vla_benchmark/scripts/run_benchmark.py \
 A complete Modal deployment is included for remote GPU execution. See `docs/MODAL.md`
 for setup, deploy, and run instructions.
 
+**Always pass `--detach`:**
+
+```bash
+modal run --detach modal_app.py::main --command run --experiment all
+```
+
+`modal run` without `--detach` creates an ephemeral app that Modal stops when the local
+client disconnects, and it takes `.spawn()`ed calls down with it — the run dies after the
+image build with `Stopping app - local client disconnected`, having executed nothing.
+
+Outputs land on the Modal volume `async-vla-benchmark-outputs`, not in this directory.
+Retrieve them with `modal volume get` before aggregating or plotting locally.
+
+## Results
+
+Days 1-3 results and the section 24 answers are in
+`outputs/summaries/days1_3_report.md`; the harness audit is in
+`outputs/summaries/days1_3_audit.md`. LeRobot behaviours the adapters work around are
+recorded in `UPSTREAM_CHANGES.md`.
+
+Headline: at 20 Hz, native inference occupies **11 control steps** against the core
+experiment's **10**-step horizon, so every asynchronous strategy operates outside its
+design regime. `blocking_sync` (0.933 success at native latency) outperforms
+`naive_async` (0.267) and `rtc` (0.067). RTC contributes **zero guided actions** at every
+horizon tested while improving action continuity by 24-29%.
+
 ## Current environment status
 
-The macOS development host used for this workspace does not have `lerobot`, `libero`,
-`mujoco`, `robosuite`, CUDA, or `pytest`. The code has been compiled and the unit-style
-checks pass, but no benchmark episodes have been executed on a real π0.5 checkpoint.
+Full Days 1-3 execution completed 2026-08-08 on Modal (A100-40GB): 222 unique episodes,
+3998 requests, `validate_results.py` clean. The local development host has no `lerobot`,
+`libero`, `mujoco`, `robosuite`, CUDA, or `torch`; the test suite runs there with
+torch-dependent cases skipped, so RTC tensor-contract tests execute only in the container.

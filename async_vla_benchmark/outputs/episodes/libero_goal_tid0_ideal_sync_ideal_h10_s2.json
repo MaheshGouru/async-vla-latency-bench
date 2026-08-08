@@ -7,11 +7,11 @@
   "environment_steps": 139,
   "timed_out": false,
   "logical_completion_time_seconds": 6.95,
-  "wall_clock_runtime_seconds": 38.331829441999616,
+  "wall_clock_runtime_seconds": 46.38850946900038,
   "number_of_policy_requests": 14,
-  "total_model_inference_ms": 5671.192564,
-  "mean_request_latency_ms": 408.6162662142857,
-  "p95_request_latency_ms": 436.3730819,
+  "total_model_inference_ms": 6869.598979,
+  "mean_request_latency_ms": 495.3555744285714,
+  "p95_request_latency_ms": 508.15420565,
   "mean_action_age_ms": 223.38129496402877,
   "p95_action_age_ms": 450.0,
   "maximum_action_age_ms": 450.0,
@@ -22,5 +22,11 @@
   "discarded_old_actions": 0,
   "mean_action_delta_l2": 0.6073885778233351,
   "mean_action_acceleration_l2": 0.0539125245908917,
-  "mean_action_jerk_l2": 0.08901598824912348
+  "mean_action_jerk_l2": 0.08901598824912348,
+  "rtc_mean_overlap_actions": null,
+  "rtc_mean_guided_actions": null,
+  "rtc_total_guided_actions": null,
+  "rtc_mean_effective_execution_horizon": null,
+  "rtc_inference_delay_mismatch_rate": null,
+  "rtc_mean_absolute_inference_delay_error_steps": null
 }

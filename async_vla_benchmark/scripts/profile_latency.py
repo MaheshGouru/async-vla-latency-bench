@@ -57,9 +57,8 @@ def _measure(policy, preprocessor, postprocessor, obs_list, n):
     return records
 
 
-def _summarize(records):
-    values = [r["request_latency_ms"] for r in records]
-    stats = {
+def _stats(values):
+    return {
         "mean_ms": statistics.mean(values),
         "std_ms": statistics.stdev(values) if len(values) > 1 else 0.0,
         "min_ms": min(values),
@@ -69,6 +68,33 @@ def _summarize(records):
         "p95_ms": percentile(values, 0.95),
         "p99_ms": percentile(values, 0.99),
     }
+
+
+# Spec §7 requires the full stat set for each latency component, not just the
+# end-to-end request latency.
+_COMPONENTS = (
+    "preprocessing_latency_ms",
+    "model_latency_ms",
+    "postprocessing_latency_ms",
+    "request_latency_ms",
+)
+
+
+def _summarize(records):
+    # Top-level keys stay request-latency stats for backward compatibility with
+    # the figures and the Days 1-3 report/audit, which cite them directly.
+    stats = _stats([r["request_latency_ms"] for r in records])
+    stats["components"] = {
+        component: _stats([r[component] for r in records])
+        for component in _COMPONENTS
+        if all(component in r for r in records)
+    }
+    gpu_times = [r["gpu_event_ms"] for r in records if r.get("gpu_event_ms") is not None]
+    if gpu_times:
+        stats["components"]["gpu_event_ms"] = _stats(gpu_times)
+    stats["cuda_synchronized"] = bool(records) and all(
+        r.get("cuda_synchronized") for r in records
+    )
     return stats
 
 
@@ -145,7 +171,11 @@ def main():
         plt.xlabel("Request latency (ms)")
         plt.ylabel("Count")
         plt.title("Native π0.5-LIBERO request latency distribution")
+        # The spec names this figure twice under two filenames: §7 requires
+        # native_latency_histogram.png, §20 native_latency_distribution.png.
+        # Write both rather than leaving one of them unproduced.
         plt.savefig(cfg.output_dir / "figures" / "native_latency_distribution.png", dpi=150)
+        plt.savefig(cfg.output_dir / "figures" / "native_latency_histogram.png", dpi=150)
         plt.close()
     except Exception as exc:
         print(f"warning: could not generate histogram: {exc}")

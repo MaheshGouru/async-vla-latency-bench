@@ -31,7 +31,11 @@ latency_profiles:
 execution_horizons: [2, 5, 10]
 rtc:
   enabled: true
-  execution_horizon: 10
   max_guidance_weight: 10.0
   prefix_attention_schedule: EXP
-  request_threshold_actions: 8
+  # execution_horizon and request_threshold_actions are derived per-episode from
+  # the plan's fixed_horizon (spec §16: rtc.execution_horizon = fixed_horizon,
+  # request_threshold_actions = ceil(fixed_horizon / 2)), so they are not set here.
+  # For the core experiment's fixed_horizon=10 this yields 10 and 5, matching the
+  # §15 defaults. The loader's execution_horizon default (10) is only LeRobot's
+  # fallback for requests that pass no explicit horizon; every request here does.

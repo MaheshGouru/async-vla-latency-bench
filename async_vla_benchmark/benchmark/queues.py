@@ -6,6 +6,15 @@ import math
 from typing import Any, Deque, Iterable, Optional
 
 
+def request_threshold_for_horizon(horizon: int) -> int:
+    """Spec §16: request_threshold_actions = ceil(fixed_horizon / 2).
+
+    Shared by paired naive_async and RTC runs (spec §16: "Use the same horizon
+    and threshold for paired naive_async and RTC runs").
+    """
+    return math.ceil(horizon / 2)
+
+
 @dataclass(frozen=True)
 class QueuedAction:
     value: Any
@@ -26,7 +35,7 @@ class ActionQueue:
         self.request_threshold = (
             min(request_threshold, horizon)
             if request_threshold is not None
-            else math.ceil(horizon / 2)
+            else request_threshold_for_horizon(horizon)
         )
         self._items: Deque[QueuedAction] = deque()
         self.outstanding_request_id: Optional[str] = None

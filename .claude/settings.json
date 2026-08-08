@@ -5,7 +5,8 @@
       "Bash(python3 -c \"import torch; print\\(torch.__version__, torch.cuda.is_available\\(\\)\\)\")",
       "Bash(modal --version)",
       "Bash(modal profile *)",
-      "Bash(modal secret *)"
+      "Bash(modal secret *)",
+      "Bash(.venv/bin/modal app *)"
     ]
   }
 }

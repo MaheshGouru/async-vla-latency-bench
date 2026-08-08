@@ -13,6 +13,9 @@ from async_vla_benchmark.benchmark.execution import run_episode
 from async_vla_benchmark.benchmark.latency import LatencyProfile
 from async_vla_benchmark.benchmark.logging import ensure_dir, write_json
 from async_vla_benchmark.benchmark.policy import load_pi05_policy, load_pre_post_processors
+from async_vla_benchmark.benchmark.queues import request_threshold_for_horizon
+from async_vla_benchmark.benchmark.rtc import build_rtc_config, configure_rtc
+from async_vla_benchmark.scripts.validate_results import validate_episode
 
 
 @dataclass(frozen=True)
@@ -69,6 +72,22 @@ def _load_policy_and_processors(cfg: BenchmarkConfig):
         n_action_steps=cfg.policy_n_action_steps,
         device=cfg.device,
     )
+    # Spec §15: apply the RTC settings to the policy. PI05Config.rtc_config
+    # defaults to None and the pi05_libero_finetuned checkpoint ships null, so
+    # without this the policy's _rtc_enabled() is False and LeRobot silently
+    # ignores the per-request inference_delay/prev_chunk_left_over/
+    # execution_horizon arguments -- no RTC guidance is applied at all.
+    # execution_horizon here is only LeRobot's fallback; every request passes
+    # its own value derived from the episode's fixed_horizon.
+    if cfg.rtc.enabled:
+        configure_rtc(
+            policy,
+            build_rtc_config(
+                execution_horizon=cfg.rtc.execution_horizon,
+                max_guidance_weight=cfg.rtc.max_guidance_weight,
+                prefix_attention_schedule=cfg.rtc.prefix_attention_schedule,
+            ),
+        )
     preprocessor, postprocessor = load_pre_post_processors(
         policy,
         cfg.policy_checkpoint,
@@ -113,8 +132,17 @@ def _run_experiment(cfg: BenchmarkConfig, tagged_plans: list[tuple[str, EpisodeP
                 continue
 
         if args.resume and episode_json.exists() and not args.overwrite:
-            print(f"skip {episode_id}: already completed")
-            continue
+            # Spec §22: "--resume must skip only completed *and validated* episodes."
+            # Existence alone is not completion -- an episode that crashed after
+            # writing its summary but before flushing a full parquet would otherwise
+            # be skipped permanently, and a resumed long run would silently carry the
+            # gap forward.
+            existing = json.loads(episode_json.read_text())
+            errors = validate_episode(output_dir, episode_id, existing)
+            if not errors:
+                print(f"skip {episode_id}: already completed and validated")
+                continue
+            print(f"rerun {episode_id}: prior run failed validation ({len(errors)} errors)")
 
         suite, task_id = _parse_task(plan.task)
         env_key = f"{suite}:{task_id}"
@@ -136,6 +164,17 @@ def _run_experiment(cfg: BenchmarkConfig, tagged_plans: list[tuple[str, EpisodeP
 
         if policy is None:
             policy, preprocessor, postprocessor = _load_policy_and_processors(cfg)
+
+        # RTC is configured once, on the policy object that also serves
+        # ideal_sync/blocking_sync/naive_async. Scope the flag to the episodes that
+        # actually ask for it so a non-RTC arm can never reach a guided code path.
+        # This is a guard rather than a diagnosis: whether LeRobot's plain
+        # `predict_action_chunk(batch)` consults `_rtc_enabled()` when passed no RTC
+        # arguments is unverified, and a contaminated control arm would be invisible
+        # in the outputs -- the RTC diagnostics are only recorded for RTC episodes,
+        # so a spoiled naive_async run looks entirely normal.
+        if cfg.rtc.enabled:
+            policy.config.rtc_config.enabled = plan.strategy == "rtc"
 
         latency_profile = next(
             (p for p in cfg.latency_profiles if p.name == plan.latency_profile), None
@@ -162,8 +201,13 @@ def _run_experiment(cfg: BenchmarkConfig, tagged_plans: list[tuple[str, EpisodeP
             output_dir=output_dir,
             seed=plan.seed,
             use_rtc=(plan.strategy == "rtc"),
-            rtc_execution_horizon=cfg.rtc.execution_horizon,
-            request_threshold_actions=cfg.rtc.request_threshold_actions,
+            # Spec §16: the horizon sweep sets rtc.execution_horizon = fixed_horizon
+            # and request_threshold_actions = ceil(fixed_horizon / 2), using the same
+            # values for paired naive_async and RTC runs. Both are derived from the
+            # plan's horizon rather than read from cfg.rtc, which carries a single
+            # constant and would otherwise apply h=10's settings to every sweep cell.
+            rtc_execution_horizon=plan.fixed_horizon,
+            request_threshold_actions=request_threshold_for_horizon(plan.fixed_horizon),
             device=cfg.device,
         )
         summaries_by_experiment.setdefault(experiment_name, []).append(summary)
@@ -175,8 +219,23 @@ def _run_experiment(cfg: BenchmarkConfig, tagged_plans: list[tuple[str, EpisodeP
         )
 
     # Write aggregate summaries, one file per experiment represented in this run.
+    #
+    # Merge into whatever the file already holds rather than replacing it. A
+    # filtered run (--strategy/--latency-profile/--task/--seed) only produces the
+    # subset it was asked for, so a plain overwrite would silently drop every
+    # episode outside the filter -- e.g. `--strategy naive_async` would leave
+    # core_summaries.json containing only naive_async rows, and make_figures.py
+    # would then build figures from a fraction of the data. Episodes are keyed by
+    # episode_id, so a rerun of the same condition replaces its own stale row.
     for experiment_name, summaries in summaries_by_experiment.items():
-        write_json(output_dir / "summaries" / f"{experiment_name}_summaries.json", summaries)
+        path = output_dir / "summaries" / f"{experiment_name}_summaries.json"
+        merged: dict[str, dict] = {}
+        if path.exists():
+            for existing in json.loads(path.read_text()):
+                merged[existing["episode_id"]] = existing
+        for summary in summaries:
+            merged[summary["episode_id"]] = summary
+        write_json(path, [merged[key] for key in sorted(merged)])
     return 0
 
 

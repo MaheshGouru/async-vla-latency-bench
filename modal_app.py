@@ -81,6 +81,12 @@ def _run_script(argv: list[str]):
     cmd = [sys.executable, "-m"] + argv
     print(f"running: {' '.join(cmd)}")
     result = subprocess.run(cmd, check=False)
+    if result.returncode != 0:
+        # Returning the code instead of raising makes Modal report the call as
+        # *succeeded* whatever the script did -- a crashed benchmark is then
+        # indistinguishable from a completed one in `modal app list`. Raise so the
+        # call is marked failed and the exit code is visible without reading logs.
+        raise RuntimeError(f"{argv[0]} exited with code {result.returncode}")
     return result.returncode
 
 
@@ -353,6 +359,47 @@ def make_figures():
     )
 
 
+@app.function(
+    volumes={str(MOUNT_PATH): volume},
+    timeout=30 * 60,
+)
+def aggregate_results():
+    """Rebuild the spec §20 summary tables from per-episode artifacts.
+
+    No GPU: this only reads `episodes/*.json` and `requests/*.parquet` off the
+    volume and rewrites the summary tables, so it must not reserve an A100.
+    """
+    result = _run_script(
+        [
+            "async_vla_benchmark.scripts.aggregate_results",
+            "--config",
+            str(CONFIG_PATH),
+            "--output-dir",
+            str(MOUNT_PATH),
+        ]
+    )
+    volume.commit()
+    return result
+
+
+@app.function(
+    gpu="A100-40GB",
+    secrets=[modal.Secret.from_name("hf-token")],
+    timeout=30 * 60,
+)
+def diagnose_rtc():
+    """Report whether RTC guidance is active before and after configure_rtc.
+
+    No volume mount: this only loads the policy and inspects its RTC state, so
+    it writes nothing and cannot disturb benchmark artifacts. The hf-token
+    secret is not needed for auth (the checkpoint is public) but unauthenticated
+    Hub downloads are rate-limited, which is slow for a multi-GB checkpoint.
+    """
+    return _run_script(
+        ["async_vla_benchmark.scripts.diagnose_rtc", "--config", str(CONFIG_PATH)]
+    )
+
+
 @app.local_entrypoint()
 def main(
     command: str,
@@ -386,6 +433,8 @@ def main(
         "validate": lambda: validate_results.spawn(),
         "figures": lambda: make_figures.spawn(),
         "diagnose": lambda: diagnose_observation.spawn(suite, task_id, seed),
+        "aggregate": lambda: aggregate_results.spawn(),
+        "diagnose_rtc": lambda: diagnose_rtc.spawn(),
         "diagnose_scale": lambda: diagnose_action_scale.spawn(suite, task_id, seed),
         "diagnose_raw_scale": lambda: diagnose_raw_action_scale.spawn(suite, task_id, seed),
         "diagnose_libero_plus": lambda: diagnose_libero_plus.spawn(suite, task_id, seed),

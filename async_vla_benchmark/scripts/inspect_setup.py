@@ -14,10 +14,50 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def package(name):
+    """Resolve an installed package's version.
+
+    Tries the distribution name first, then case variants, then the imported
+    module's `__version__`. LIBERO in particular installs from git under a
+    distribution name that does not always match the import name, which is why
+    a plain `importlib.metadata.version` lookup recorded `null` for it.
+    """
+    for candidate in (name, name.upper(), name.capitalize()):
+        try:
+            return importlib.metadata.version(candidate)
+        except importlib.metadata.PackageNotFoundError:
+            continue
     try:
-        return importlib.metadata.version(name)
-    except importlib.metadata.PackageNotFoundError:
+        module = importlib.import_module(name)
+    except Exception:
         return None
+    version = getattr(module, "__version__", None)
+    return str(version) if version is not None else None
+
+
+def nvidia_driver_version():
+    """Read the driver version from `nvidia-smi` (spec §2 requires it recorded)."""
+    try:
+        result = subprocess.run(
+            ["nvidia-smi", "--query-gpu=driver_version", "--format=csv,noheader"],
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    if result.returncode != 0:
+        return None
+    return result.stdout.strip().splitlines()[0].strip() or None
+
+
+def installed_packages():
+    """Full installed-package inventory (spec §2: "installed Python packages")."""
+    found = {}
+    for dist in importlib.metadata.distributions():
+        name = dist.metadata["Name"]
+        if name:
+            found[name] = dist.version
+    return dict(sorted(found.items(), key=lambda item: item[0].lower()))
 
 
 def git_commit(path):
@@ -41,6 +81,24 @@ def resolve_checkpoint_revision_sha(checkpoint: str, revision: str | None) -> st
 
     try:
         return HfApi().model_info(checkpoint, revision=revision).sha
+    except HfHubHTTPError:
+        return None
+
+
+def resolve_dataset_revision_sha(dataset: str, revision: str | None) -> str | None:
+    """Resolve the dataset repo to an exact commit SHA (spec §2: "dataset
+    revision SHA").
+
+    Unlike the checkpoint, the dataset is intentionally unpinned in the config
+    (it trains nothing here — it only defines LIBERO preprocessing and
+    normalization conventions). Resolve `main` in that case so the SHA actually
+    in use is still recorded rather than left null.
+    """
+    from huggingface_hub import HfApi
+    from huggingface_hub.utils import HfHubHTTPError
+
+    try:
+        return HfApi().dataset_info(dataset, revision=revision or "main").sha
     except HfHubHTTPError:
         return None
 
@@ -76,9 +134,10 @@ def main(output_dir: Path | None = None, config_path: Path | None = None):
         "checkpoint_revision_sha": None,
         "dataset_revision_sha": None,
         "packages": packages,
+        "installed_packages": installed_packages(),
         "cuda_version": None,
         "cuda_available": False,
-        "nvidia_driver": None,
+        "nvidia_driver": nvidia_driver_version(),
         "gpu_model": None,
         "deviations": [],
     }
@@ -100,6 +159,16 @@ def main(output_dir: Path | None = None, config_path: Path | None = None):
             f"Could not resolve checkpoint_revision {cfg.checkpoint_revision!r} for "
             f"{cfg.policy_checkpoint!r} against the Hub."
         )
+    # An unpinned checkpoint is the risk class that caused the LEROBOT_COMMIT
+    # latency drift; record it as a deviation rather than silently writing null.
+    if not cfg.checkpoint_revision:
+        metadata["deviations"].append(
+            f"checkpoint_revision is unpinned for {cfg.policy_checkpoint!r}; "
+            "results cannot be attributed to an exact checkpoint."
+        )
+    metadata["dataset_revision_sha"] = resolve_dataset_revision_sha(
+        cfg.dataset_repo, cfg.dataset_revision
+    )
     try:
         import torch
         metadata["cuda_version"] = torch.version.cuda

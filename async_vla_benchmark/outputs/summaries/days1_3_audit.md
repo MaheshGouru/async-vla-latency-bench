@@ -6,12 +6,49 @@ revisions, task IDs and initial states, latency conversion, action-age
 calculation, queue semantics, RTC adapter inputs, paired seeds, and missing or
 invalid runs.
 
-**Verdict: no correctness failure found that changes the scientific
-conclusions in `days1_3_report.md`. One item remains an open risk worth
-resolving before broad Days 4-8 experiments (see "Open items" below). The
-checkpoint-pin risk flagged in the original version of this audit was
-resolved 2026-08-06 without requiring a rerun (see "Repository and checkpoint
-revisions"). Neither invalidates existing Days 1-3 results.**
+**Verdict (revised 2026-08-08): both correctness failures are fixed and the full
+re-run has landed. Entry requirements are met.**
+
+The two defects found on 2026-08-07 — RTC guidance never active, and
+`request_threshold_actions` set to `8` rather than the `5` that spec section 15
+specifies — were corrected and all 222 episodes re-executed on 2026-08-08
+(A100-40GB, LeRobot `2aba372b`, checkpoint `8e174154`). `validate_results.py`
+reports 0 errors with the RTC checks *firing* rather than skipping: all 1477 RTC
+requests carry `rtc_*` diagnostics and all 3998 requests are CUDA-synchronized.
+`days1_3_report.md` has been rewritten against this data; every pre-2026-08-07
+`naive_async` and `rtc` result is withdrawn.
+
+A third defect was found and fixed during the re-run itself: `prev_chunk_left_over`
+was passed to LeRobot as a numpy array, which crashed `RTCProcessor.denoise_step`
+on the first RTC episode. It had been invisible because the argument was
+previously discarded unread (see `UPSTREAM_CHANGES.md` items 1 and 2).
+
+**Two findings carry into Days 4-8 and should be settled before broad experiments:**
+
+1. **RTC contributes zero guided actions** at every horizon in the spec matrix
+   (0 across all 81 episodes, h=2/5/10). Native inference occupies 11 control
+   steps against a 10-step horizon, so `inference_delay ≥ effective_horizon` and
+   guidance cannot reach an executed action. Any Days 4-8 RTC condition
+   inheriting `policy_n_action_steps: 10` will reproduce this null.
+2. **Native inference occupies the whole execution horizon.** The section 7
+   profile measures 476.8 ms p50, which is 10 control steps at 20 Hz against a
+   configured horizon of 10 (13 steps with RTC guidance enabled). Inference
+   speed itself is stable — the 2026-08-06 and 2026-08-08 dedicated profiles
+   agree to +3.6% — so this is a property of the experimental design, not drift.
+   Any Days 4-8 condition at `policy_n_action_steps: 10` inherits it.
+
+*Superseded verdicts, retained for provenance:* the 2026-08-07 verdict above, and
+the original "no correctness failure found that changes the scientific
+conclusions... Neither invalidates existing Days 1-3 results." The latter rested
+on the assumption that RTC guidance was running, which was never verified against
+the installed policy at the time.
+
+*Superseded verdict, retained for provenance:* "no correctness failure found
+that changes the scientific conclusions... Neither invalidates existing Days 1-3
+results." That conclusion rested on the assumption that RTC guidance was
+running, which was never verified against the installed policy at the time.
+The checkpoint-pin risk it describes was genuinely resolved 2026-08-06 and did
+not require a re-run (see "Repository and checkpoint revisions").
 
 ---
 
@@ -112,6 +149,65 @@ revisions"). Neither invalidates existing Days 1-3 results.**
 
 ## RTC adapter inputs
 
+> **CORRECTION (2026-08-07): RTC guidance was never active in any Days 1-3 run.**
+> The findings in this section were written on the assumption that guidance was
+> running and only its inputs were in question. That assumption is wrong, and the
+> analysis below is superseded.
+>
+> `configure_rtc()` existed in `benchmark/rtc.py` from the initial commit but was
+> **never called** — `git log -S configure_rtc` returns only `07f9007`, and
+> `git grep configure_rtc HEAD` finds no caller outside `rtc.py` itself.
+> `load_pi05_policy` never touches `config.rtc_config`, so it kept the `None` that
+> `PI05Config` defaults to and that the `pi05_libero_finetuned` checkpoint ships.
+>
+> Confirmed empirically on Modal/A100 against the pinned LeRobot
+> (`2aba372b4e217cc47db28e0f836859b20d1456c9`) via
+> `scripts/diagnose_rtc.py`, 2026-08-07:
+>
+> ```text
+> === AS THE DAYS 1-3 RUNS LOADED IT (pre-fix behavior) ===
+>   config.rtc_config:      None
+>   policy.rtc_processor:   None
+>   policy._rtc_enabled():  false
+>
+> === AFTER configure_rtc (post-fix behavior) ===
+>   config.rtc_config:      RTCConfig(enabled=True,
+>                             prefix_attention_schedule=RTCAttentionSchedule.EXP,
+>                             max_guidance_weight=10.0, execution_horizon=10, ...)
+>   policy.rtc_processor:   <lerobot.policies.rtc.modeling_rtc.RTCProcessor object>
+>   policy._rtc_enabled():  true
+>
+> === VERDICT ===
+> Days 1-3 runs had RTC guidance active: False
+> configure_rtc activates guidance:      True
+> ```
+>
+> Consequences:
+>
+> - All 81 `rtc` episodes in the shipped dataset are invalid as RTC. They ran as
+>   `naive_async` plus the delay-aligned chunk truncation in `execution.py`
+>   (`raw_chunk[delay_steps:]`), which is what produced the 93.3% vs 33.3% result
+>   at native latency — not guidance.
+> - The "open risk" below (LeRobot clamping `execution_horizon` to the remainder
+>   length) describes code inside the guidance path, which never executed. It
+>   cannot be the cause of the `native+300` inversion reported in
+>   `days1_3_report.md` Q6, and that answer needs rewriting rather than re-running.
+> - Independently of the activation bug, `discarded_old_actions = 0` in all 222
+>   episodes proves the queue was empty at every chunk replacement. Since the
+>   actions RTC would guide are exactly the actions `naive_async` discards
+>   (`guided = max(0, threshold - delay_steps)`), guidance had nothing to act on
+>   even had it been enabled.
+> - A second, independent defect compounds this: `request_threshold_actions` was
+>   `8`, not the `ceil(fixed_horizon / 2)` that spec sections 14, 15, and 16 all
+>   require. That invalidates the 81 `naive_async` episodes as well, for reasons
+>   unrelated to RTC.
+>
+> The 45 `blocking_sync` and 15 `ideal_sync` episodes are unaffected by both
+> defects: neither strategy calls `should_request()`, so neither ever saw the
+> threshold, and neither uses RTC. Re-run of the 162 affected episodes was
+> dispatched 2026-08-07.
+
+
 - **Fixed during this project**: `inference_delay` was hardcoded to `0` on
   every RTC request (`execution.py`, prior to fix), meaning RTC's guidance
   was computed as if every response arrived instantaneously, regardless of
@@ -173,12 +269,32 @@ revisions"). Neither invalidates existing Days 1-3 results.**
 
 ## Open items (not blocking, but should be resolved before broad Days 4-8 experiments)
 
-1. RTC's effective `execution_horizon` is silently smaller than configured
-   due to the remainder-length clamp — affects interpretation of any
-   Days 4-8 RTC condition inheriting this config.
-2. `naive_async` and `rtc` share `request_threshold_actions` — confirm this
-   is intentional before treating them as independently-tuned baselines.
-3. No bootstrap 95% CIs computed on Days 1-3 results yet.
+1. **RESOLVED (measured).** RTC's effective `execution_horizon` is clamped to the
+   remainder length: **4.67** against a configured **10**, now recorded per
+   request as `rtc_effective_execution_horizon`. The clamp is real; it is no
+   longer a hidden quantity.
+2. **RESOLVED (intentional).** `naive_async` and `rtc` share
+   `request_threshold_actions` by spec section 16: "Use the same horizon and
+   threshold for paired `naive_async` and RTC runs."
+3. **RESOLVED.** Wilson 95% intervals are reported for success rates
+   (`days1_3_report.md` question 6); they are wide at n=15 and overlap for most
+   pairwise comparisons, so conclusions there rest on mechanism rather than
+   rates. Bootstrap 95% intervals (10000 resamples, n=45) are reported for the
+   continuous metrics in question 7; all three continuity intervals exclude zero
+   (delta −29.1% [−39.6, −16.8], acceleration −22.5% [−34.2, −8.5], jerk −23.6%
+   [−34.6, −10.2]).
+4. **RESOLVED.** The section 7 profiling pass was re-run 2026-08-08 (10 warmup +
+   100 measured, CUDA-synchronized): p50 476.8 / p95 489.9 / p99 499.8 ms,
+   std 6.6 ms. The CUDA event time matches the wall-clock model time to 0.1 ms,
+   confirming synchronization. `native_latency.json` and `native_latency.csv` on
+   the volume are current.
+
+   *Left open:* the superseded 2026-08-06 run recorded ~400 ms in-run against
+   its own 460 ms profile — 13% below a figure that should be a lower bound. The
+   cause was never identified. It affects no result reported now, but it is a
+   reason to distrust pre-2026-08-07 latency numbers specifically.
+5. **NEW: 87-98% of async episodes end by timeout** rather than task outcome, so
+   success rates partly measure "finished within the step cap".
 4. The RTC adapter trace against LeRobot's source was done at `main`, not
    verified byte-for-byte at the exact pinned SHA
    (`2aba372b4e217cc47db28e0f836859b20d1456c9`) — low risk (the `sample_noise`/
