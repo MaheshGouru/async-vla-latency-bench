@@ -6,7 +6,8 @@
       "Bash(modal --version)",
       "Bash(modal profile *)",
       "Bash(modal secret *)",
-      "Bash(.venv/bin/modal app *)"
+      "Bash(.venv/bin/modal app *)",
+      "Bash(python3 -m async_vla_benchmark.scripts.run_tests)"
     ]
   }
 }

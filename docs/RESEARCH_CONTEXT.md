@@ -39,7 +39,7 @@ lerobot/pi05_libero_finetuned
 Main evaluation override:
 
 ```text
-policy.n_action_steps = 10
+policy.n_action_steps = 25
 ```
 
 No additional VLA model is required for the primary paper.

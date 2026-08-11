@@ -20,19 +20,29 @@ from async_vla_benchmark.benchmark.stage0 import (
 )
 
 
-def rows_from(spec: dict[tuple[str, str], dict[int, int]]) -> list[CalibrationRow]:
-    """Build rows from {(task, method): {delay: successes_out_of_2}}."""
+#: The selection rule works on pooled rates, so it does not care how many seeds
+#: production runs with. These fixtures keep two seeds because the thresholds are
+#: easiest to read against small denominators; the production count lives in
+#: `SEEDS` and is asserted by the manifest tests below.
+TEST_SEEDS: tuple[int, ...] = (0, 1)
+
+
+def rows_from(
+    spec: dict[tuple[str, str], dict[int, int]],
+    seeds: tuple[int, ...] = TEST_SEEDS,
+) -> list[CalibrationRow]:
+    """Build rows from {(task, method): {delay: successes_out_of_len(seeds)}}."""
     out = []
     for (task, method), by_delay in spec.items():
         for delay, successes in by_delay.items():
-            for seed in SEEDS:
+            for index, seed in enumerate(seeds):
                 out.append(
                     CalibrationRow(
                         task_key=task,
                         execution_method=method,
                         added_delay_ms=delay,
                         seed=seed,
-                        success=seed < successes,
+                        success=index < successes,
                     )
                 )
     return out
@@ -47,13 +57,22 @@ def flat(successes_by_delay: dict[int, int], cells=(("a", "naive_async"), ("b", 
 # --------------------------------------------------------------------------
 
 
-def test_manifest_is_the_full_96_episode_grid():
+def test_manifest_is_the_full_180_episode_grid():
+    # The literal is the point: it fails if a frozen constant moves without the
+    # matching DECISIONS/spec amendment (D002/D007/D014, STAGE_0 sections 4-5).
     plans = stage0_manifest()
-    assert len(plans) == 96
+    assert len(plans) == 180
     assert len(plans) == (
         len(STAGE0_TASKS) * len(EXECUTION_METHODS) * len(ADDED_DELAYS_MS) * len(SEEDS)
     )
-    assert len({p.run_id for p in plans}) == 96
+    assert len({p.run_id for p in plans}) == 180
+
+
+def test_calibration_seeds_avoid_the_stage_2_held_out_range():
+    # STAGE_2 section 4 reserves seeds 2-9 for held-out confirmation; calibrating
+    # d* on one of them would weaken that claim two stages downstream.
+    assert SEEDS[:2] == (0, 1), "Stage 1 reuses the first two seeds as ID controls"
+    assert not set(SEEDS) & set(range(2, 10))
 
 
 def test_manifest_covers_every_cell_at_every_delay():
@@ -71,9 +90,18 @@ def test_manifest_covers_every_cell_at_every_delay():
                 assert len(matching) == len(SEEDS)
 
 
-def test_native_subset_is_twelve_episodes():
-    # The smoke test that gates the remaining 84.
-    assert len([p for p in stage0_manifest() if p.added_delay_ms == 0]) == 12
+def test_native_subset_is_thirty_six_episodes():
+    # The smoke test that gates the remaining 144.
+    assert len([p for p in stage0_manifest() if p.added_delay_ms == 0]) == 36
+
+
+def test_delay_grid_stops_below_the_rtc_chunk_ceiling():
+    # RTC discards the leading delay_steps actions of each chunk, so its queue
+    # starves once total latency passes half the raw chunk (25 steps / 1250 ms for
+    # pi05's 50-action chunk) at any horizon. With RTC inference measured at
+    # ~660-735 ms, delays above ~500 ms only re-measure starvation (D007, STAGE_0
+    # section 4.1).
+    assert max(ADDED_DELAYS_MS) <= 500
 
 
 def test_profile_names_match_config_keys_and_never_use_ideal():
@@ -121,7 +149,7 @@ def test_floor_cells_do_not_drag_the_pooled_curve():
 def test_picks_smallest_delay_meeting_both_thresholds():
     # Native 4/4. 100ms: 4/4 (no drop). 200ms: 2/4 (drop .50, retain .50) -> d*.
     # 300ms would also qualify but is larger, and the rule takes the smallest.
-    rows = flat({0: 2, 100: 2, 200: 1, 300: 1, 400: 0, 500: 0, 600: 0, 700: 0})
+    rows = flat({0: 2, 100: 2, 200: 1, 300: 1, 400: 0})
     result = select_high_delay(rows)
     assert result.selected_delay_ms == 200
     assert result.rule_applied == "primary"
@@ -131,14 +159,14 @@ def test_picks_smallest_delay_meeting_both_thresholds():
 def test_delay_with_a_big_drop_but_below_floor_is_rejected():
     # 100ms drops to 0/4: a 100% drop, but nothing survives, so it is saturated
     # rather than informative. Falls through to the fallbacks.
-    rows = flat({0: 2, 100: 0, 200: 0, 300: 0, 400: 0, 500: 0, 600: 0, 700: 0})
+    rows = flat({0: 2, 100: 0, 200: 0, 300: 0, 400: 0})
     result = select_high_delay(rows)
     assert result.rule_applied != "primary"
     assert result.calibration_saturated is True
 
 
 def test_delay_that_retains_success_but_barely_drops_is_rejected():
-    rows = flat({0: 2, 100: 2, 200: 2, 300: 2, 400: 2, 500: 2, 600: 2, 700: 2})
+    rows = flat({0: 2, 100: 2, 200: 2, 300: 2, 400: 2})
     result = select_high_delay(rows)
     assert result.rule_applied != "primary"
     assert result.calibration_weak is True
@@ -167,25 +195,26 @@ def test_primary_rule_requires_two_viable_cells():
 def test_fallback_1_takes_largest_drop_among_survivors():
     # Four cells x 2 seeds = 8 episodes per level, so a sub-threshold drop is
     # representable: 7/8 is a 0.125 drop, under the 0.20 the primary rule needs.
-    # Only 700ms moves at all, so fallback 1 must land there.
+    # Only the last level moves at all, so fallback 1 must land there.
     rows = rows_from(
         {
-            cell: {0: 2, 100: 2, 200: 2, 300: 2, 400: 2, 500: 2, 600: 2, 700: 2}
+            cell: {0: 2, 100: 2, 200: 2, 300: 2, 400: 2}
             for cell in FOUR_CELLS
         }
     )
+    last = max(ADDED_DELAYS_MS)
     rows = [
         r
         for r in rows
-        if not (r.added_delay_ms == 700 and r.cell == FOUR_CELLS[0] and r.seed == 1)
-    ] + [CalibrationRow(*FOUR_CELLS[0], 700, 1, success=False)]
+        if not (r.added_delay_ms == last and r.cell == FOUR_CELLS[0] and r.seed == 1)
+    ] + [CalibrationRow(*FOUR_CELLS[0], last, 1, success=False)]
     result = select_high_delay(rows)
     assert result.rule_applied == "fallback_1_largest_drop"
-    assert result.selected_delay_ms == 700
+    assert result.selected_delay_ms == last
 
 
 def test_fallback_1_breaks_ties_toward_the_smaller_delay():
-    rows = flat({0: 2, 100: 1, 200: 1, 300: 1, 400: 1, 500: 1, 600: 1, 700: 1})
+    rows = flat({0: 2, 100: 1, 200: 1, 300: 1, 400: 1})
     result = select_high_delay(rows)
     # Every candidate ties at a 0.5 drop; the earliest one wins. This satisfies
     # the primary rule too, which is the correct outcome.
@@ -193,7 +222,7 @@ def test_fallback_1_breaks_ties_toward_the_smaller_delay():
 
 
 def test_fallback_2_flags_saturation_and_takes_the_smallest_qualifying_delay():
-    rows = flat({0: 2, 100: 0, 200: 0, 300: 0, 400: 0, 500: 0, 600: 0, 700: 0})
+    rows = flat({0: 2, 100: 0, 200: 0, 300: 0, 400: 0})
     result = select_high_delay(rows)
     assert result.rule_applied == "fallback_2_saturated"
     assert result.selected_delay_ms == 100
@@ -225,7 +254,7 @@ def test_no_valid_nonzero_delay_yields_no_selection():
 
 
 def test_invalid_episodes_are_excluded_from_selection():
-    rows = flat({0: 2, 100: 2, 200: 1, 300: 1, 400: 0, 500: 0, 600: 0, 700: 0})
+    rows = flat({0: 2, 100: 2, 200: 1, 300: 1, 400: 0})
     poisoned = rows + [
         CalibrationRow("a", "naive_async", 200, seed, success=True, status="invalid")
         for seed in range(20)

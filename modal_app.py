@@ -366,8 +366,8 @@ def stage0_preflight():
 def run_stage0(native_only: bool = False, resume: bool = True, tasks: str = "", methods: str = ""):
     """Run the Stage 0 latency calibration on a GPU worker.
 
-    `native_only=True` runs just the 12 Native episodes -- the viability smoke
-    test that decides whether the remaining 84 are worth running at all
+    `native_only=True` runs just the 36 Native episodes -- the viability smoke
+    test that decides whether the remaining 144 are worth running at all
     (STAGE_0 section 8.1: a cell that already fails at Native gets no vote in
     choosing d*).
     """

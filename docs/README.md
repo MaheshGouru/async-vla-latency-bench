@@ -19,14 +19,14 @@ Model:
     lerobot/pi05_libero_finetuned
 
 Evaluation action horizon:
-    n_action_steps = 10
+    n_action_steps = 25
 
 Execution methods:
     Naive async
     RTC
 ```
 
-`n_action_steps=10` is the evaluation setting. Do not infer it from the checkpoint's training configuration.
+`n_action_steps=25` is the evaluation setting (D002, amended 2026-08-11; LeRobot's documented default of 10 leaves the action queue with no latency headroom at 20 Hz). Do not infer it from the checkpoint's training configuration.
 
 ## Canonical analysis taxonomy
 
@@ -61,9 +61,9 @@ Run:
 ```text
 3 tasks
 × 2 methods
-× 8 added delays [0,100,200,300,400,500,600,700 ms]
-× 2 seeds
-= 96 episodes
+× 5 added delays [0,100,200,300,400 ms]
+× 6 seeds [0,1,10,11,12,13]
+= 180 episodes
 ```
 
 Output:

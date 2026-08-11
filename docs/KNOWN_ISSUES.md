@@ -9,7 +9,7 @@
 | K005 | OOD difficulty | a chosen moderate variant may still produce a floor | interaction becomes uninterpretable | require OOD-low viability and report floor cells |
 | K006 | Model scope | one π0.5 checkpoint | limits cross-model generality | frame as controlled case study, not universal ranking |
 | K007 | Environment | LIBERO-Plus replaces/conflicts with vanilla LIBERO namespace | can contaminate ID setup | separate pinned environments |
-| K008 | Latency calibration | `d*` is chosen from only two seeds per calibration cell | selected operating point may be noisy | use all six viable task × method cells; report full curve; freeze before OOD |
+| K008 | Latency calibration | `d*` is chosen from six seeds per calibration cell (was two until 2026-08-11) | selected operating point is still an order statistic, so residual noise biases it low | use all six viable task × method cells; report full curve; freeze before OOD |
 | K009 | Method fairness | Naive async and RTC may differ in policy-call/queue semantics | interaction could reflect implementation mismatch | validate request schedule, horizon, checkpoint, action representation |
 | K010 | Freshness metrics | action-age aggregation can be contaminated by holds/startup | misleading mechanism analysis | separate holds/underruns and inspect action-level traces |
 | K011 | Runtime drift | native latency may drift across runs/GPU state | changes effective delay | log request latency per request and GPU/environment metadata |

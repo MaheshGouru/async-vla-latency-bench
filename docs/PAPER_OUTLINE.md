@@ -79,7 +79,7 @@ State explicitly that the mechanism grouping is introduced for this study.
 
 ```text
 lerobot/pi05_libero_finetuned
-n_action_steps = 10
+n_action_steps = 25
 ```
 
 ### 4.2 Tasks

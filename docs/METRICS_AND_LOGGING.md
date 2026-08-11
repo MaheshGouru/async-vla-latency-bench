@@ -51,7 +51,7 @@ total_logical_latency_ms =
 Stage 0 tests:
 
 ```text
-0, 100, 200, 300, 400, 500, 600, 700 ms
+0, 100, 200, 300, 400 ms
 ```
 
 Stage 1 and Stage 2 use:

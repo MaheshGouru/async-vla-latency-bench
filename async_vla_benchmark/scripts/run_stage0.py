@@ -4,7 +4,7 @@
     # 1. environment/policy assertions only, no episodes
     python -m async_vla_benchmark.scripts.run_stage0 --config ... --preflight-only
 
-    # 2. the 12 Native episodes, as a viability smoke test
+    # 2. the 36 Native episodes, as a viability smoke test
     python -m async_vla_benchmark.scripts.run_stage0 --config ... --native-only
 
     # 3. the full 96
@@ -37,11 +37,11 @@ from async_vla_benchmark.benchmark.latency import LatencyProfile
 from async_vla_benchmark.benchmark.logging import ensure_dir, write_csv
 from async_vla_benchmark.benchmark.metrics import percentile
 from async_vla_benchmark.benchmark.policy import load_pi05_policy, load_pre_post_processors
-from async_vla_benchmark.benchmark.queues import request_threshold_for_horizon
 from async_vla_benchmark.benchmark.rtc import build_rtc_config, configure_rtc
 from async_vla_benchmark.benchmark.stage0 import (
     ADDED_DELAYS_MS,
     FIXED_HORIZON,
+    REQUEST_THRESHOLD_ACTIONS,
     STAGE0_TASKS,
     TASKS_BY_KEY,
     Stage0Plan,
@@ -305,6 +305,27 @@ def preflight(cfg: BenchmarkConfig, check_policy: bool = True) -> int:
                 )
             else:
                 print(f"ok  policy n_action_steps = {steps}")
+            # RTC drops the leading `delay_steps` actions of each raw chunk, so it
+            # can only fill the queue when `chunk_size - delay_steps >= H`. The
+            # ADDED_DELAYS_MS cap keeps delay_steps <= H, which makes
+            # `chunk_size >= 2 * H` the invariant the delay grid is derived from.
+            # Assert it rather than trust it: if the checkpoint ever ships a
+            # shorter chunk, the RTC arm silently starves and only the hold counts
+            # would show it.
+            chunk_size = getattr(policy.config, "chunk_size", None)
+            if chunk_size is None:
+                print(
+                    "WARN policy.config.chunk_size unavailable; cannot verify the "
+                    "RTC chunk budget (see stage0.ADDED_DELAYS_MS)"
+                )
+            elif chunk_size < 2 * FIXED_HORIZON:
+                failures.append(
+                    f"policy chunk_size={chunk_size}, need >= {2 * FIXED_HORIZON} "
+                    f"so RTC can still fill a {FIXED_HORIZON}-action queue after "
+                    "discarding the delay prefix"
+                )
+            else:
+                print(f"ok  policy chunk_size = {chunk_size} (>= 2 x {FIXED_HORIZON})")
             rtc_cfg = getattr(policy.config, "rtc_config", None)
             if cfg.rtc.enabled and rtc_cfg is None:
                 failures.append("rtc.enabled is true but policy.config.rtc_config is None")
@@ -419,7 +440,7 @@ def run(cfg: BenchmarkConfig, plans: list[Stage0Plan], args) -> int:
                     seed=plan.seed,
                     use_rtc=(plan.execution_method == "rtc"),
                     rtc_execution_horizon=FIXED_HORIZON,
-                    request_threshold_actions=request_threshold_for_horizon(FIXED_HORIZON),
+                    request_threshold_actions=REQUEST_THRESHOLD_ACTIONS,
                     device=cfg.device,
                 )
                 print(
@@ -493,7 +514,7 @@ def main() -> int:
     parser.add_argument(
         "--native-only",
         action="store_true",
-        help="run only the 12 Native (0 ms) episodes as a viability smoke test",
+        help="run only the 36 Native (0 ms) episodes as a viability smoke test",
     )
     parser.add_argument("--task", action="append", help="task_key filter, repeatable")
     parser.add_argument("--method", action="append", help="execution method filter")

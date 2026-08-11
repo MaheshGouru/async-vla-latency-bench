@@ -49,13 +49,18 @@ Use exactly:
 lerobot/pi05_libero_finetuned
 ```
 
-The LeRobot checkpoint is trained on `HuggingFaceVLA/libero`, and the official LeRobot LIBERO evaluation uses:
+The LeRobot checkpoint is trained on `HuggingFaceVLA/libero`, and the official LeRobot LIBERO evaluation uses `n_action_steps = 10`. This pack does not, for the queue-headroom reason recorded in D002 and STAGE_0 section 2.1:
 
 ```text
-policy.n_action_steps = 10
+policy.n_action_steps = 25
+request_threshold_actions = 25
 ```
 
-Keep `n_action_steps=10` for Stage 1.
+Keep `n_action_steps=25` for Stage 1 (amended 2026-08-11; was `10`). This is not
+optional bookkeeping: Stage 1's ID controls are Stage 0's Native and `d*`
+episodes, and they are only the same condition if the execution configuration is
+identical. Running Stage 1 at a different horizon would silently make the reused
+controls incomparable to the OOD arm.
 
 ### Execution methods
 
@@ -1537,7 +1542,7 @@ all 21 OOD variants were frozen before outcome inspection
 same two seeds used everywhere
 same high-delay d* used everywhere
 same policy checkpoint used everywhere
-same n_action_steps=10 used everywhere
+same n_action_steps=25 used everywhere
 ID controls shared rather than duplicated
 no missing factorial cells
 ```
@@ -1585,7 +1590,7 @@ Primary benchmark/model sources used to define this specification:
   - Sensor Noise
 - LIBERO-Plus provides `task_classification.json` mapping task IDs to perturbation categories and difficulty levels.
 - The official LIBERO-Plus benchmark implementation contains thousands of perturbed tasks per suite and retrieves tasks using zero-based `get_task(i)`.
-- The LeRobot π0.5 LIBERO checkpoint is trained using `HuggingFaceVLA/libero`, and the documented evaluation uses `n_action_steps=10`.
+- The LeRobot π0.5 LIBERO checkpoint is trained using `HuggingFaceVLA/libero`, and the documented evaluation uses `n_action_steps=10`; this pack runs `n_action_steps=25` instead (D002, amended 2026-08-11) because a 10-action chunk gives the action queue no latency headroom at 20 Hz.
 
 ---
 

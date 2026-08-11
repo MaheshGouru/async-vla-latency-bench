@@ -36,6 +36,7 @@ from async_vla_benchmark.benchmark.stage0 import (
     delay_display,
     select_high_delay,
     selection_payload,
+    stage0_manifest,
 )
 
 
@@ -267,7 +268,7 @@ def main() -> int:
     parser.add_argument(
         "--require-complete",
         action="store_true",
-        help="fail if fewer than the full 96 valid episodes are present",
+        help="fail if fewer than the full planned grid of valid episodes is present",
     )
     args = parser.parse_args()
 
@@ -276,7 +277,9 @@ def main() -> int:
 
     rows, raw = load_rows(args.results)
     valid = [r for r in rows if r.status == "ok"]
-    expected = len(STAGE0_TASKS) * len(EXECUTION_METHODS) * len(ADDED_DELAYS_MS) * 2
+    # Derive from SEEDS rather than a literal: this was `* 2` and would have
+    # accepted a third of the grid as "complete" once Stage 0 moved to six seeds.
+    expected = len(stage0_manifest())
     if args.require_complete and len(valid) < expected:
         raise SystemExit(
             f"{len(valid)}/{expected} valid episodes; rerun the gaps or drop "

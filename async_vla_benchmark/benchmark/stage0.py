@@ -18,18 +18,47 @@ from typing import Iterable, Sequence
 
 #: Added artificial delay in ms. `0` is "Native": measured inference latency is
 #: still present, so this is not a zero-latency condition.
-ADDED_DELAYS_MS: tuple[int, ...] = (0, 100, 200, 300, 400, 500, 600, 700)
+#:
+#: Capped at 400 ms (was 700). RTC discards the leading `delay_steps` actions of
+#: every chunk (execution.py), so its usable chunk is `chunk_len - delay_steps`
+#: against a wait of `delay_steps` -- the queue starves once total latency reaches
+#: half the raw chunk (25 steps / 1250 ms for pi05's 50-action chunk), at *any*
+#: horizon. RTC's measured inference runs ~660-735 ms, which leaves ~500 ms of
+#: addable delay and ~400 ms with margin against its p95. Levels above that would
+#: only re-measure queue starvation, which is what the H=10 calibration did.
+ADDED_DELAYS_MS: tuple[int, ...] = (0, 100, 200, 300, 400)
 
 #: Stage 0 calibrates the same two methods the Stage 1 factorial compares.
 #: Blocking/ideal are historical context only (D003) and are not run here.
 EXECUTION_METHODS: tuple[str, ...] = ("naive_async", "rtc")
 
-#: Two fixed exploratory seeds, shared with Stage 1 so the Native and `d*`
-#: episodes can be reused as Stage 1's ID controls (STAGE_0 section 5).
-SEEDS: tuple[int, ...] = (0, 1)
+#: Six fixed exploratory seeds. 0 and 1 stay first and are still the pair Stage 1
+#: reuses as its ID controls (STAGE_0 section 5). The extras skip 2-9, which
+#: STAGE_2 section 4 reserves as held-out confirmatory seeds -- calibrating `d*`
+#: on one of those would compromise the held-out claim downstream.
+#:
+#: Two seeds made viability (STAGE_0 section 8.1, `Native success >= 1/2`) a
+#: single-episode coin flip, and left ~20 points of standard error on each pooled
+#: point -- the whole size of the 20-point selection criterion. Because section
+#: 8.3 selects the *smallest* qualifying delay, that noise biases `d*` downward
+#: rather than merely scattering it.
+SEEDS: tuple[int, ...] = (0, 1, 10, 11, 12, 13)
 
-#: n_action_steps=10 (D002); Stage 0 runs no horizon sweep.
-FIXED_HORIZON: int = 10
+#: n_action_steps=25 (D002 as amended 2026-08-11); Stage 0 runs no horizon sweep.
+#:
+#: At 20 Hz a chunk covers `H x 50 ms` of robot time, which is the total latency
+#: the queue can absorb before it underruns. H=10 gave a 500 ms budget against
+#: ~500 ms of native inference: zero headroom, and ~33% of every episode's steps
+#: were holds before any delay was added. 25 covers native plus the 400 ms sweep.
+FIXED_HORIZON: int = 25
+
+#: Request the next chunk as soon as one lands, rather than at `ceil(H/2)`
+#: remaining (spec section 16 / `queues.request_threshold_for_horizon`). The
+#: halved default spends half the latency budget draining before the request goes
+#: out, which reinstates exactly the underrun H=25 exists to remove. Applied
+#: identically to naive_async and RTC so the paired comparison stays fair (K009).
+#: Days 1-3 keeps the section 16 default; this override is Stage 0 only.
+REQUEST_THRESHOLD_ACTIONS: int = FIXED_HORIZON
 
 # Selection thresholds (STAGE_0 section 8.3).
 MIN_SUCCESS_DROP: float = 0.20

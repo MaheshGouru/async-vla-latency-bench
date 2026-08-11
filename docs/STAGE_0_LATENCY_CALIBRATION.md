@@ -59,7 +59,8 @@ Use:
 
 ```text
 policy = lerobot/pi05_libero_finetuned
-policy.n_action_steps = 10
+policy.n_action_steps = 25
+request_threshold_actions = 25
 ```
 
 Execution methods:
@@ -70,6 +71,31 @@ rtc
 ```
 
 Do not use LIBERO-Plus/OOD environments during Stage 0.
+
+### 2.1 Why `n_action_steps = 25` (amended 2026-08-11)
+
+This was `10` for the first calibration run, which produced `d* = 100 ms` on a
+curve that turned out to be measuring queue starvation rather than action
+staleness.
+
+LIBERO runs at 20 Hz, so one chunk of `H` actions covers `H x 50 ms` of robot
+time. That is the total request latency the action queue can absorb before it
+underruns and the arm holds position. At `H = 10` the budget is 500 ms against
+~500 ms of measured native inference — no headroom at all, and RTC's ~660 ms is
+already past it. The first run therefore held on ~33% (naive) to ~44% (RTC) of
+control steps at **zero** added delay, rising to ~65-70% at +700 ms, and every
+one of its 96 failures was a step-cap timeout rather than a task error.
+
+`H = 25` gives a 1250 ms budget, which covers native plus the full amended delay
+sweep. `request_threshold_actions` is raised from the section 16 default of
+`ceil(H/2)` to `H` for the same reason: requesting only once the queue has half
+drained spends half the budget before the request is even issued. Both values
+apply identically to `naive_async` and `rtc`, preserving K009.
+
+This changes the control regime, not just the plumbing — 25 steps of open-loop
+execution per observation is a different condition from 10, and Days 1-3 results
+(which ran at `H = 10`, with `execution_horizons: [2, 5, 10]` all deeper in the
+same starvation regime) are **not** directly comparable to Stage 0 onward.
 
 ---
 
@@ -93,7 +119,8 @@ assert task_suite.get_task(task_id).name == EXPECTED_TASK_NAME
 
 ## 4. Latencies to test
 
-Test exactly eight **added-delay** settings:
+Test exactly five **added-delay** settings (amended 2026-08-11; was eight, to
+`+700 ms`):
 
 | `added_delay_ms` | Display label | Meaning |
 |---:|---|---|
@@ -102,211 +129,328 @@ Test exactly eight **added-delay** settings:
 | `200` | **Native + 200 ms** | Native request latency plus 200 ms |
 | `300` | **Native + 300 ms** | Native request latency plus 300 ms |
 | `400` | **Native + 400 ms** | Native request latency plus 400 ms |
-| `500` | **Native + 500 ms** | Native request latency plus 500 ms |
-| `600` | **Native + 600 ms** | Native request latency plus 600 ms |
-| `700` | **Native + 700 ms** | Native request latency plus 700 ms |
 
 Important:
 
 - These values are **added artificial delay**, not total request latency.
 - Log the actual measured total request latency for every request.
 - Also convert total latency to effective logical delay in control steps.
-- Include `+700 ms` in calibration so the full degradation curve is observed, but do not automatically choose it if it is already saturated.
 - Do not use different delays for different task groups or execution methods.
+- Observe the full degradation curve within this range, but do not automatically choose `+400 ms` if it is already saturated.
+
+### 4.1 Why the sweep stops at `+400 ms` (amended 2026-08-11)
+
+The cap is set by RTC, not by the horizon. RTC discards the leading
+`delay_steps` actions of every chunk (they were already guided by the previous
+chunk), so its usable chunk is `chunk_size - delay_steps` against a wait of
+`delay_steps`. The queue therefore starves once `delay_steps` exceeds half the
+raw chunk — 25 steps / 1250 ms for pi05's 50-action chunk — **at any
+`n_action_steps`**. Raising `H` cannot buy past it.
+
+RTC's measured inference runs ~660 ms at native and ~735 ms under delay, leaving
+roughly 500 ms of addable delay before that ceiling and ~400 ms with margin
+against its p95. Levels above that do not measure delay tolerance; they
+re-measure queue starvation, which is what the `H = 10` calibration did.
+
+`run_stage0.py` preflight asserts `chunk_size >= 2 x n_action_steps`, which is
+the invariant this grid is derived from.
 
 ---
 
 ## 5. Seeds and total budget
 
-Use the same exploratory seeds as Stage 1:
+Use six seeds (amended 2026-08-11; was two). Seeds `0` and `1` remain the pair
+Stage 1 uses, so its ID controls are still drawn from Stage 0 episodes:
 
 ```text
-seed = 0
-seed = 1
+seed = 0    (shared with Stage 1)
+seed = 1    (shared with Stage 1)
+seed = 10
+seed = 11
+seed = 12
+seed = 13
 ```
+
+The extra seeds deliberately skip `2-9`, which STAGE_2 section 4 reserves as
+held-out confirmatory seeds. Calibrating `d*` on a held-out seed would weaken the
+Stage 2 claim.
 
 Calibration budget:
 
 ```text
 3 tasks
 × 2 methods
-× 8 added-delay settings
-× 2 seeds
-= 96 episodes
+× 5 added-delay settings
+× 6 seeds
+= 180 episodes
 ```
 
-There are **48 unique task × method × delay condition blocks**, each with 2 seeds.
+There are **30 unique task × method × delay condition blocks**, each with 6 seeds.
 
-The `Native` episodes and the episodes at the eventually selected `d*` become the Stage 1 shared ID controls.
+The `Native` episodes and the episodes at the eventually selected `d*`, **restricted
+to seeds 0 and 1**, become the Stage 1 shared ID controls — 24 episodes, unchanged.
 
 Therefore:
 
 ```text
-Stage 0 unique episodes = 96
+Stage 0 unique episodes = 180
 Stage 1 OOD episodes    = 168
 --------------------------------
-Total unique episodes   = 264
+Total unique episodes   = 348
 ```
 
 Do not rerun the 24 selected ID low/high episodes unless a run is invalid.
+
+**A change to `n_action_steps` or `request_threshold_actions` invalidates every
+Stage 0 episode, including those 24.** They are the same execution condition as
+Stage 1's ID arm only so long as the execution configuration is identical.
+
+### 5.1 Why six seeds (amended 2026-08-11)
+
+Two reasons, both structural rather than cosmetic:
+
+1. **Viability becomes decidable.** Section 8.1 admits a cell at `Native success
+   >= 1/2`. At two seeds a cell's native rate can only be `0`, `0.5`, or `1.0`,
+   so admission turns on a single episode — and admission determines which cells
+   the pooled curve is computed over, i.e. the curve `d*` is read off.
+2. **`d*` is an order statistic, so noise biases it downward.** Section 8.3 takes
+   the *smallest* qualifying delay. At six episodes per pooled point the standard
+   error is ~20 points, the same size as the 20-point drop criterion, so the rule
+   stops at whichever level dips first by chance. Six seeds (18 episodes per
+   point) brings that to ~11 points.
+
+Four seeds would be the bare minimum; six is chosen because the marginal cost is
+~90 minutes of A100 time against a parameter that 168 Stage 1 and ~96-128 Stage 2
+episodes are conditioned on, and which no amount of held-out replication can
+repair after the fact.
 
 ---
 
 ## 6. Complete calibration experiment table
 
-### 6.1 Condition-level matrix — 48 conditions
+### 6.1 Condition-level matrix — 30 conditions
+
+Generated from `benchmark/stage0.py`; enumerate with `python -m async_vla_benchmark.scripts.run_stage0 --config <cfg> --dry-run`.
 
 | # | Task-demand group | Suite:task_id | Method | Added delay | Seeds | Episodes |
 |---:|---|---|---|---|---|---:|
-| 1 | Single-stage transport | `libero_spatial:2` | Naive async | Native | `0, 1` | 2 |
-| 2 | Single-stage transport | `libero_spatial:2` | Naive async | Native + 100 ms | `0, 1` | 2 |
-| 3 | Single-stage transport | `libero_spatial:2` | Naive async | Native + 200 ms | `0, 1` | 2 |
-| 4 | Single-stage transport | `libero_spatial:2` | Naive async | Native + 300 ms | `0, 1` | 2 |
-| 5 | Single-stage transport | `libero_spatial:2` | Naive async | Native + 400 ms | `0, 1` | 2 |
-| 6 | Single-stage transport | `libero_spatial:2` | Naive async | Native + 500 ms | `0, 1` | 2 |
-| 7 | Single-stage transport | `libero_spatial:2` | Naive async | Native + 600 ms | `0, 1` | 2 |
-| 8 | Single-stage transport | `libero_spatial:2` | Naive async | Native + 700 ms | `0, 1` | 2 |
-| 9 | Single-stage transport | `libero_spatial:2` | RTC | Native | `0, 1` | 2 |
-| 10 | Single-stage transport | `libero_spatial:2` | RTC | Native + 100 ms | `0, 1` | 2 |
-| 11 | Single-stage transport | `libero_spatial:2` | RTC | Native + 200 ms | `0, 1` | 2 |
-| 12 | Single-stage transport | `libero_spatial:2` | RTC | Native + 300 ms | `0, 1` | 2 |
-| 13 | Single-stage transport | `libero_spatial:2` | RTC | Native + 400 ms | `0, 1` | 2 |
-| 14 | Single-stage transport | `libero_spatial:2` | RTC | Native + 500 ms | `0, 1` | 2 |
-| 15 | Single-stage transport | `libero_spatial:2` | RTC | Native + 600 ms | `0, 1` | 2 |
-| 16 | Single-stage transport | `libero_spatial:2` | RTC | Native + 700 ms | `0, 1` | 2 |
-| 17 | Articulated/contact-rich | `libero_goal:0` | Naive async | Native | `0, 1` | 2 |
-| 18 | Articulated/contact-rich | `libero_goal:0` | Naive async | Native + 100 ms | `0, 1` | 2 |
-| 19 | Articulated/contact-rich | `libero_goal:0` | Naive async | Native + 200 ms | `0, 1` | 2 |
-| 20 | Articulated/contact-rich | `libero_goal:0` | Naive async | Native + 300 ms | `0, 1` | 2 |
-| 21 | Articulated/contact-rich | `libero_goal:0` | Naive async | Native + 400 ms | `0, 1` | 2 |
-| 22 | Articulated/contact-rich | `libero_goal:0` | Naive async | Native + 500 ms | `0, 1` | 2 |
-| 23 | Articulated/contact-rich | `libero_goal:0` | Naive async | Native + 600 ms | `0, 1` | 2 |
-| 24 | Articulated/contact-rich | `libero_goal:0` | Naive async | Native + 700 ms | `0, 1` | 2 |
-| 25 | Articulated/contact-rich | `libero_goal:0` | RTC | Native | `0, 1` | 2 |
-| 26 | Articulated/contact-rich | `libero_goal:0` | RTC | Native + 100 ms | `0, 1` | 2 |
-| 27 | Articulated/contact-rich | `libero_goal:0` | RTC | Native + 200 ms | `0, 1` | 2 |
-| 28 | Articulated/contact-rich | `libero_goal:0` | RTC | Native + 300 ms | `0, 1` | 2 |
-| 29 | Articulated/contact-rich | `libero_goal:0` | RTC | Native + 400 ms | `0, 1` | 2 |
-| 30 | Articulated/contact-rich | `libero_goal:0` | RTC | Native + 500 ms | `0, 1` | 2 |
-| 31 | Articulated/contact-rich | `libero_goal:0` | RTC | Native + 600 ms | `0, 1` | 2 |
-| 32 | Articulated/contact-rich | `libero_goal:0` | RTC | Native + 700 ms | `0, 1` | 2 |
-| 33 | Multi-stage/sequential | `libero_10:2` | Naive async | Native | `0, 1` | 2 |
-| 34 | Multi-stage/sequential | `libero_10:2` | Naive async | Native + 100 ms | `0, 1` | 2 |
-| 35 | Multi-stage/sequential | `libero_10:2` | Naive async | Native + 200 ms | `0, 1` | 2 |
-| 36 | Multi-stage/sequential | `libero_10:2` | Naive async | Native + 300 ms | `0, 1` | 2 |
-| 37 | Multi-stage/sequential | `libero_10:2` | Naive async | Native + 400 ms | `0, 1` | 2 |
-| 38 | Multi-stage/sequential | `libero_10:2` | Naive async | Native + 500 ms | `0, 1` | 2 |
-| 39 | Multi-stage/sequential | `libero_10:2` | Naive async | Native + 600 ms | `0, 1` | 2 |
-| 40 | Multi-stage/sequential | `libero_10:2` | Naive async | Native + 700 ms | `0, 1` | 2 |
-| 41 | Multi-stage/sequential | `libero_10:2` | RTC | Native | `0, 1` | 2 |
-| 42 | Multi-stage/sequential | `libero_10:2` | RTC | Native + 100 ms | `0, 1` | 2 |
-| 43 | Multi-stage/sequential | `libero_10:2` | RTC | Native + 200 ms | `0, 1` | 2 |
-| 44 | Multi-stage/sequential | `libero_10:2` | RTC | Native + 300 ms | `0, 1` | 2 |
-| 45 | Multi-stage/sequential | `libero_10:2` | RTC | Native + 400 ms | `0, 1` | 2 |
-| 46 | Multi-stage/sequential | `libero_10:2` | RTC | Native + 500 ms | `0, 1` | 2 |
-| 47 | Multi-stage/sequential | `libero_10:2` | RTC | Native + 600 ms | `0, 1` | 2 |
-| 48 | Multi-stage/sequential | `libero_10:2` | RTC | Native + 700 ms | `0, 1` | 2 |
+| 1 | Single-stage transport | `libero_spatial:2` | Naive async | Native | `0, 1, 10, 11, 12, 13` | 6 |
+| 2 | Single-stage transport | `libero_spatial:2` | Naive async | Native + 100 ms | `0, 1, 10, 11, 12, 13` | 6 |
+| 3 | Single-stage transport | `libero_spatial:2` | Naive async | Native + 200 ms | `0, 1, 10, 11, 12, 13` | 6 |
+| 4 | Single-stage transport | `libero_spatial:2` | Naive async | Native + 300 ms | `0, 1, 10, 11, 12, 13` | 6 |
+| 5 | Single-stage transport | `libero_spatial:2` | Naive async | Native + 400 ms | `0, 1, 10, 11, 12, 13` | 6 |
+| 6 | Single-stage transport | `libero_spatial:2` | RTC | Native | `0, 1, 10, 11, 12, 13` | 6 |
+| 7 | Single-stage transport | `libero_spatial:2` | RTC | Native + 100 ms | `0, 1, 10, 11, 12, 13` | 6 |
+| 8 | Single-stage transport | `libero_spatial:2` | RTC | Native + 200 ms | `0, 1, 10, 11, 12, 13` | 6 |
+| 9 | Single-stage transport | `libero_spatial:2` | RTC | Native + 300 ms | `0, 1, 10, 11, 12, 13` | 6 |
+| 10 | Single-stage transport | `libero_spatial:2` | RTC | Native + 400 ms | `0, 1, 10, 11, 12, 13` | 6 |
+| 11 | Articulated/contact-rich | `libero_goal:0` | Naive async | Native | `0, 1, 10, 11, 12, 13` | 6 |
+| 12 | Articulated/contact-rich | `libero_goal:0` | Naive async | Native + 100 ms | `0, 1, 10, 11, 12, 13` | 6 |
+| 13 | Articulated/contact-rich | `libero_goal:0` | Naive async | Native + 200 ms | `0, 1, 10, 11, 12, 13` | 6 |
+| 14 | Articulated/contact-rich | `libero_goal:0` | Naive async | Native + 300 ms | `0, 1, 10, 11, 12, 13` | 6 |
+| 15 | Articulated/contact-rich | `libero_goal:0` | Naive async | Native + 400 ms | `0, 1, 10, 11, 12, 13` | 6 |
+| 16 | Articulated/contact-rich | `libero_goal:0` | RTC | Native | `0, 1, 10, 11, 12, 13` | 6 |
+| 17 | Articulated/contact-rich | `libero_goal:0` | RTC | Native + 100 ms | `0, 1, 10, 11, 12, 13` | 6 |
+| 18 | Articulated/contact-rich | `libero_goal:0` | RTC | Native + 200 ms | `0, 1, 10, 11, 12, 13` | 6 |
+| 19 | Articulated/contact-rich | `libero_goal:0` | RTC | Native + 300 ms | `0, 1, 10, 11, 12, 13` | 6 |
+| 20 | Articulated/contact-rich | `libero_goal:0` | RTC | Native + 400 ms | `0, 1, 10, 11, 12, 13` | 6 |
+| 21 | Multi-stage/sequential | `libero_10:2` | Naive async | Native | `0, 1, 10, 11, 12, 13` | 6 |
+| 22 | Multi-stage/sequential | `libero_10:2` | Naive async | Native + 100 ms | `0, 1, 10, 11, 12, 13` | 6 |
+| 23 | Multi-stage/sequential | `libero_10:2` | Naive async | Native + 200 ms | `0, 1, 10, 11, 12, 13` | 6 |
+| 24 | Multi-stage/sequential | `libero_10:2` | Naive async | Native + 300 ms | `0, 1, 10, 11, 12, 13` | 6 |
+| 25 | Multi-stage/sequential | `libero_10:2` | Naive async | Native + 400 ms | `0, 1, 10, 11, 12, 13` | 6 |
+| 26 | Multi-stage/sequential | `libero_10:2` | RTC | Native | `0, 1, 10, 11, 12, 13` | 6 |
+| 27 | Multi-stage/sequential | `libero_10:2` | RTC | Native + 100 ms | `0, 1, 10, 11, 12, 13` | 6 |
+| 28 | Multi-stage/sequential | `libero_10:2` | RTC | Native + 200 ms | `0, 1, 10, 11, 12, 13` | 6 |
+| 29 | Multi-stage/sequential | `libero_10:2` | RTC | Native + 300 ms | `0, 1, 10, 11, 12, 13` | 6 |
+| 30 | Multi-stage/sequential | `libero_10:2` | RTC | Native + 400 ms | `0, 1, 10, 11, 12, 13` | 6 |
 
-### 6.2 Episode-level manifest — all 96 episodes
+### 6.2 Episode-level manifest — all 180 episodes
+
+`Exp.` is the doc-level label; `run_id` in the emitted manifest is the descriptive form built by `Stage0Plan.run_id`.
 
 | Exp. | Task-demand group | Suite:task_id | Method | Added delay (ms) | Delay label | Seed |
 |---:|---|---|---|---:|---|---:|
 | C001 | Single-stage transport | `libero_spatial:2` | Naive async | 0 | Native | 0 |
 | C002 | Single-stage transport | `libero_spatial:2` | Naive async | 0 | Native | 1 |
-| C003 | Single-stage transport | `libero_spatial:2` | Naive async | 100 | Native + 100 ms | 0 |
-| C004 | Single-stage transport | `libero_spatial:2` | Naive async | 100 | Native + 100 ms | 1 |
-| C005 | Single-stage transport | `libero_spatial:2` | Naive async | 200 | Native + 200 ms | 0 |
-| C006 | Single-stage transport | `libero_spatial:2` | Naive async | 200 | Native + 200 ms | 1 |
-| C007 | Single-stage transport | `libero_spatial:2` | Naive async | 300 | Native + 300 ms | 0 |
-| C008 | Single-stage transport | `libero_spatial:2` | Naive async | 300 | Native + 300 ms | 1 |
-| C009 | Single-stage transport | `libero_spatial:2` | Naive async | 400 | Native + 400 ms | 0 |
-| C010 | Single-stage transport | `libero_spatial:2` | Naive async | 400 | Native + 400 ms | 1 |
-| C011 | Single-stage transport | `libero_spatial:2` | Naive async | 500 | Native + 500 ms | 0 |
-| C012 | Single-stage transport | `libero_spatial:2` | Naive async | 500 | Native + 500 ms | 1 |
-| C013 | Single-stage transport | `libero_spatial:2` | Naive async | 600 | Native + 600 ms | 0 |
-| C014 | Single-stage transport | `libero_spatial:2` | Naive async | 600 | Native + 600 ms | 1 |
-| C015 | Single-stage transport | `libero_spatial:2` | Naive async | 700 | Native + 700 ms | 0 |
-| C016 | Single-stage transport | `libero_spatial:2` | Naive async | 700 | Native + 700 ms | 1 |
-| C017 | Single-stage transport | `libero_spatial:2` | RTC | 0 | Native | 0 |
-| C018 | Single-stage transport | `libero_spatial:2` | RTC | 0 | Native | 1 |
-| C019 | Single-stage transport | `libero_spatial:2` | RTC | 100 | Native + 100 ms | 0 |
-| C020 | Single-stage transport | `libero_spatial:2` | RTC | 100 | Native + 100 ms | 1 |
-| C021 | Single-stage transport | `libero_spatial:2` | RTC | 200 | Native + 200 ms | 0 |
-| C022 | Single-stage transport | `libero_spatial:2` | RTC | 200 | Native + 200 ms | 1 |
-| C023 | Single-stage transport | `libero_spatial:2` | RTC | 300 | Native + 300 ms | 0 |
-| C024 | Single-stage transport | `libero_spatial:2` | RTC | 300 | Native + 300 ms | 1 |
-| C025 | Single-stage transport | `libero_spatial:2` | RTC | 400 | Native + 400 ms | 0 |
-| C026 | Single-stage transport | `libero_spatial:2` | RTC | 400 | Native + 400 ms | 1 |
-| C027 | Single-stage transport | `libero_spatial:2` | RTC | 500 | Native + 500 ms | 0 |
-| C028 | Single-stage transport | `libero_spatial:2` | RTC | 500 | Native + 500 ms | 1 |
-| C029 | Single-stage transport | `libero_spatial:2` | RTC | 600 | Native + 600 ms | 0 |
-| C030 | Single-stage transport | `libero_spatial:2` | RTC | 600 | Native + 600 ms | 1 |
-| C031 | Single-stage transport | `libero_spatial:2` | RTC | 700 | Native + 700 ms | 0 |
-| C032 | Single-stage transport | `libero_spatial:2` | RTC | 700 | Native + 700 ms | 1 |
-| C033 | Articulated/contact-rich | `libero_goal:0` | Naive async | 0 | Native | 0 |
-| C034 | Articulated/contact-rich | `libero_goal:0` | Naive async | 0 | Native | 1 |
-| C035 | Articulated/contact-rich | `libero_goal:0` | Naive async | 100 | Native + 100 ms | 0 |
-| C036 | Articulated/contact-rich | `libero_goal:0` | Naive async | 100 | Native + 100 ms | 1 |
-| C037 | Articulated/contact-rich | `libero_goal:0` | Naive async | 200 | Native + 200 ms | 0 |
-| C038 | Articulated/contact-rich | `libero_goal:0` | Naive async | 200 | Native + 200 ms | 1 |
-| C039 | Articulated/contact-rich | `libero_goal:0` | Naive async | 300 | Native + 300 ms | 0 |
-| C040 | Articulated/contact-rich | `libero_goal:0` | Naive async | 300 | Native + 300 ms | 1 |
-| C041 | Articulated/contact-rich | `libero_goal:0` | Naive async | 400 | Native + 400 ms | 0 |
-| C042 | Articulated/contact-rich | `libero_goal:0` | Naive async | 400 | Native + 400 ms | 1 |
-| C043 | Articulated/contact-rich | `libero_goal:0` | Naive async | 500 | Native + 500 ms | 0 |
-| C044 | Articulated/contact-rich | `libero_goal:0` | Naive async | 500 | Native + 500 ms | 1 |
-| C045 | Articulated/contact-rich | `libero_goal:0` | Naive async | 600 | Native + 600 ms | 0 |
-| C046 | Articulated/contact-rich | `libero_goal:0` | Naive async | 600 | Native + 600 ms | 1 |
-| C047 | Articulated/contact-rich | `libero_goal:0` | Naive async | 700 | Native + 700 ms | 0 |
-| C048 | Articulated/contact-rich | `libero_goal:0` | Naive async | 700 | Native + 700 ms | 1 |
-| C049 | Articulated/contact-rich | `libero_goal:0` | RTC | 0 | Native | 0 |
-| C050 | Articulated/contact-rich | `libero_goal:0` | RTC | 0 | Native | 1 |
-| C051 | Articulated/contact-rich | `libero_goal:0` | RTC | 100 | Native + 100 ms | 0 |
-| C052 | Articulated/contact-rich | `libero_goal:0` | RTC | 100 | Native + 100 ms | 1 |
-| C053 | Articulated/contact-rich | `libero_goal:0` | RTC | 200 | Native + 200 ms | 0 |
-| C054 | Articulated/contact-rich | `libero_goal:0` | RTC | 200 | Native + 200 ms | 1 |
-| C055 | Articulated/contact-rich | `libero_goal:0` | RTC | 300 | Native + 300 ms | 0 |
-| C056 | Articulated/contact-rich | `libero_goal:0` | RTC | 300 | Native + 300 ms | 1 |
-| C057 | Articulated/contact-rich | `libero_goal:0` | RTC | 400 | Native + 400 ms | 0 |
-| C058 | Articulated/contact-rich | `libero_goal:0` | RTC | 400 | Native + 400 ms | 1 |
-| C059 | Articulated/contact-rich | `libero_goal:0` | RTC | 500 | Native + 500 ms | 0 |
-| C060 | Articulated/contact-rich | `libero_goal:0` | RTC | 500 | Native + 500 ms | 1 |
-| C061 | Articulated/contact-rich | `libero_goal:0` | RTC | 600 | Native + 600 ms | 0 |
-| C062 | Articulated/contact-rich | `libero_goal:0` | RTC | 600 | Native + 600 ms | 1 |
-| C063 | Articulated/contact-rich | `libero_goal:0` | RTC | 700 | Native + 700 ms | 0 |
-| C064 | Articulated/contact-rich | `libero_goal:0` | RTC | 700 | Native + 700 ms | 1 |
-| C065 | Multi-stage/sequential | `libero_10:2` | Naive async | 0 | Native | 0 |
-| C066 | Multi-stage/sequential | `libero_10:2` | Naive async | 0 | Native | 1 |
-| C067 | Multi-stage/sequential | `libero_10:2` | Naive async | 100 | Native + 100 ms | 0 |
-| C068 | Multi-stage/sequential | `libero_10:2` | Naive async | 100 | Native + 100 ms | 1 |
-| C069 | Multi-stage/sequential | `libero_10:2` | Naive async | 200 | Native + 200 ms | 0 |
-| C070 | Multi-stage/sequential | `libero_10:2` | Naive async | 200 | Native + 200 ms | 1 |
-| C071 | Multi-stage/sequential | `libero_10:2` | Naive async | 300 | Native + 300 ms | 0 |
-| C072 | Multi-stage/sequential | `libero_10:2` | Naive async | 300 | Native + 300 ms | 1 |
-| C073 | Multi-stage/sequential | `libero_10:2` | Naive async | 400 | Native + 400 ms | 0 |
-| C074 | Multi-stage/sequential | `libero_10:2` | Naive async | 400 | Native + 400 ms | 1 |
-| C075 | Multi-stage/sequential | `libero_10:2` | Naive async | 500 | Native + 500 ms | 0 |
-| C076 | Multi-stage/sequential | `libero_10:2` | Naive async | 500 | Native + 500 ms | 1 |
-| C077 | Multi-stage/sequential | `libero_10:2` | Naive async | 600 | Native + 600 ms | 0 |
-| C078 | Multi-stage/sequential | `libero_10:2` | Naive async | 600 | Native + 600 ms | 1 |
-| C079 | Multi-stage/sequential | `libero_10:2` | Naive async | 700 | Native + 700 ms | 0 |
-| C080 | Multi-stage/sequential | `libero_10:2` | Naive async | 700 | Native + 700 ms | 1 |
-| C081 | Multi-stage/sequential | `libero_10:2` | RTC | 0 | Native | 0 |
-| C082 | Multi-stage/sequential | `libero_10:2` | RTC | 0 | Native | 1 |
-| C083 | Multi-stage/sequential | `libero_10:2` | RTC | 100 | Native + 100 ms | 0 |
-| C084 | Multi-stage/sequential | `libero_10:2` | RTC | 100 | Native + 100 ms | 1 |
-| C085 | Multi-stage/sequential | `libero_10:2` | RTC | 200 | Native + 200 ms | 0 |
-| C086 | Multi-stage/sequential | `libero_10:2` | RTC | 200 | Native + 200 ms | 1 |
-| C087 | Multi-stage/sequential | `libero_10:2` | RTC | 300 | Native + 300 ms | 0 |
-| C088 | Multi-stage/sequential | `libero_10:2` | RTC | 300 | Native + 300 ms | 1 |
-| C089 | Multi-stage/sequential | `libero_10:2` | RTC | 400 | Native + 400 ms | 0 |
-| C090 | Multi-stage/sequential | `libero_10:2` | RTC | 400 | Native + 400 ms | 1 |
-| C091 | Multi-stage/sequential | `libero_10:2` | RTC | 500 | Native + 500 ms | 0 |
-| C092 | Multi-stage/sequential | `libero_10:2` | RTC | 500 | Native + 500 ms | 1 |
-| C093 | Multi-stage/sequential | `libero_10:2` | RTC | 600 | Native + 600 ms | 0 |
-| C094 | Multi-stage/sequential | `libero_10:2` | RTC | 600 | Native + 600 ms | 1 |
-| C095 | Multi-stage/sequential | `libero_10:2` | RTC | 700 | Native + 700 ms | 0 |
-| C096 | Multi-stage/sequential | `libero_10:2` | RTC | 700 | Native + 700 ms | 1 |
+| C003 | Single-stage transport | `libero_spatial:2` | Naive async | 0 | Native | 10 |
+| C004 | Single-stage transport | `libero_spatial:2` | Naive async | 0 | Native | 11 |
+| C005 | Single-stage transport | `libero_spatial:2` | Naive async | 0 | Native | 12 |
+| C006 | Single-stage transport | `libero_spatial:2` | Naive async | 0 | Native | 13 |
+| C007 | Single-stage transport | `libero_spatial:2` | Naive async | 100 | Native + 100 ms | 0 |
+| C008 | Single-stage transport | `libero_spatial:2` | Naive async | 100 | Native + 100 ms | 1 |
+| C009 | Single-stage transport | `libero_spatial:2` | Naive async | 100 | Native + 100 ms | 10 |
+| C010 | Single-stage transport | `libero_spatial:2` | Naive async | 100 | Native + 100 ms | 11 |
+| C011 | Single-stage transport | `libero_spatial:2` | Naive async | 100 | Native + 100 ms | 12 |
+| C012 | Single-stage transport | `libero_spatial:2` | Naive async | 100 | Native + 100 ms | 13 |
+| C013 | Single-stage transport | `libero_spatial:2` | Naive async | 200 | Native + 200 ms | 0 |
+| C014 | Single-stage transport | `libero_spatial:2` | Naive async | 200 | Native + 200 ms | 1 |
+| C015 | Single-stage transport | `libero_spatial:2` | Naive async | 200 | Native + 200 ms | 10 |
+| C016 | Single-stage transport | `libero_spatial:2` | Naive async | 200 | Native + 200 ms | 11 |
+| C017 | Single-stage transport | `libero_spatial:2` | Naive async | 200 | Native + 200 ms | 12 |
+| C018 | Single-stage transport | `libero_spatial:2` | Naive async | 200 | Native + 200 ms | 13 |
+| C019 | Single-stage transport | `libero_spatial:2` | Naive async | 300 | Native + 300 ms | 0 |
+| C020 | Single-stage transport | `libero_spatial:2` | Naive async | 300 | Native + 300 ms | 1 |
+| C021 | Single-stage transport | `libero_spatial:2` | Naive async | 300 | Native + 300 ms | 10 |
+| C022 | Single-stage transport | `libero_spatial:2` | Naive async | 300 | Native + 300 ms | 11 |
+| C023 | Single-stage transport | `libero_spatial:2` | Naive async | 300 | Native + 300 ms | 12 |
+| C024 | Single-stage transport | `libero_spatial:2` | Naive async | 300 | Native + 300 ms | 13 |
+| C025 | Single-stage transport | `libero_spatial:2` | Naive async | 400 | Native + 400 ms | 0 |
+| C026 | Single-stage transport | `libero_spatial:2` | Naive async | 400 | Native + 400 ms | 1 |
+| C027 | Single-stage transport | `libero_spatial:2` | Naive async | 400 | Native + 400 ms | 10 |
+| C028 | Single-stage transport | `libero_spatial:2` | Naive async | 400 | Native + 400 ms | 11 |
+| C029 | Single-stage transport | `libero_spatial:2` | Naive async | 400 | Native + 400 ms | 12 |
+| C030 | Single-stage transport | `libero_spatial:2` | Naive async | 400 | Native + 400 ms | 13 |
+| C031 | Single-stage transport | `libero_spatial:2` | RTC | 0 | Native | 0 |
+| C032 | Single-stage transport | `libero_spatial:2` | RTC | 0 | Native | 1 |
+| C033 | Single-stage transport | `libero_spatial:2` | RTC | 0 | Native | 10 |
+| C034 | Single-stage transport | `libero_spatial:2` | RTC | 0 | Native | 11 |
+| C035 | Single-stage transport | `libero_spatial:2` | RTC | 0 | Native | 12 |
+| C036 | Single-stage transport | `libero_spatial:2` | RTC | 0 | Native | 13 |
+| C037 | Single-stage transport | `libero_spatial:2` | RTC | 100 | Native + 100 ms | 0 |
+| C038 | Single-stage transport | `libero_spatial:2` | RTC | 100 | Native + 100 ms | 1 |
+| C039 | Single-stage transport | `libero_spatial:2` | RTC | 100 | Native + 100 ms | 10 |
+| C040 | Single-stage transport | `libero_spatial:2` | RTC | 100 | Native + 100 ms | 11 |
+| C041 | Single-stage transport | `libero_spatial:2` | RTC | 100 | Native + 100 ms | 12 |
+| C042 | Single-stage transport | `libero_spatial:2` | RTC | 100 | Native + 100 ms | 13 |
+| C043 | Single-stage transport | `libero_spatial:2` | RTC | 200 | Native + 200 ms | 0 |
+| C044 | Single-stage transport | `libero_spatial:2` | RTC | 200 | Native + 200 ms | 1 |
+| C045 | Single-stage transport | `libero_spatial:2` | RTC | 200 | Native + 200 ms | 10 |
+| C046 | Single-stage transport | `libero_spatial:2` | RTC | 200 | Native + 200 ms | 11 |
+| C047 | Single-stage transport | `libero_spatial:2` | RTC | 200 | Native + 200 ms | 12 |
+| C048 | Single-stage transport | `libero_spatial:2` | RTC | 200 | Native + 200 ms | 13 |
+| C049 | Single-stage transport | `libero_spatial:2` | RTC | 300 | Native + 300 ms | 0 |
+| C050 | Single-stage transport | `libero_spatial:2` | RTC | 300 | Native + 300 ms | 1 |
+| C051 | Single-stage transport | `libero_spatial:2` | RTC | 300 | Native + 300 ms | 10 |
+| C052 | Single-stage transport | `libero_spatial:2` | RTC | 300 | Native + 300 ms | 11 |
+| C053 | Single-stage transport | `libero_spatial:2` | RTC | 300 | Native + 300 ms | 12 |
+| C054 | Single-stage transport | `libero_spatial:2` | RTC | 300 | Native + 300 ms | 13 |
+| C055 | Single-stage transport | `libero_spatial:2` | RTC | 400 | Native + 400 ms | 0 |
+| C056 | Single-stage transport | `libero_spatial:2` | RTC | 400 | Native + 400 ms | 1 |
+| C057 | Single-stage transport | `libero_spatial:2` | RTC | 400 | Native + 400 ms | 10 |
+| C058 | Single-stage transport | `libero_spatial:2` | RTC | 400 | Native + 400 ms | 11 |
+| C059 | Single-stage transport | `libero_spatial:2` | RTC | 400 | Native + 400 ms | 12 |
+| C060 | Single-stage transport | `libero_spatial:2` | RTC | 400 | Native + 400 ms | 13 |
+| C061 | Articulated/contact-rich | `libero_goal:0` | Naive async | 0 | Native | 0 |
+| C062 | Articulated/contact-rich | `libero_goal:0` | Naive async | 0 | Native | 1 |
+| C063 | Articulated/contact-rich | `libero_goal:0` | Naive async | 0 | Native | 10 |
+| C064 | Articulated/contact-rich | `libero_goal:0` | Naive async | 0 | Native | 11 |
+| C065 | Articulated/contact-rich | `libero_goal:0` | Naive async | 0 | Native | 12 |
+| C066 | Articulated/contact-rich | `libero_goal:0` | Naive async | 0 | Native | 13 |
+| C067 | Articulated/contact-rich | `libero_goal:0` | Naive async | 100 | Native + 100 ms | 0 |
+| C068 | Articulated/contact-rich | `libero_goal:0` | Naive async | 100 | Native + 100 ms | 1 |
+| C069 | Articulated/contact-rich | `libero_goal:0` | Naive async | 100 | Native + 100 ms | 10 |
+| C070 | Articulated/contact-rich | `libero_goal:0` | Naive async | 100 | Native + 100 ms | 11 |
+| C071 | Articulated/contact-rich | `libero_goal:0` | Naive async | 100 | Native + 100 ms | 12 |
+| C072 | Articulated/contact-rich | `libero_goal:0` | Naive async | 100 | Native + 100 ms | 13 |
+| C073 | Articulated/contact-rich | `libero_goal:0` | Naive async | 200 | Native + 200 ms | 0 |
+| C074 | Articulated/contact-rich | `libero_goal:0` | Naive async | 200 | Native + 200 ms | 1 |
+| C075 | Articulated/contact-rich | `libero_goal:0` | Naive async | 200 | Native + 200 ms | 10 |
+| C076 | Articulated/contact-rich | `libero_goal:0` | Naive async | 200 | Native + 200 ms | 11 |
+| C077 | Articulated/contact-rich | `libero_goal:0` | Naive async | 200 | Native + 200 ms | 12 |
+| C078 | Articulated/contact-rich | `libero_goal:0` | Naive async | 200 | Native + 200 ms | 13 |
+| C079 | Articulated/contact-rich | `libero_goal:0` | Naive async | 300 | Native + 300 ms | 0 |
+| C080 | Articulated/contact-rich | `libero_goal:0` | Naive async | 300 | Native + 300 ms | 1 |
+| C081 | Articulated/contact-rich | `libero_goal:0` | Naive async | 300 | Native + 300 ms | 10 |
+| C082 | Articulated/contact-rich | `libero_goal:0` | Naive async | 300 | Native + 300 ms | 11 |
+| C083 | Articulated/contact-rich | `libero_goal:0` | Naive async | 300 | Native + 300 ms | 12 |
+| C084 | Articulated/contact-rich | `libero_goal:0` | Naive async | 300 | Native + 300 ms | 13 |
+| C085 | Articulated/contact-rich | `libero_goal:0` | Naive async | 400 | Native + 400 ms | 0 |
+| C086 | Articulated/contact-rich | `libero_goal:0` | Naive async | 400 | Native + 400 ms | 1 |
+| C087 | Articulated/contact-rich | `libero_goal:0` | Naive async | 400 | Native + 400 ms | 10 |
+| C088 | Articulated/contact-rich | `libero_goal:0` | Naive async | 400 | Native + 400 ms | 11 |
+| C089 | Articulated/contact-rich | `libero_goal:0` | Naive async | 400 | Native + 400 ms | 12 |
+| C090 | Articulated/contact-rich | `libero_goal:0` | Naive async | 400 | Native + 400 ms | 13 |
+| C091 | Articulated/contact-rich | `libero_goal:0` | RTC | 0 | Native | 0 |
+| C092 | Articulated/contact-rich | `libero_goal:0` | RTC | 0 | Native | 1 |
+| C093 | Articulated/contact-rich | `libero_goal:0` | RTC | 0 | Native | 10 |
+| C094 | Articulated/contact-rich | `libero_goal:0` | RTC | 0 | Native | 11 |
+| C095 | Articulated/contact-rich | `libero_goal:0` | RTC | 0 | Native | 12 |
+| C096 | Articulated/contact-rich | `libero_goal:0` | RTC | 0 | Native | 13 |
+| C097 | Articulated/contact-rich | `libero_goal:0` | RTC | 100 | Native + 100 ms | 0 |
+| C098 | Articulated/contact-rich | `libero_goal:0` | RTC | 100 | Native + 100 ms | 1 |
+| C099 | Articulated/contact-rich | `libero_goal:0` | RTC | 100 | Native + 100 ms | 10 |
+| C100 | Articulated/contact-rich | `libero_goal:0` | RTC | 100 | Native + 100 ms | 11 |
+| C101 | Articulated/contact-rich | `libero_goal:0` | RTC | 100 | Native + 100 ms | 12 |
+| C102 | Articulated/contact-rich | `libero_goal:0` | RTC | 100 | Native + 100 ms | 13 |
+| C103 | Articulated/contact-rich | `libero_goal:0` | RTC | 200 | Native + 200 ms | 0 |
+| C104 | Articulated/contact-rich | `libero_goal:0` | RTC | 200 | Native + 200 ms | 1 |
+| C105 | Articulated/contact-rich | `libero_goal:0` | RTC | 200 | Native + 200 ms | 10 |
+| C106 | Articulated/contact-rich | `libero_goal:0` | RTC | 200 | Native + 200 ms | 11 |
+| C107 | Articulated/contact-rich | `libero_goal:0` | RTC | 200 | Native + 200 ms | 12 |
+| C108 | Articulated/contact-rich | `libero_goal:0` | RTC | 200 | Native + 200 ms | 13 |
+| C109 | Articulated/contact-rich | `libero_goal:0` | RTC | 300 | Native + 300 ms | 0 |
+| C110 | Articulated/contact-rich | `libero_goal:0` | RTC | 300 | Native + 300 ms | 1 |
+| C111 | Articulated/contact-rich | `libero_goal:0` | RTC | 300 | Native + 300 ms | 10 |
+| C112 | Articulated/contact-rich | `libero_goal:0` | RTC | 300 | Native + 300 ms | 11 |
+| C113 | Articulated/contact-rich | `libero_goal:0` | RTC | 300 | Native + 300 ms | 12 |
+| C114 | Articulated/contact-rich | `libero_goal:0` | RTC | 300 | Native + 300 ms | 13 |
+| C115 | Articulated/contact-rich | `libero_goal:0` | RTC | 400 | Native + 400 ms | 0 |
+| C116 | Articulated/contact-rich | `libero_goal:0` | RTC | 400 | Native + 400 ms | 1 |
+| C117 | Articulated/contact-rich | `libero_goal:0` | RTC | 400 | Native + 400 ms | 10 |
+| C118 | Articulated/contact-rich | `libero_goal:0` | RTC | 400 | Native + 400 ms | 11 |
+| C119 | Articulated/contact-rich | `libero_goal:0` | RTC | 400 | Native + 400 ms | 12 |
+| C120 | Articulated/contact-rich | `libero_goal:0` | RTC | 400 | Native + 400 ms | 13 |
+| C121 | Multi-stage/sequential | `libero_10:2` | Naive async | 0 | Native | 0 |
+| C122 | Multi-stage/sequential | `libero_10:2` | Naive async | 0 | Native | 1 |
+| C123 | Multi-stage/sequential | `libero_10:2` | Naive async | 0 | Native | 10 |
+| C124 | Multi-stage/sequential | `libero_10:2` | Naive async | 0 | Native | 11 |
+| C125 | Multi-stage/sequential | `libero_10:2` | Naive async | 0 | Native | 12 |
+| C126 | Multi-stage/sequential | `libero_10:2` | Naive async | 0 | Native | 13 |
+| C127 | Multi-stage/sequential | `libero_10:2` | Naive async | 100 | Native + 100 ms | 0 |
+| C128 | Multi-stage/sequential | `libero_10:2` | Naive async | 100 | Native + 100 ms | 1 |
+| C129 | Multi-stage/sequential | `libero_10:2` | Naive async | 100 | Native + 100 ms | 10 |
+| C130 | Multi-stage/sequential | `libero_10:2` | Naive async | 100 | Native + 100 ms | 11 |
+| C131 | Multi-stage/sequential | `libero_10:2` | Naive async | 100 | Native + 100 ms | 12 |
+| C132 | Multi-stage/sequential | `libero_10:2` | Naive async | 100 | Native + 100 ms | 13 |
+| C133 | Multi-stage/sequential | `libero_10:2` | Naive async | 200 | Native + 200 ms | 0 |
+| C134 | Multi-stage/sequential | `libero_10:2` | Naive async | 200 | Native + 200 ms | 1 |
+| C135 | Multi-stage/sequential | `libero_10:2` | Naive async | 200 | Native + 200 ms | 10 |
+| C136 | Multi-stage/sequential | `libero_10:2` | Naive async | 200 | Native + 200 ms | 11 |
+| C137 | Multi-stage/sequential | `libero_10:2` | Naive async | 200 | Native + 200 ms | 12 |
+| C138 | Multi-stage/sequential | `libero_10:2` | Naive async | 200 | Native + 200 ms | 13 |
+| C139 | Multi-stage/sequential | `libero_10:2` | Naive async | 300 | Native + 300 ms | 0 |
+| C140 | Multi-stage/sequential | `libero_10:2` | Naive async | 300 | Native + 300 ms | 1 |
+| C141 | Multi-stage/sequential | `libero_10:2` | Naive async | 300 | Native + 300 ms | 10 |
+| C142 | Multi-stage/sequential | `libero_10:2` | Naive async | 300 | Native + 300 ms | 11 |
+| C143 | Multi-stage/sequential | `libero_10:2` | Naive async | 300 | Native + 300 ms | 12 |
+| C144 | Multi-stage/sequential | `libero_10:2` | Naive async | 300 | Native + 300 ms | 13 |
+| C145 | Multi-stage/sequential | `libero_10:2` | Naive async | 400 | Native + 400 ms | 0 |
+| C146 | Multi-stage/sequential | `libero_10:2` | Naive async | 400 | Native + 400 ms | 1 |
+| C147 | Multi-stage/sequential | `libero_10:2` | Naive async | 400 | Native + 400 ms | 10 |
+| C148 | Multi-stage/sequential | `libero_10:2` | Naive async | 400 | Native + 400 ms | 11 |
+| C149 | Multi-stage/sequential | `libero_10:2` | Naive async | 400 | Native + 400 ms | 12 |
+| C150 | Multi-stage/sequential | `libero_10:2` | Naive async | 400 | Native + 400 ms | 13 |
+| C151 | Multi-stage/sequential | `libero_10:2` | RTC | 0 | Native | 0 |
+| C152 | Multi-stage/sequential | `libero_10:2` | RTC | 0 | Native | 1 |
+| C153 | Multi-stage/sequential | `libero_10:2` | RTC | 0 | Native | 10 |
+| C154 | Multi-stage/sequential | `libero_10:2` | RTC | 0 | Native | 11 |
+| C155 | Multi-stage/sequential | `libero_10:2` | RTC | 0 | Native | 12 |
+| C156 | Multi-stage/sequential | `libero_10:2` | RTC | 0 | Native | 13 |
+| C157 | Multi-stage/sequential | `libero_10:2` | RTC | 100 | Native + 100 ms | 0 |
+| C158 | Multi-stage/sequential | `libero_10:2` | RTC | 100 | Native + 100 ms | 1 |
+| C159 | Multi-stage/sequential | `libero_10:2` | RTC | 100 | Native + 100 ms | 10 |
+| C160 | Multi-stage/sequential | `libero_10:2` | RTC | 100 | Native + 100 ms | 11 |
+| C161 | Multi-stage/sequential | `libero_10:2` | RTC | 100 | Native + 100 ms | 12 |
+| C162 | Multi-stage/sequential | `libero_10:2` | RTC | 100 | Native + 100 ms | 13 |
+| C163 | Multi-stage/sequential | `libero_10:2` | RTC | 200 | Native + 200 ms | 0 |
+| C164 | Multi-stage/sequential | `libero_10:2` | RTC | 200 | Native + 200 ms | 1 |
+| C165 | Multi-stage/sequential | `libero_10:2` | RTC | 200 | Native + 200 ms | 10 |
+| C166 | Multi-stage/sequential | `libero_10:2` | RTC | 200 | Native + 200 ms | 11 |
+| C167 | Multi-stage/sequential | `libero_10:2` | RTC | 200 | Native + 200 ms | 12 |
+| C168 | Multi-stage/sequential | `libero_10:2` | RTC | 200 | Native + 200 ms | 13 |
+| C169 | Multi-stage/sequential | `libero_10:2` | RTC | 300 | Native + 300 ms | 0 |
+| C170 | Multi-stage/sequential | `libero_10:2` | RTC | 300 | Native + 300 ms | 1 |
+| C171 | Multi-stage/sequential | `libero_10:2` | RTC | 300 | Native + 300 ms | 10 |
+| C172 | Multi-stage/sequential | `libero_10:2` | RTC | 300 | Native + 300 ms | 11 |
+| C173 | Multi-stage/sequential | `libero_10:2` | RTC | 300 | Native + 300 ms | 12 |
+| C174 | Multi-stage/sequential | `libero_10:2` | RTC | 300 | Native + 300 ms | 13 |
+| C175 | Multi-stage/sequential | `libero_10:2` | RTC | 400 | Native + 400 ms | 0 |
+| C176 | Multi-stage/sequential | `libero_10:2` | RTC | 400 | Native + 400 ms | 1 |
+| C177 | Multi-stage/sequential | `libero_10:2` | RTC | 400 | Native + 400 ms | 10 |
+| C178 | Multi-stage/sequential | `libero_10:2` | RTC | 400 | Native + 400 ms | 11 |
+| C179 | Multi-stage/sequential | `libero_10:2` | RTC | 400 | Native + 400 ms | 12 |
+| C180 | Multi-stage/sequential | `libero_10:2` | RTC | 400 | Native + 400 ms | 13 |
 
 ---
 
@@ -380,7 +524,7 @@ For each of the six:
 3 tasks × 2 methods
 ```
 
-compute Native success over the two seeds.
+compute Native success over all six seeds.
 
 A task × method cell is **viable for delay calibration** if:
 
@@ -395,7 +539,7 @@ Cells already at `0 / 2` under Native are retained in all tables but are not all
 For each candidate:
 
 ```text
-d ∈ {100, 200, 300, 400, 500, 600, 700} ms
+d ∈ {100, 200, 300, 400} ms
 ```
 
 using only the viable cells, calculate:
@@ -403,10 +547,15 @@ using only the viable cells, calculate:
 ```text
 S_native
 S_d
-delay_drop(d) = S_d - S_native
+delay_drop(d) = S_native - S_d
 ```
 
-where success is pooled over the same viable task × method cells and both seeds.
+where success is pooled over the same viable task × method cells and all six seeds.
+
+`delay_drop` is stated as `S_native - S_d` so a degradation is a positive number,
+matching the `S_native - S_d >= 0.20` test in section 8.3. (It read `S_d -
+S_native` before 2026-08-11, which contradicted 8.3; the implementation in
+`benchmark/stage0.py` always used the 8.3 orientation.)
 
 ### 8.3 Frozen selection rule
 
@@ -447,13 +596,19 @@ Apply these in order if no candidate satisfies the primary rule:
 CALIBRATION_SATURATED = true
 ```
 
-3. Otherwise choose `700 ms` and flag:
+3. Otherwise choose the **largest candidate delay** — `400 ms` under the section 4
+   grid as amended — and flag:
 
 ```text
 CALIBRATION_WEAK = true
 ```
 
 The flags describe the calibration result; they are not reasons to retune using OOD data.
+
+`benchmark/stage0.py` implements fallback 3 as `max(candidates)` rather than a
+literal `700`, so it tracks section 4 automatically. The flags are additionally
+derived from the shape of the curve rather than from whichever branch fired, so a
+flat or floored curve is always labelled even when fallback 1 claims it first.
 
 Do not change the rule after inspecting OOD results.
 
@@ -485,8 +640,8 @@ Then Stage 1 reads this file rather than hard-coding its own delay.
 
 ### Table A — Per-task calibration
 
-| Task-demand group | Method | Native | +100 | +200 | +300 | +400 | +500 | +600 | +700 ms | Viable? |
-|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---|
+| Task-demand group | Method | Native | +100 | +200 | +300 | +400 ms | Viable? |
+|---|---|---:|---:|---:|---:|---:|---|
 
 Cells contain:
 
@@ -505,9 +660,6 @@ successes / 2
 | 200 ms | ... | ... | ... | ... |
 | 300 ms | ... | ... | ... | ... |
 | 400 ms | ... | ... | ... | ... |
-| 500 ms | ... | ... | ... | ... |
-| 600 ms | ... | ... | ... | ... |
-| 700 ms | ... | ... | ... | ... |
 
 Mark the selected `d*`.
 
@@ -515,10 +667,10 @@ Mark the selected `d*`.
 
 ### Table C — Execution-method calibration
 
-| Method | Native | +100 | +200 | +300 | +400 | +500 | +600 | +700 ms |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|
-| Naive async | ... | ... | ... | ... | ... | ... | ... | ... |
-| RTC | ... | ... | ... | ... | ... | ... | ... | ... |
+| Method | Native | +100 | +200 | +300 | +400 ms |
+|---|---:|---:|---:|---:|---:|
+| Naive async | ... | ... | ... | ... | ... |
+| RTC | ... | ... | ... | ... | ... |
 
 Use this only descriptively. The selected `d*` remains common to both methods.
 
@@ -535,7 +687,7 @@ Use this only descriptively. The selected `d*` remains common to both methods.
 
 ### Plot 1 — ID success vs added delay
 
-- x-axis: added delay (`0`, `100`, `200`, `300`, `400`, `500`, `600`, `700 ms`)
+- x-axis: added delay (`0`, `100`, `200`, `300`, `400 ms`)
 - y-axis: success rate
 - line: execution method
 - facet: task-demand group
@@ -605,9 +757,6 @@ with:
 - +200 ms pooled success:
 - +300 ms pooled success:
 - +400 ms pooled success:
-- +500 ms pooled success:
-- +600 ms pooled success:
-- +700 ms pooled success:
 
 ## Freshness response
 - Native p95 action age:
@@ -615,9 +764,6 @@ with:
 - +200 ms p95 action age:
 - +300 ms p95 action age:
 - +400 ms p95 action age:
-- +500 ms p95 action age:
-- +600 ms p95 action age:
-- +700 ms p95 action age:
 
 ## Selected high delay
 - d*:
@@ -641,7 +787,7 @@ with:
 
 Use:
 
-> “To avoid tuning latency against OOD outcomes, we select the high-delay condition using only standard LIBERO tasks. We evaluate 0, 100, 200, 300, 400, 500, 600, and 700 ms of added delay under both Naive async and RTC, then freeze the smallest delay that produces at least a 20 percentage-point reduction in pooled success on viable ID conditions while retaining at least 25% success.”
+> “To avoid tuning latency against OOD outcomes, we select the high-delay condition using only standard LIBERO tasks. We evaluate 0, 100, 200, 300, and 400 ms of added delay under both Naive async and RTC, then freeze the smallest delay that produces at least a 20 percentage-point reduction in pooled success on viable ID conditions while retaining at least 25% success.”
 
 ### Stage 1 transition
 
@@ -705,16 +851,17 @@ ADDED DELAYS:
     200 ms
     300 ms
     400 ms
-    500 ms
-    600 ms
-    700 ms
 
 SEEDS:
     0
     1
+    10
+    11
+    12
+    13
 
 TOTAL:
-    96 episodes
+    180 episodes
 
 OUTPUT:
     one frozen high delay d*

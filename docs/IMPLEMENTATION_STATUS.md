@@ -18,13 +18,13 @@ Prior work indicates that a π0.5 LIBERO harness with Naive async and RTC exists
 - [ ] Pin π0.5 checkpoint revision
 - [ ] Validate CUDA/EGL environment
 - [ ] Verify exact standard-LIBERO task names at IDs 2 / 0 / 2
-- [ ] Validate `n_action_steps=10`
+- [ ] Validate `n_action_steps=25`
 - [ ] Validate Naive async semantics
 - [ ] Validate RTC semantics
 - [ ] Validate request-specific logical delay
 - [ ] Validate action-age calculation
 - [ ] Generate 96-run calibration manifest
-- [ ] Run 96 calibration episodes
+- [ ] Run 180 calibration episodes
 - [ ] Validate missing/invalid cells
 - [ ] Generate calibration plots/tables
 - [ ] Write `selected_high_delay.json`
