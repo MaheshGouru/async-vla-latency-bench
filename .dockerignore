@@ -6,4 +6,10 @@ __pycache__
 .pytest_cache
 notebooks
 async_vla_benchmark/outputs
+DataArchive
+core_summaries.json
+horizon_sweep_summaries.json
+stage0_export_*/
+stage0_results*
+tmp/
 .claude

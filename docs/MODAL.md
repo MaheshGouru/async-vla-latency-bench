@@ -1,5 +1,33 @@
 # Running the Benchmark on Modal
 
+## Active Stage 0 run
+
+The narrowed ID-only latency calibration uses the minimal `modal_stage0.py` app:
+
+```bash
+modal run --detach modal_stage0.py::main --command run
+```
+
+Run the isolated 25/50/75 ms refinement on the native-viable cells:
+
+```bash
+modal run --detach modal_stage0.py::main --command refine
+```
+
+This dispatches 18 new A100 episodes and writes them to
+`/data/outputs/stage0_refinement_25_75` without modifying the original Stage 0
+results.
+
+It submits 96 sequential A100 episodes and returns a call ID. Poll it with:
+
+```bash
+modal run modal_stage0.py::main --command status --call-id <call_id>
+```
+
+Stage 0 outputs are isolated at `/data/outputs/stage0` on the existing
+`async-vla-benchmark-outputs` volume. The remaining commands below document the
+completed Days 1-3 pipeline.
+
 This repository includes a `modal_app.py` deployment that executes the Days 1–3
 benchmark pipeline on GPU workers in the cloud. It persists outputs to a Modal
 Volume mounted at `/data/outputs`.

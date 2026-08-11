@@ -14,6 +14,9 @@ venv/
 # Models and datasets
 checkpoints/
 datasets/
+stage0_export_*/
+stage0_results*
+tmp/
 *.pt
 *.pth
 *.safetensors

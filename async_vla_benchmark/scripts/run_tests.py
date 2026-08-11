@@ -2,7 +2,9 @@
 """Run the benchmark test suite without requiring pytest."""
 
 import contextlib
+import importlib
 import inspect
+import re
 import sys
 import traceback
 from pathlib import Path
@@ -13,8 +15,9 @@ class Skipped(Exception):
 
 
 class _FakeRaises:
-    def __init__(self, expected):
+    def __init__(self, expected, match=None):
         self.expected = expected
+        self.match = match
 
     def __enter__(self):
         return self
@@ -24,6 +27,10 @@ class _FakeRaises:
             raise AssertionError(f"expected {self.expected.__name__} but no exception was raised")
         if not issubclass(exc_type, self.expected):
             return False
+        if self.match is not None and re.search(self.match, str(exc_value)) is None:
+            raise AssertionError(
+                f"exception message {str(exc_value)!r} does not match {self.match!r}"
+            )
         return True
 
 
@@ -67,6 +74,13 @@ class _FakePytest:
     @staticmethod
     def skip(reason=""):
         raise Skipped(reason)
+
+    @staticmethod
+    def importorskip(name):
+        try:
+            return importlib.import_module(name)
+        except ImportError as exc:
+            raise Skipped(f"could not import {name}: {exc}") from exc
 
 
 def _run_all_tests():

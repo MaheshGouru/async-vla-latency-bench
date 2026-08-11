@@ -1,4 +1,4 @@
-"""Typed YAML configuration loader for the Days 1-3 benchmark."""
+"""Typed YAML configuration loader for the latency benchmark."""
 
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -28,6 +28,25 @@ class RTCConfig:
     max_guidance_weight: float
     prefix_attention_schedule: str
     request_threshold_actions: int
+
+
+@dataclass(frozen=True)
+class Stage0TaskConfig:
+    task_key: str
+    task_group_key: str
+    task_group_label: str
+    suite: str
+    task_id: int
+    task_name: str
+
+
+@dataclass(frozen=True)
+class Stage0Config:
+    tasks: list[Stage0TaskConfig]
+    methods: list[str]
+    added_delays_ms: list[int]
+    seeds: list[int]
+    fixed_horizon: int
 
 
 @dataclass
@@ -61,6 +80,7 @@ class BenchmarkConfig:
     max_episode_steps: int | None = None
     output_dir: Path = field(default_factory=lambda: Path("outputs"))
     selected_tasks_file: str = "outputs/summaries/selected_tasks.json"
+    stage0: Stage0Config | None = None
 
 
 def _as_list(value: Any) -> list[int]:
@@ -106,6 +126,27 @@ def load_config(path: Path | str) -> BenchmarkConfig:
         request_threshold_actions=rtc_raw.get("request_threshold_actions", 5),
     )
 
+    stage0 = None
+    stage0_raw = raw.get("stage0")
+    if stage0_raw is not None:
+        stage0 = Stage0Config(
+            tasks=[
+                Stage0TaskConfig(
+                    task_key=item["task_key"],
+                    task_group_key=item["task_group_key"],
+                    task_group_label=item["task_group_label"],
+                    suite=item["suite"],
+                    task_id=int(item["task_id"]),
+                    task_name=item["task_name"],
+                )
+                for item in stage0_raw.get("tasks", [])
+            ],
+            methods=[str(value) for value in stage0_raw.get("methods", [])],
+            added_delays_ms=_as_list(stage0_raw.get("added_delays_ms", [])),
+            seeds=_as_list(stage0_raw.get("seeds", [])),
+            fixed_horizon=int(stage0_raw.get("fixed_horizon", 10)),
+        )
+
     return BenchmarkConfig(
         repository=raw.get("repository", "huggingface/lerobot"),
         repository_revision=raw.get("repository_revision"),
@@ -136,4 +177,5 @@ def load_config(path: Path | str) -> BenchmarkConfig:
         max_episode_steps=raw.get("max_episode_steps"),
         output_dir=Path(raw.get("output_dir", "outputs")),
         selected_tasks_file=raw.get("selected_tasks_file", "outputs/summaries/selected_tasks.json"),
+        stage0=stage0,
     )

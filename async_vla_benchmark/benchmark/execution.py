@@ -2,7 +2,7 @@
 
 import time
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any, Mapping, Optional
 
 import numpy as np
 
@@ -113,6 +113,7 @@ class EpisodeRunner:
         request_threshold_actions: Optional[int] = None,
         max_steps: Optional[int] = None,
         device: str = "cuda",
+        summary_metadata: Mapping[str, Any] | None = None,
     ) -> None:
         self.env = env
         self.policy = policy
@@ -127,6 +128,7 @@ class EpisodeRunner:
         self.episode_id = episode_id
         self.output_dir = output_dir
         self.device = device
+        self.summary_metadata = dict(summary_metadata or {})
         self.control_frequency_hz = resolve_control_frequency_hz(env)
         self.control_period_seconds = 1.0 / self.control_frequency_hz
         self.clock = EventClock(self.control_period_seconds)
@@ -385,8 +387,11 @@ class EpisodeRunner:
     ) -> None:
         source_step = meta.get("source_observation_step")
         if source_step is None:
-            age_steps = 0
-            age_ms = 0.0
+            # A hold has no source policy observation, so assigning age zero would
+            # make stale episodes appear artificially fresh. Keep it null and
+            # summarize action age over policy-generated actions only.
+            age_steps = None
+            age_ms = None
         else:
             age_steps = action_age_steps(control_step, source_step)
             age_ms = action_age_ms(age_steps, self.control_period_seconds)
@@ -489,38 +494,55 @@ class EpisodeRunner:
         import statistics
 
         request_latencies = [r["measured_request_latency_ms"] for r in self.requests]
-        action_ages = [a["action_age_ms"] for a in self.actions]
+        action_ages = [a["action_age_ms"] for a in self.actions if a["action_age_ms"] is not None]
         queue_depths = [a["queue_depth_before"] for a in self.actions]
-        deltas = [np.linalg.norm(np.array(a["action_vector"][:6])) for a in self.actions]
+        delay_steps = [r["delay_steps"] for r in self.requests if r["latency_profile"] != "ideal"]
+        motion_actions = [a["action_vector"][:6] for a in self.actions]
 
         def pct(values, p):
             return percentile(values, p) if values else float("nan")
 
         summary = {
+            **self.summary_metadata,
             "episode_id": self.episode_id,
             "strategy": self.strategy,
             "latency_profile": self.latency_profile.name,
             "fixed_horizon": self.fixed_horizon,
             "success": success,
             "environment_steps": environment_steps,
+            # LIBERO exposes binary task success but no calibrated subgoal-progress
+            # signal. Successful episodes are complete; failed completion fraction
+            # remains unavailable rather than being fabricated from elapsed steps.
+            "completion_fraction": 1.0 if success else None,
             "timed_out": environment_steps >= self.max_steps,
+            "failure_mode": "success" if success else (
+                "timeout" if environment_steps >= self.max_steps else "other"
+            ),
+            "status": "completed",
+            "invalid_reason": None,
+            "control_frequency_hz": self.control_frequency_hz,
             "logical_completion_time_seconds": environment_steps * self.control_period_seconds,
             "wall_clock_runtime_seconds": self._wall_clock_runtime_seconds,
             "number_of_policy_requests": len(self.requests),
             "total_model_inference_ms": self._total_model_inference_ms,
             "mean_request_latency_ms": statistics.mean(request_latencies) if request_latencies else float("nan"),
+            "p50_request_latency_ms": pct(request_latencies, 0.50),
             "p95_request_latency_ms": pct(request_latencies, 0.95),
             "mean_action_age_ms": statistics.mean(action_ages) if action_ages else float("nan"),
+            "p50_action_age_ms": pct(action_ages, 0.50),
             "p95_action_age_ms": pct(action_ages, 0.95),
             "maximum_action_age_ms": max(action_ages) if action_ages else float("nan"),
+            "mean_logical_delay_steps": statistics.mean(delay_steps) if delay_steps else float("nan"),
+            "p95_logical_delay_steps": pct(delay_steps, 0.95),
             "mean_queue_depth": statistics.mean(queue_depths) if queue_depths else float("nan"),
+            "p95_queue_depth": pct(queue_depths, 0.95),
             "minimum_queue_depth": min(queue_depths) if queue_depths else float("nan"),
             "queue_underrun_steps": sum(1 for a in self.actions if a["is_queue_underrun"]),
             "hold_action_steps": sum(1 for a in self.actions if a["is_hold_action"]),
             "discarded_old_actions": self.queue.discarded_old_actions,
-            "mean_action_delta_l2": statistics.mean(deltas) if deltas else float("nan"),
-            "mean_action_acceleration_l2": mean_continuity([a["action_vector"] for a in self.actions], 2),
-            "mean_action_jerk_l2": mean_continuity([a["action_vector"] for a in self.actions], 3),
+            "mean_action_delta_l2": mean_continuity(motion_actions, 1),
+            "mean_action_acceleration_l2": mean_continuity(motion_actions, 2),
+            "mean_action_jerk_l2": mean_continuity(motion_actions, 3),
         }
         summary.update(self._summarize_rtc())
         return summary
@@ -598,6 +620,7 @@ def run_episode(
     rtc_execution_horizon: int = 10,
     request_threshold_actions: Optional[int] = None,
     device: str = "cuda",
+    summary_metadata: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     """High-level entry point to run one episode and write artifacts."""
     runner = EpisodeRunner(
@@ -615,5 +638,6 @@ def run_episode(
         rtc_execution_horizon=rtc_execution_horizon,
         request_threshold_actions=request_threshold_actions,
         device=device,
+        summary_metadata=summary_metadata,
     )
     return runner.run(seed)

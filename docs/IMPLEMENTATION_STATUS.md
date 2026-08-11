@@ -1,64 +1,54 @@
-# Days 1–3 Implementation Status
+# Implementation Status
 
-Last updated: 2026-07-21
+Last updated: 2026-08-11
 
-Current state: benchmark infrastructure and scripts are implemented, but real
-experimental execution has not been performed. The checks below validate local
-scaffolding and are not evidence of completed experiments.
+## Completed prerequisite
 
-## Scope
+Mathew's Days 1-3 run produced 222 validated episodes on Modal and established
+the reusable discrete-event runner, request/action provenance, Naive async and RTC
+adapters, result validation, and pinned pi0.5-LIBERO environment.
 
-- [x] Scope limited to ideal synchronous, blocking synchronous, naive asynchronous queue, RTC, and fixed execution horizons.
-- [x] No policy training, OOD perturbations, dynamic interventions, VLASH, FASTER, DEHP, SmolVLA, or OpenVLA.
+Those outputs remain historical evidence. They use task IDs 0/0/0 and do not
+constitute the new Stage 0 calibration.
 
-## Inspection and environment
+## Stage 0 calibration
 
-- [x] Read `AGENTS.md`, `docs/RESEARCH_CONTEXT.md`, and `docs/DAYS_1_3_SPEC.md` completely.
-- [x] Inspected workspace and all discovered Python environments.
-- [x] Inspected current upstream LeRobot π0.5, RTC, and LIBERO APIs as a scaffolding reference.
-- [ ] Pin local LeRobot Git commit (blocked: no LeRobot checkout or installation).
-- [ ] Pin checkpoint and dataset revision SHAs (blocked: artifacts not installed/downloaded).
-- [ ] Validate Linux/CUDA/EGL execution environment (blocked: current host is macOS without CUDA stack).
+Stage 0 - ID-only latency calibration
 
-## Implementation
+- [x] Pin LeRobot revision
+- [x] Pin pi0.5 checkpoint revision
+- [x] Freeze exact task IDs and names at 2/0/2
+- [x] Freeze Naive async and RTC as the two methods
+- [x] Freeze delays 0 through 700 ms in 100 ms increments
+- [x] Freeze seeds 0 and 1
+- [x] Generate the 96-episode manifest
+- [x] Isolate Stage 0 outputs from Days 1-3 artifacts
+- [x] Add task-name and experiment-matrix preflight assertions
+- [x] Add Stage 0 result tables, figures, and frozen `d*` selection
+- [x] Correct action-age aggregation to exclude source-less hold actions
+- [x] Build the pinned CUDA/LeRobot/LIBERO Modal image
+- [x] Validate the CUDA/EGL image and exact live task names on Modal
+- [x] Run all 96 calibration episodes
+- [x] Validate all 96 episode/request/action artifacts
+- [x] Generate final calibration artifacts
+- [x] Freeze `selected_high_delay.json` at `d*=100 ms`
 
-- [x] Create isolated benchmark package structure.
-- [x] Implement latency conversion, provenance, queue, logical clock, RTC call adapter, metrics, and guarded environment/policy adapters.
-- [x] Complete production episode execution and output logging.
-- [x] Implement inspect_setup, task selection, profiling, benchmark, validation, figure, and test-runner scripts.
-- [x] Implement latency, action-age, naive-queue, horizon, RTC, and reproducibility tests.
-- [x] Add `--output-dir` overrides to all CLI scripts for Modal volume mounting.
-- [x] Create `modal_app.py`, `Dockerfile.modal`, and `docs/MODAL.md` for remote GPU execution.
+All 96 manifest rows completed with valid episode, request, and action logs. The
+low-delay results also exposed queue starvation in some Native cells; this is an
+experimental outcome rather than a missing or malformed run.
 
-## Validation and experiments
+## Active refinement
 
-### Implementation-only checks
+An 18-episode follow-up was submitted on 2026-08-11 for 25, 50, and 75 ms added
+delay. It is restricted to the three task x method cells that had at least one
+Native success:
 
-- [x] Dependency-free latency smoke test passes (`0/1/100/101/300/700 ms`).
-- [x] Package syntax compilation passes under Python 3.14.5.
-- [x] Core dry-run expands to 150 episodes; horizon dry-run expands to 108 maximum episodes.
-- [x] Custom test runner passes 6/7 tests (1 skipped because LeRobot/LIBERO is not installed).
+```text
+libero_goal:0 x naive_async
+libero_goal:0 x rtc
+libero_10:2   x naive_async
+```
 
-### Experimental completion criteria
-
-- [ ] Execution environment metadata captured from the required Linux/CUDA/EGL host.
-- [ ] Exact checkpoint loads on CUDA.
-- [ ] Three viable tasks selected.
-- [ ] 100 measured native requests profiled.
-- [ ] Core episode logs validated.
-- [ ] RTC verified with request-specific delays.
-- [ ] Horizon sweep logs validated.
-- [ ] Figures generated after validation.
-
-Experimental completion: **not achieved**. No validated request, action, episode,
-task-selection, native-latency, horizon-sweep, summary, or figure artifacts exist on
-this host.
-
-## Recorded deviations and failures
-
-- 2026-07-21: Workspace is a Git repository; LeRobot and LIBERO are not installed.
-- 2026-07-21: No CUDA runtime/GPU is available on the macOS development host.
-- 2026-07-21: Artifact revisions (`checkpoint_revision`, `dataset_revision`) are still `null` in `configs/days1_3.yaml`.
-- 2026-07-21: No benchmark episodes have been executed; all outputs are scaffolding diagnostics.
-- 2026-07-21: `pytest` is not installed, but `scripts/run_tests.py` provides a shim and runs the test suite.
-- 2026-07-21: `inspect_setup.py` writes `async_vla_benchmark/outputs/environment.json` with `status: not_ready`.
+The refinement writes to `/data/outputs/stage0_refinement_25_75` and does not
+modify the frozen 96-episode calibration. Raw exports and result archives are
+intentionally ignored by Git and should be shared separately from the code PR.

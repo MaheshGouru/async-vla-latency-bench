@@ -1,107 +1,51 @@
-
 # Research Context
 
-## Research goal
+## Working title
 
-We are studying asynchronous buffering for Vision-Language-Action policies
-without physical robot hardware.
+Robustness Under Delay: OOD x Inference-Latency Interactions in
+Vision-Language-Action Policies
 
-The initial target is a workshop paper studying how model inference latency
-translates into behavioral latency, action staleness, queue underruns, and task
-failure.
+## Central question
 
-## Final Week 1 question
+Which kinds of distribution shift reduce a VLA policy's tolerance to inference
+delay, and under which behavioral demands?
 
-For a frozen π0.5-LIBERO policy, compare:
+The completed Days 1-3 experiment established the execution harness and measured
+the latency regime. Its ideal-sync, blocking-sync, and horizon-sweep results are
+historical context, not the new critical-path factorial.
 
-1. Ideal synchronous execution
-2. Blocking synchronous execution
-3. Naive asynchronous action replacement
-4. Real-Time Chunking
-5. Fixed execution horizons
+## Active stage
 
-Measure:
+Stage 0 is an in-distribution-only latency calibration. It uses the frozen
+`lerobot/pi05_libero_finetuned` checkpoint with `n_action_steps=10` and compares:
 
-- native model latency;
-- end-to-end request latency;
-- action age;
-- task success;
-- completion time;
-- queue depth and underruns;
-- action continuity;
-- sensitivity to execution horizon.
+- `naive_async`
+- `rtc`
 
-## Why this study comes first
+The exact base tasks are:
 
-Before implementing a new algorithm, we need to determine whether:
+- `libero_spatial:2` - Single-stage transport
+- `libero_goal:0` - Articulated/contact-rich
+- `libero_10:2` - Multi-stage/sequential
 
-- asynchronous strategies produce meaningfully different behavior;
-- action age differs from raw inference latency;
-- RTC improves continuity, success, or both;
-- fixed execution horizon materially changes performance;
-- there is a sufficient empirical gap to justify adding VLASH and FASTER.
+Stage 0 tests 0 through 700 ms of added delay in 100 ms increments with seeds 0
+and 1. The 96 ID episodes select one non-saturating high delay, `d*`, without
+using any OOD outcomes.
 
-## Model and benchmark
+## Paper path
 
-Primary checkpoint:
+Stage 1 will cross Native versus Native + `d*` with the seven LIBERO-Plus
+perturbation families under Naive async and RTC. Stage 2 may confirm selected
+interactions on held-out seeds.
 
-`lerobot/pi05_libero_finetuned`
+The stronger target result is not merely that OOD and delay both hurt. It is that
+native-latency OOD performance may fail to predict delayed OOD performance, or
+that perturbation families and behavioral demands differ in how much they reduce
+delay tolerance.
 
-Environment:
+## Scope boundary
 
-LIBERO through LeRobot.
-
-Initial task suites:
-
-- LIBERO-Spatial
-- LIBERO-Goal
-- LIBERO-10
-
-The dataset reference is:
-
-`HuggingFaceVLA/libero`
-
-No policy training or fine-tuning is required in Days 1–3.
-
-## Important conceptual distinctions
-
-Model inference latency:
-Time needed for one policy request.
-
-Logical inference delay:
-Number of control steps before a generated chunk becomes available.
-
-Action age:
-Time between capturing the source observation and executing an action generated
-from that observation.
-
-Reaction latency:
-Time between a scene change and execution of an action conditioned on a
-post-change observation.
-
-RTC primarily addresses asynchronous chunk compatibility. It should not
-automatically be interpreted as reducing raw policy-forward latency.
-
-## Ideas considered but not pursued yet
-
-Semantic slack:
-Rejected as the initial contribution because it closely overlaps adaptive
-execution-horizon and event-triggered control literature.
-
-Joint adaptive compute and execution horizon:
-Potential later project, but too broad before establishing the baseline
-phenomenon.
-
-OOD and dynamic perturbations:
-Deferred until the standard asynchronous execution harness is validated.
-
-VLASH and FASTER:
-Required candidates for a later complete-paper benchmark, but excluded from the
-Days 1–3 critical path.
-
-## Current scope boundary
-
-Implement only what is specified in `docs/DAYS_1_3_SPEC.md`.
-
-Do not broaden the task without first documenting why the existing specification
-cannot be executed.
+The current implementation task is Stage 0 only. Do not add OOD execution,
+phase-conditioned interventions, dynamic target movement, new policies, training,
+VLASH, FASTER, or other execution methods before Stage 0 is complete and `d*` is
+frozen.

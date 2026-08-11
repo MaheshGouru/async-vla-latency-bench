@@ -75,7 +75,11 @@ def _check_delay_conversion(requests: list[dict], control_period_seconds: float)
 def _check_action_records(actions: list[dict], chunk_ids: set, request_source_ids: set) -> list[str]:
     errors = []
     for a in actions:
-        if a["action_age_steps"] < 0:
+        age_steps = a.get("action_age_steps")
+        age_missing = age_steps is None or (
+            isinstance(age_steps, float) and math.isnan(age_steps)
+        )
+        if not age_missing and age_steps < 0:
             errors.append(f"action {a['control_step']}: negative action age")
         # queue_depth_before == 0 is the expected, correct value for a hold
         # action (the queue ran dry before this step's pop) -- only negative
@@ -83,6 +87,8 @@ def _check_action_records(actions: list[dict], chunk_ids: set, request_source_id
         if a["queue_depth_before"] < 0 or a["queue_depth_after"] < 0:
             errors.append(f"action {a['control_step']}: invalid queue depth")
         if not a["is_hold_action"]:
+            if age_missing:
+                errors.append(f"action {a['control_step']}: policy action has no action age")
             if a["chunk_id"] not in chunk_ids:
                 errors.append(f"action {a['control_step']}: references missing chunk {a['chunk_id']}")
             if a["source_observation_id"] not in request_source_ids:
@@ -219,8 +225,8 @@ def _check_rtc_inference_delay(summary: dict, requests: list[dict]) -> list[str]
 
     The value spec section 15 constrains is `inference_delay` -- what RTC is handed
     at call time -- not `delay_steps`, which is recomputed from the measured latency
-    after the call returns. Those are different numbers, so the older check below
-    (realized delays all identical) cannot see this class of defect at all: when
+    after the call returns. Those are different numbers, so checking whether
+    realized delays happen to be identical cannot see this defect at all: when
     `inference_delay` was hardcoded to 0 on every request, all 222 episodes still
     validated clean. This one reads `rtc_inference_delay_steps`, the logged argument.
 
@@ -325,12 +331,6 @@ def validate_episode(output_dir: Path, episode_id: str, summary: dict) -> list[s
     errors.extend(_check_cuda_timing_synchronized(requests))
     errors.extend(_check_rtc_inference_delay(summary, requests))
     errors.extend(_check_rtc_action_counts(summary, requests))
-
-    # RTC sanity: delay_steps should not be globally averaged (identical across all requests is suspicious).
-    if summary.get("strategy") == "rtc" and len(requests) > 1:
-        delays = [r["delay_steps"] for r in requests]
-        if len(set(delays)) == 1:
-            errors.append("RTC requests all have the same delay_steps; expected request-specific delays")
 
     return errors
 

@@ -6,6 +6,10 @@ as VLASH, FASTER, DEHP, SmolVLA, or OpenVLA.
 
 ## What is implemented
 
+The active experiment is the 96-episode Stage 0 ID latency calibration described
+in `docs/STAGE_0_LATENCY_CALIBRATION.md`. The completed Days 1-3 benchmark remains
+the validated harness and historical baseline.
+
 - Discrete-event episode execution for the four baseline strategies:
   `ideal_sync`, `blocking_sync`, `naive_async`, and `rtc`.
 - Latency-to-delay-step conversion using `ceil` and request-specific measured latency.
@@ -78,6 +82,12 @@ jobs can interleave their read-modify-write and drop each other's rows. Rebuildi
 
 ## Dry-run and tests
 
+Stage 0 preflight and manifest generation do not load LeRobot or the policy:
+
+```bash
+PYTHONPATH=. python -m async_vla_benchmark.scripts.run_stage0 --manifest-only
+```
+
 The package can be exercised locally without LeRobot or CUDA:
 
 ```bash
@@ -88,6 +98,14 @@ PYTHONPATH=. python async_vla_benchmark/scripts/run_benchmark.py \
 ```
 
 ## Running on Modal
+
+The focused Stage 0 submission is:
+
+```bash
+modal run --detach modal_stage0.py::main --command run
+```
+
+It writes only to `/data/outputs/stage0` and resumes validated Stage 0 cells.
 
 A complete Modal deployment is included for remote GPU execution. See `docs/MODAL.md`
 for setup, deploy, and run instructions.
