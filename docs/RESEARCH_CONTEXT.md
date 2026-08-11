@@ -1,107 +1,179 @@
-
 # Research Context
 
-## Research goal
+## Working title
 
-We are studying asynchronous buffering for Vision-Language-Action policies
-without physical robot hardware.
+**Robustness Under Delay: OOD × Inference-Latency Interactions in Vision-Language-Action Policies**
 
-The initial target is a workshop paper studying how model inference latency
-translates into behavioral latency, action staleness, queue underruns, and task
-failure.
+Do not use `StaleBench` as the submission name unless the name collision is resolved.
 
-## Final Week 1 question
+## Central question
 
-For a frozen π0.5-LIBERO policy, compare:
+> **Which kinds of distribution shift reduce a VLA policy's tolerance to inference delay, and under which behavioral demands?**
 
-1. Ideal synchronous execution
-2. Blocking synchronous execution
-3. Naive asynchronous action replacement
-4. Real-Time Chunking
-5. Fixed execution horizons
+A complementary deployment question is:
 
-Measure:
+> **Can standard native-latency robustness evaluations predict robustness once realistic inference delay is introduced?**
 
-- native model latency;
-- end-to-end request latency;
-- action age;
-- task success;
-- completion time;
-- queue depth and underruns;
-- action continuity;
-- sensitivity to execution horizon.
+## Why this is the paper
 
-## Why this study comes first
+Static OOD robustness and inference-delay robustness are usually evaluated separately. The paper tests their **interaction**.
 
-Before implementing a new algorithm, we need to determine whether:
+A weak result is:
 
-- asynchronous strategies produce meaningfully different behavior;
-- action age differs from raw inference latency;
-- RTC improves continuity, success, or both;
-- fixed execution horizon materially changes performance;
-- there is a sufficient empirical gap to justify adding VLASH and FASTER.
+> OOD hurts, delay hurts, and OOD plus delay hurts more.
 
-## Model and benchmark
+A stronger result is one or more of:
 
-Primary checkpoint:
+1. native-latency OOD success does not predict delayed OOD success;
+2. perturbation families differ strongly in how much they reduce delay tolerance;
+3. the same perturbation behaves differently across task-demand groups;
+4. Naive async and RTC change ranking under OOD + delay;
+5. executed action age explains failures that request latency alone does not.
 
-`lerobot/pi05_libero_finetuned`
+## Primary model
 
-Environment:
+```text
+lerobot/pi05_libero_finetuned
+```
 
-LIBERO through LeRobot.
+Main evaluation override:
 
-Initial task suites:
+```text
+policy.n_action_steps = 10
+```
 
-- LIBERO-Spatial
-- LIBERO-Goal
-- LIBERO-10
+No additional VLA model is required for the primary paper.
 
-The dataset reference is:
+## Primary execution methods
 
-`HuggingFaceVLA/libero`
+```text
+Naive async
+RTC
+```
 
-No policy training or fine-tuning is required in Days 1–3.
+Ideal/blocking/horizon results from earlier work may be cited as preliminary context, but they are not part of the new critical-path factorial.
 
-## Important conceptual distinctions
+## Task-demand taxonomy
 
-Model inference latency:
-Time needed for one policy request.
+This is **our experimental taxonomy**, not an official LIBERO taxonomy.
 
-Logical inference delay:
-Number of control steps before a generated chunk becomes available.
+| Display label | Interpretation | Base task |
+|---|---|---|
+| **Single-stage transport** | relatively short pick-and-place dominated by transport between grasp and placement | `libero_spatial:2` |
+| **Articulated/contact-rich** | alignment/contact with an articulated object is central | `libero_goal:0` |
+| **Multi-stage/sequential** | multiple ordered subgoals can accumulate errors | `libero_10:2` |
 
-Action age:
-Time between capturing the source observation and executing an action generated
-from that observation.
+Exact standard-LIBERO task names:
 
-Reaction latency:
-Time between a scene change and execution of an action conditioned on a
-post-change observation.
+```text
+libero_spatial:2
+pick_up_the_black_bowl_from_table_center_and_place_it_on_the_plate
 
-RTC primarily addresses asynchronous chunk compatibility. It should not
-automatically be interpreted as reducing raw policy-forward latency.
+libero_goal:0
+open_the_middle_drawer_of_the_cabinet
 
-## Ideas considered but not pursued yet
+libero_10:2
+KITCHEN_SCENE3_turn_on_the_stove_and_put_the_moka_pot_on_it
+```
 
-Semantic slack:
-Rejected as the initial contribution because it closely overlaps adaptive
-execution-horizon and event-triggered control literature.
+## Perturbation taxonomy
 
-Joint adaptive compute and execution horizon:
-Potential later project, but too broad before establishing the baseline
-phenomenon.
+LIBERO-Plus provides seven perturbation dimensions. We retain those dimensions and introduce an internal mechanism grouping.
 
-OOD and dynamic perturbations:
-Deferred until the standard asynchronous execution harness is validated.
+| LIBERO-Plus perturbation | Internal mechanism group | Intended interpretation |
+|---|---|---|
+| Object layout | **Trajectory adaptation** | changed task geometry may require a different trajectory |
+| Robot initial state | **Trajectory adaptation** | changed manipulator start configuration requires adaptation |
+| Camera viewpoint | **Perceptual localization** | changed viewpoint stresses spatial localization |
+| Sensor noise | **Perceptual localization** | degraded observations stress localization/perception |
+| Lighting | **Appearance invariance** | task geometry is largely preserved while appearance changes |
+| Background texture | **Appearance invariance** | irrelevant scene/surface appearance changes |
+| Language instruction | **Semantic grounding** | alternative instruction wording stresses language-conditioned grounding |
 
-VLASH and FASTER:
-Required candidates for a later complete-paper benchmark, but excluded from the
-Days 1–3 critical path.
+Use the exact four mechanism labels:
 
-## Current scope boundary
+```text
+Trajectory adaptation
+Perceptual localization
+Appearance invariance
+Semantic grounding
+```
 
-Implement only what is specified in `docs/DAYS_1_3_SPEC.md`.
+## Hypotheses
 
-Do not broaden the task without first documenting why the existing specification
-cannot be executed.
+### H1 — OOD × delay interaction
+
+Distribution shift changes the marginal effect of inference delay:
+
+```text
+I =
+  [S(OOD, high) - S(OOD, low)]
+  -
+  [S(ID, high) - S(ID, low)]
+```
+
+A negative `I` means OOD reduces delay tolerance.
+
+### H2 — Perturbation mechanism
+
+The interaction magnitude differs across perturbation-mechanism groups.
+
+### H3 — Behavioral demand
+
+The same perturbation can interact differently with delay on Single-stage transport, Articulated/contact-rich, and Multi-stage/sequential tasks.
+
+### H4 — Execution method
+
+Naive async and RTC can exhibit different OOD × delay interactions and may change ranking under OOD + delay.
+
+### H5 — Temporal mechanism
+
+Executed action age and queue behavior can help explain interaction patterns that are not visible from request latency alone.
+
+H5 is mechanism analysis, not a separate headline contribution.
+
+## Scope
+
+### Required
+
+- one π0.5 checkpoint;
+- three base tasks;
+- all seven LIBERO-Plus perturbation families;
+- ID-only latency calibration;
+- Native vs Native + `d*`;
+- Naive async vs RTC;
+- action provenance and age;
+- complete exploratory reporting;
+- held-out confirmation of selected candidate effects if time permits.
+
+### Not required
+
+- phase-conditioned interventions;
+- dynamic target movement;
+- VLASH;
+- SmolVLA;
+- streaming/corrective methods;
+- additional model training;
+- hardware robot validation.
+
+## Main contribution
+
+A controlled evaluation showing **how robustness to distribution shift changes once asynchronous inference delay is introduced**, organized by:
+
+1. perturbation mechanism;
+2. manipulation behavioral demand;
+3. execution method.
+
+Action-level provenance provides an explanatory temporal measurement layer.
+
+## Explicit non-claims
+
+Do not claim:
+
+- a new execution algorithm;
+- universal robustness rankings;
+- hardware validity;
+- safety guarantees;
+- causal mechanisms from action-age correlation alone;
+- that every OOD perturbation amplifies delay;
+- that the internal taxonomy is a canonical robotics taxonomy.

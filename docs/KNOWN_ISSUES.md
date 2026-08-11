@@ -1,49 +1,24 @@
 # Known Issues
 
-Last updated: 2026-07-21
+| ID | Area | Issue | Impact | Mitigation |
+|---|---|---|---|---|
+| K001 | Statistics | Stage 1 has only 2 seeds per cell | per-cell rates are very noisy | label Stage 1 exploratory; confirm selected effects on new seeds |
+| K002 | Taxonomy | task-demand groups are introduced by this study | cannot present them as canonical literature categories | state this explicitly |
+| K003 | Taxonomy | perturbation-mechanism groups are introduced by this study | mechanism labels may be debatable | preserve official LIBERO-Plus category alongside internal group |
+| K004 | Coverage | one OOD variant per task × family cannot represent the full perturbation family | limits family-level generalization | deterministic selection; state limitation; optionally add variants only after main result |
+| K005 | OOD difficulty | a chosen moderate variant may still produce a floor | interaction becomes uninterpretable | require OOD-low viability and report floor cells |
+| K006 | Model scope | one π0.5 checkpoint | limits cross-model generality | frame as controlled case study, not universal ranking |
+| K007 | Environment | LIBERO-Plus replaces/conflicts with vanilla LIBERO namespace | can contaminate ID setup | separate pinned environments |
+| K008 | Latency calibration | `d*` is chosen from only two seeds per calibration cell | selected operating point may be noisy | use all six viable task × method cells; report full curve; freeze before OOD |
+| K009 | Method fairness | Naive async and RTC may differ in policy-call/queue semantics | interaction could reflect implementation mismatch | validate request schedule, horizon, checkpoint, action representation |
+| K010 | Freshness metrics | action-age aggregation can be contaminated by holds/startup | misleading mechanism analysis | separate holds/underruns and inspect action-level traces |
+| K011 | Runtime drift | native latency may drift across runs/GPU state | changes effective delay | log request latency per request and GPU/environment metadata |
+| K012 | Naming | `StaleBench` collides with an unrelated benchmark name | submission ambiguity | use the new descriptive working title unless renamed again |
+| K013 | Semantic grounding | mechanism group contains one perturbation family only | mechanism-level comparison is unbalanced | treat group-level result as descriptive |
+| K014 | Simulation | no hardware validation | deployment conclusions limited | state simulation-only scope; make no safety claims |
 
-## Blocking experimental execution
+## Issue template
 
-1. **No pinned LeRobot checkout or installation.** `lerobot` is not importable on the
-   macOS development host and no LeRobot commit can currently be recorded.
-2. **Required simulation packages are absent.** `libero`, `mujoco`, and `robosuite` are
-   not installed.
-3. **No CUDA/EGL execution host.** The current machine is macOS and has no available CUDA
-   runtime or GPU. It cannot satisfy the required Linux/CUDA/EGL conditions.
-4. **Artifact revisions are unresolved.** The checkpoint and dataset revision SHAs are
-   still `null` in `configs/days1_3.yaml`.
-5. **Control frequency resolution is unvalidated.** `environment.resolve_control_frequency_hz`
-   now walks wrappers and checks `metadata["render_fps"]`, but it has not been verified
-   against an instantiated `LiberoEnv`.
-
-## Implementation status
-
-The core benchmark package is implemented. The remaining risks are:
-
-1. The LeRobot preprocessor input format for the LIBERO `pixels`/`robot_state` observation
-   dict has been inferred from upstream source but not validated against a pinned installed
-   revision or checkpoint.
-2. The RTC wrapper passes `inference_delay`, `prev_chunk_left_over`, and `execution_horizon`
-   but has not been exercised against a real π0.5 checkpoint.
-3. Parquet output schemas and the result validator have not been exercised on real
-   benchmark episodes.
-4. `make_figures.py` requires `matplotlib` and validated summaries.
-5. The Modal deployment (`modal_app.py` / `Dockerfile.modal`) has been added but has
-   not been built, deployed, or run on a GPU worker. Image build issues with LeRobot,
-   robosuite, or LIBERO may require Dockerfile edits on the target host.
-
-## Test status
-
-1. `pytest` is not installed. `scripts/run_tests.py` injects a minimal pytest shim and runs
-   the test suite; 6/7 tests pass and 1 is skipped because LeRobot/LIBERO is missing.
-2. Implementation checks (latency, queue, action age, horizon, RTC) pass, but they do not
-   exercise LeRobot, LIBERO, CUDA timing, or environment rollouts.
-
-## Output status
-
-1. `async_vla_benchmark/outputs/environment.json` is a failed-readiness diagnostic with
-   `status: not_ready`.
-2. No validated experimental request, action, episode, task-selection, latency-profile,
-   summary, report, or figure artifacts exist on this host.
-3. No task has been selected, no checkpoint has loaded, and zero benchmark episodes have
-   been run.
+```text
+KXXX | Area | Issue | Impact | Mitigation
+```

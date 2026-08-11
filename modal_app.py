@@ -41,6 +41,13 @@ LIBERO_PLUS_SHA = "4976dc3"
 VOLUME_NAME = "async-vla-benchmark-outputs"
 MOUNT_PATH = Path("/data/outputs")
 CONFIG_PATH = Path("/root/async-vla-latency-bench/async_vla_benchmark/configs/days1_3.yaml")
+STAGE0_CONFIG_PATH = Path(
+    "/root/async-vla-latency-bench/async_vla_benchmark/configs/stage0.yaml"
+)
+# Stage 0 writes under its own prefix on the shared volume. Raw artifacts are
+# keyed by episode_id alone, so a shared root would let calibration runs collide
+# with the Days 1-3 core/horizon outputs.
+STAGE0_PATH = MOUNT_PATH / "stage0"
 
 image = modal.Image.from_dockerfile(
     Path(__file__).parent / "Dockerfile.modal",
@@ -329,6 +336,93 @@ def run_single_episode(suite: str = "libero_spatial", task_id: int = 0, seed: in
     gpu="A100-40GB",
     volumes={str(MOUNT_PATH): volume},
     secrets=[modal.Secret.from_name("hf-token")],
+    timeout=60 * 60,
+)
+def stage0_preflight():
+    """Stage 0 gate: assert task names, control frequency, and n_action_steps.
+
+    Runs no episodes. Everything downstream of Stage 0 inherits these
+    assumptions, so this is the cheapest place to catch a wrong task index or a
+    checkpoint whose chunk length does not match the configured horizon.
+    """
+    return _run_script(
+        [
+            "async_vla_benchmark.scripts.run_stage0",
+            "--config",
+            str(STAGE0_CONFIG_PATH),
+            "--output-dir",
+            str(STAGE0_PATH),
+            "--preflight-only",
+        ]
+    )
+
+
+@app.function(
+    gpu="A100-40GB",
+    volumes={str(MOUNT_PATH): volume},
+    secrets=[modal.Secret.from_name("hf-token")],
+    timeout=10 * 60 * 60,
+)
+def run_stage0(native_only: bool = False, resume: bool = True, tasks: str = "", methods: str = ""):
+    """Run the Stage 0 latency calibration on a GPU worker.
+
+    `native_only=True` runs just the 12 Native episodes -- the viability smoke
+    test that decides whether the remaining 84 are worth running at all
+    (STAGE_0 section 8.1: a cell that already fails at Native gets no vote in
+    choosing d*).
+    """
+    cmd = [
+        "async_vla_benchmark.scripts.run_stage0",
+        "--config",
+        str(STAGE0_CONFIG_PATH),
+        "--output-dir",
+        str(STAGE0_PATH),
+    ]
+    if native_only:
+        cmd.append("--native-only")
+    if resume:
+        cmd.append("--resume")
+    for task in filter(None, (t.strip() for t in tasks.split(","))):
+        cmd.extend(["--task", task])
+    for method in filter(None, (m.strip() for m in methods.split(","))):
+        cmd.extend(["--method", method])
+    try:
+        return _run_script(cmd)
+    finally:
+        # Commit even on failure: a partial calibration is resumable, and
+        # losing 80 completed episodes to one crash is the expensive outcome.
+        volume.commit()
+
+
+@app.function(
+    volumes={str(MOUNT_PATH): volume},
+    timeout=30 * 60,
+)
+def select_high_delay(require_complete: bool = True):
+    """Apply the frozen d* rule and write `selected_high_delay.json`.
+
+    No GPU: this reads the calibration CSV and writes tables. Kept separate from
+    `run_stage0` so that producing the data and choosing the operating point are
+    distinct, individually auditable steps.
+    """
+    result = _run_script(
+        [
+            "async_vla_benchmark.scripts.select_high_delay",
+            "--results",
+            str(STAGE0_PATH / "latency_calibration_episode_results.csv"),
+            "--output-dir",
+            str(STAGE0_PATH),
+        ]
+        + (["--require-complete"] if require_complete else [])
+    )
+    volume.commit()
+    return result
+
+
+@app.function(
+    gpu="A100-40GB",
+    volumes={str(MOUNT_PATH): volume},
+    secrets=[modal.Secret.from_name("hf-token")],
     timeout=30 * 60,
 )
 def validate_results():
@@ -414,6 +508,10 @@ def main(
     suite: str = "libero_spatial",
     task_id: int = 0,
     seed: int = 0,
+    native_only: bool = False,
+    resume: bool = True,
+    methods: str = "",
+    require_complete: bool = True,
 ):
     """Dispatch a benchmark pipeline step to Modal from your local machine.
 
@@ -438,6 +536,10 @@ def main(
         "diagnose_scale": lambda: diagnose_action_scale.spawn(suite, task_id, seed),
         "diagnose_raw_scale": lambda: diagnose_raw_action_scale.spawn(suite, task_id, seed),
         "diagnose_libero_plus": lambda: diagnose_libero_plus.spawn(suite, task_id, seed),
+        # Stage 0 (docs/STAGE_0_LATENCY_CALIBRATION.md), in running order.
+        "stage0_preflight": lambda: stage0_preflight.spawn(),
+        "stage0": lambda: run_stage0.spawn(native_only, resume, tasks, methods),
+        "stage0_select": lambda: select_high_delay.spawn(require_complete),
     }
     if command == "status":
         if not call_id:
