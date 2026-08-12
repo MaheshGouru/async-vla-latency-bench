@@ -90,7 +90,19 @@ yaml.dump(cfg, open(os.path.expanduser('~/.libero/config.yaml'), 'w'))
 export MUJOCO_GL=egl
 export PYOPENGL_PLATFORM=egl
 export HF_TOKEN=<your HuggingFace token>       # replaces the Modal `hf-token` secret
+
+# On a multi-GPU box, pin BOTH of these to the same free physical device.
+export CUDA_VISIBLE_DEVICES=2
+export MUJOCO_EGL_DEVICE_ID=2
 ```
+
+`MUJOCO_EGL_DEVICE_ID` is not optional on a shared box. MuJoCo's EGL backend picks
+its device independently of `CUDA_VISIBLE_DEVICES` and defaults to physical device
+0. robosuite builds the render context before the policy loads, so if device 0 is
+held by another user under `Exclusive_Process`, CUDA init is poisoned and the run
+dies with `cudaErrorDevicesUnavailable` — pointing at a GPU that is in fact idle.
+Both variables take the **physical** index; inside the process CUDA still sees the
+selected card as `cuda:0`.
 
 Without EGL, substitute `MUJOCO_GL=osmesa` and `PYOPENGL_PLATFORM=osmesa`.
 
@@ -135,7 +147,7 @@ and you lose the GPU-hours, not just the output. Use `nohup` (or `tmux` if the
 box has it):
 
 ```bash
-nohup python -m async_vla_benchmark.scripts.run_stage0 \
+nohup python -u -m async_vla_benchmark.scripts.run_stage0 \
     --config async_vla_benchmark/configs/stage0.yaml \
     --output-dir outputs/stage0 \
     --resume \
@@ -148,8 +160,17 @@ Watch it:
 
 ```bash
 tail -f outputs/stage0_run.log
-grep -c '^completed' outputs/stage0_run.log     # episodes finished so far
+ls outputs/stage0/episodes/*.json | wc -l       # episodes finished so far
 ```
+
+Count the per-episode artifacts, not rows in
+`latency_calibration_episode_results.csv`: that CSV is written once when the whole
+sweep finishes, so it reports nothing at all while the run is in progress.
+`episodes/*.json` is also what `--resume` reads.
+
+`-u` matters: with stdout redirected to a file Python block-buffers its output, so
+without it the log looks frozen for minutes at a time and cannot be used to tell a
+healthy run from a hung one.
 
 `--resume` skips episodes already present in the results CSV, so a killed run
 restarts with the same command and loses at most one episode. Keep using it.

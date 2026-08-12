@@ -42,6 +42,7 @@ from async_vla_benchmark.benchmark.stage0 import (
     ADDED_DELAYS_MS,
     FIXED_HORIZON,
     REQUEST_THRESHOLD_ACTIONS,
+    SEEDS,
     STAGE0_TASKS,
     TASKS_BY_KEY,
     Stage0Plan,
@@ -520,6 +521,17 @@ def main() -> int:
     parser.add_argument("--method", action="append", help="execution method filter")
     parser.add_argument("--delay", type=int, action="append", help="added delay filter")
     parser.add_argument("--seed", type=int, action="append", help="seed filter")
+    parser.add_argument(
+        "--extra-seed",
+        type=int,
+        action="append",
+        help=(
+            "extend the manifest with a seed outside the frozen SEEDS. Widening "
+            "the calibration is an amendment: fix the seeds in DECISIONS.md before "
+            "running, never after seeing where d* lands. Must avoid 2-9 (STAGE_2 "
+            "held-out reserve)."
+        ),
+    )
     parser.add_argument("--resume", action="store_true", help="skip completed episodes")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--verbose", action="store_true")
@@ -529,7 +541,16 @@ def main() -> int:
     if args.output_dir:
         cfg.output_dir = args.output_dir
 
-    plans = stage0_manifest()
+    reserved = sorted(s for s in (args.extra_seed or ()) if 2 <= s <= 9)
+    if reserved:
+        parser.error(
+            f"--extra-seed {reserved} is inside the 2-9 range STAGE_2 section 4 "
+            "reserves as held-out confirmatory seeds; calibrating on one would "
+            "compromise the held-out claim downstream"
+        )
+
+    seeds = tuple(dict.fromkeys(SEEDS + tuple(args.extra_seed or ())))
+    plans = stage0_manifest(seeds=seeds)
     if args.native_only:
         plans = [p for p in plans if p.added_delay_ms == 0]
     if args.task:
