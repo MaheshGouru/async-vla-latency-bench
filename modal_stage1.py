@@ -45,12 +45,12 @@ def _run_script(argv: list[str]) -> int:
     command = [sys.executable, "-m", *argv]
     print(f"running: {' '.join(command)}")
     result = subprocess.run(command, check=False, capture_output=True, text=True)
-    if result.stdout:
-        print(result.stdout)
-    if result.stderr:
-        print(result.stderr, file=sys.stderr)
+    combined = result.stdout + "\n" + result.stderr
+    output_tail = combined[-6000:]
+    if output_tail:
+        print("--- subprocess output tail ---")
+        print(output_tail)
     if result.returncode != 0:
-        output_tail = "\n".join((result.stdout + "\n" + result.stderr).splitlines()[-80:])
         raise RuntimeError(
             f"{argv[0]} exited with code {result.returncode}\n"
             f"--- subprocess output tail ---\n{output_tail}"
