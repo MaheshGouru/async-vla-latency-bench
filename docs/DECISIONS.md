@@ -26,6 +26,9 @@ Last updated: 2026-07-20
    The benchmark will not silently assume a frequency.
 4. Real policy loading requires CUDA. The present macOS host is suitable only for
    dependency-free implementation checks and dry-run planning.
+5. Stage 1 runs in the LIBERO-Plus image, separate from vanilla LIBERO, because
+   both packages install as the top-level `libero` module and cannot be trusted
+   side by side in one environment.
 
 ## Latency and RTC semantics
 
@@ -38,6 +41,8 @@ Last updated: 2026-07-20
    experiments.
 4. Treat the initial queue fill as ideal startup or record it separately; it must not be
    silently mixed into steady-state latency measurements.
+5. Stage 1 must read the Stage 0 ID-only `selected_high_delay.json`; no OOD
+   result may influence the Native + `d*` delay.
 
 ## Evidence and reporting
 

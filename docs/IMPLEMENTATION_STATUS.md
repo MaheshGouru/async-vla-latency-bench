@@ -37,6 +37,20 @@ All 96 manifest rows completed with valid episode, request, and action logs. The
 low-delay results also exposed queue starvation in some Native cells; this is an
 experimental outcome rather than a missing or malformed run.
 
+## Stage 1 scaffolding
+
+Stage 1 moves to LIBERO-Plus OOD x latency once Stage 0 has frozen `d*`.
+
+- [x] Read Stage 0 `selected_high_delay.json` instead of selecting delay from OOD
+- [x] Add frozen Stage 1 config for the 2/0/2 Stage 0 tasks
+- [x] Cross the seven LIBERO-Plus perturbation families with Native and Native + `d*`
+- [x] Restrict methods to Naive async and RTC
+- [x] Reuse the existing discrete-event runner, policy wrapper, queue logic, RTC adapter, and validation
+- [x] Add a LIBERO-Plus Modal entrypoint for manifest, dry-run, filtered, and resumable runs
+- [ ] Run the Stage 1 manifest in the LIBERO-Plus image and verify category/task-id resolution
+- [ ] Run Stage 1 episodes on Modal
+- [ ] Aggregate Stage 1 summaries and generate paper-facing figures
+
 ## Active refinement
 
 An 18-episode follow-up was submitted on 2026-08-11 for 25, 50, and 75 ms added

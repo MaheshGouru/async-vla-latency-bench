@@ -88,6 +88,16 @@ Stage 0 preflight and manifest generation do not load LeRobot or the policy:
 PYTHONPATH=. python -m async_vla_benchmark.scripts.run_stage0 --manifest-only
 ```
 
+Stage 1 LIBERO-Plus planning runs in the LIBERO-Plus image because it resolves
+`task_classification.json` at runtime. It reads the frozen Stage 0 `d*`:
+
+```bash
+PYTHONPATH=. python -m async_vla_benchmark.scripts.run_stage1 \
+  --config async_vla_benchmark/configs/stage1_libero_plus.yaml \
+  --stage0-delay-selection-file async_vla_benchmark/outputs/stage0/selected_high_delay.json \
+  --dry-run
+```
+
 The package can be exercised locally without LeRobot or CUDA:
 
 ```bash
@@ -106,6 +116,17 @@ modal run --detach modal_stage0.py::main --command run
 ```
 
 It writes only to `/data/outputs/stage0` and resumes validated Stage 0 cells.
+
+The Stage 1 LIBERO-Plus submission is separate:
+
+```bash
+modal run modal_stage1.py::main --command manifest
+modal run modal_stage1.py::main --command dry_run --perturbations camera_viewpoints
+modal run --detach modal_stage1.py::main --command run --perturbations camera_viewpoints
+```
+
+Stage 1 writes to `/data/outputs/stage1_libero_plus` and reads
+`/data/outputs/stage0/selected_high_delay.json`.
 
 A complete Modal deployment is included for remote GPU execution. See `docs/MODAL.md`
 for setup, deploy, and run instructions.
