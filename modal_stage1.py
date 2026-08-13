@@ -39,6 +39,7 @@ app = modal.App("async-vla-stage1-libero-plus", image=image)
 
 
 def _run_script(argv: list[str]) -> int:
+    from pathlib import Path
     import subprocess
     import sys
 
@@ -46,13 +47,24 @@ def _run_script(argv: list[str]) -> int:
     print(f"running: {' '.join(command)}")
     result = subprocess.run(command, check=False, capture_output=True, text=True)
     combined = result.stdout + "\n" + result.stderr
-    output_tail = combined[-6000:]
+    log_path = VOLUME_ROOT / "stage1_libero_plus" / "debug" / "last_subprocess.log"
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    log_path.write_text(combined[-200000:])
+
+    compact_lines = []
+    for line in combined.splitlines()[-120:]:
+        if "[info] using task orders" in line:
+            compact_lines.append("[info] using task orders <omitted>")
+        else:
+            compact_lines.append(line)
+    output_tail = "\n".join(compact_lines)[-1800:]
     if output_tail:
         print("--- subprocess output tail ---")
         print(output_tail)
     if result.returncode != 0:
         raise RuntimeError(
             f"{argv[0]} exited with code {result.returncode}\n"
+            f"full log: {log_path}\n"
             f"--- subprocess output tail ---\n{output_tail}"
         )
     return result.returncode
