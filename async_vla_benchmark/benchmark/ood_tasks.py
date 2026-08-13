@@ -32,7 +32,7 @@ class TaskVariant:
     id: int  # raw 1-indexed id as stored in task_classification.json
     name: str
     category: str
-    difficulty_level: int
+    difficulty_level: int | None
 
     @property
     def task_id(self) -> int:
@@ -98,15 +98,18 @@ def list_variants(suite_name: str) -> list[TaskVariant]:
             f"Suite '{suite_name}' not found in task_classification.json. "
             f"Available: {', '.join(sorted(raw.keys()))}"
         )
-    return [
-        TaskVariant(
-            id=int(entry["id"]),
-            name=str(entry["name"]),
-            category=str(entry["category"]),
-            difficulty_level=int(entry["difficulty_level"]),
+    variants = []
+    for entry in raw[suite_name]:
+        difficulty = entry.get("difficulty_level")
+        variants.append(
+            TaskVariant(
+                id=int(entry["id"]),
+                name=str(entry["name"]),
+                category=str(entry["category"]),
+                difficulty_level=None if difficulty is None else int(difficulty),
+            )
         )
-        for entry in raw[suite_name]
-    ]
+    return variants
 
 
 def list_categories(suite_name: str) -> list[str]:
