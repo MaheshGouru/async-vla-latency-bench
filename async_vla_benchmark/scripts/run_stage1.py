@@ -157,6 +157,10 @@ def main() -> int:
     if cfg.policy_n_action_steps != 25:
         raise ValueError("Stage 1 requires policy_n_action_steps=25")
     _configure_libero_home(args.scene)
+    if args.scene == "ood":
+        # See resolve_stage1_variants: native library order matters when the
+        # no-sudo Jupyter environment supplies ImageMagick through Conda.
+        from wand.api import library as _wand_library  # noqa: F401
     plans = [row for row in read_csv(args.manifest) if row["scene_condition"] == args.scene and not _bool(row["reuse_stage0"])]
     for field, selected in (("seed", args.seed), ("task_key", args.task), ("execution_method", args.method), ("delay_condition", args.delay), ("perturbation_key", args.perturbation)):
         if selected:

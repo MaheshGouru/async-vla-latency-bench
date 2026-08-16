@@ -47,6 +47,10 @@ def main() -> int:
         f"init_states: {root / 'init_files'}\n"
     )
 
+    # Load Conda's MagickWand (and its newer C++ runtime) before LeRobot/PyTorch
+    # loads the host C++ runtime. Reversing this order makes dlopen fail even
+    # though the exact same MagickWand installation passes in a clean process.
+    from wand.api import library as _wand_library  # noqa: F401
     from lerobot.envs.libero import _get_suite
 
     classification = json.loads(classification_path.read_text())
