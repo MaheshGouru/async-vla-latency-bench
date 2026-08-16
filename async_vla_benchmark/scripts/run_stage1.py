@@ -9,6 +9,7 @@ import json
 import math
 import os
 import platform
+import sys
 import traceback
 from pathlib import Path
 
@@ -130,10 +131,13 @@ def main() -> int:
     # isolated ID/OOD execution environments.
     os.environ["MPLBACKEND"] = "Agg"
     native = Path.home() / "stage1-native"
-    if native.exists():
-        os.environ["MAGICK_HOME"] = str(native)
-        os.environ["PATH"] = str(native / "bin") + os.pathsep + os.environ.get("PATH", "")
-        os.environ["LD_LIBRARY_PATH"] = str(native / "lib") + os.pathsep + os.environ.get("LD_LIBRARY_PATH", "")
+    if native.exists() and os.environ.get("STAGE1_NATIVE_REEXEC") != str(native):
+        environment = os.environ.copy()
+        environment["STAGE1_NATIVE_REEXEC"] = str(native)
+        environment["MAGICK_HOME"] = str(native)
+        environment["PATH"] = str(native / "bin") + os.pathsep + environment.get("PATH", "")
+        environment["LD_LIBRARY_PATH"] = str(native / "lib") + os.pathsep + environment.get("LD_LIBRARY_PATH", "")
+        os.execve(sys.executable, [sys.executable, "-m", "async_vla_benchmark.scripts.run_stage1", *sys.argv[1:]], environment)
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=Path, required=True)
     parser.add_argument("--manifest", type=Path, required=True)

@@ -4,6 +4,7 @@
 import argparse
 import json
 import os
+import sys
 from pathlib import Path
 
 from async_vla_benchmark.benchmark.ood_tasks import find_task_classification_path
@@ -16,10 +17,15 @@ def main() -> int:
     # isolated benchmark venv intentionally has no matplotlib-inline package.
     os.environ["MPLBACKEND"] = "Agg"
     native = Path.home() / "stage1-native"
-    if native.exists():
-        os.environ["MAGICK_HOME"] = str(native)
-        os.environ["PATH"] = str(native / "bin") + os.pathsep + os.environ.get("PATH", "")
-        os.environ["LD_LIBRARY_PATH"] = str(native / "lib") + os.pathsep + os.environ.get("LD_LIBRARY_PATH", "")
+    if native.exists() and os.environ.get("STAGE1_NATIVE_REEXEC") != str(native):
+        # glibc reads LD_LIBRARY_PATH at process startup. Re-exec once so
+        # MagickWand's transitive libraries are discoverable before Wand loads.
+        environment = os.environ.copy()
+        environment["STAGE1_NATIVE_REEXEC"] = str(native)
+        environment["MAGICK_HOME"] = str(native)
+        environment["PATH"] = str(native / "bin") + os.pathsep + environment.get("PATH", "")
+        environment["LD_LIBRARY_PATH"] = str(native / "lib") + os.pathsep + environment.get("LD_LIBRARY_PATH", "")
+        os.execve(sys.executable, [sys.executable, "-m", "async_vla_benchmark.scripts.resolve_stage1_variants", *sys.argv[1:]], environment)
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--overwrite", action="store_true")
