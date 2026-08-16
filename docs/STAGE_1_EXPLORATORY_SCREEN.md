@@ -1519,3 +1519,36 @@ PRIMARY INTERPRETATION:
 STAGE:
     exploratory
 ```
+
+
+---
+
+## Stage 1 outcome addendum — 2026-08-16
+
+Stage 1 is complete.
+
+```text
+ID:  low 60.0%, high 56.7%
+OOD: low 60.0%, high 58.1%
+I = +1.4 percentage points
+```
+
+Do not reinterpret this as broad OOD amplification.
+
+The strongest aggregate result is RTC versus Naive async at the frozen 25-action
+configuration. Localized negative RTC interactions appeared for:
+
+```text
+long × object layout
+goal × sensor noise
+goal × robot initial state
+goal × lighting
+```
+
+The prespecified family-level selection rule tied:
+`Object layout`, `Robot initial state`, and `Lighting`.
+
+Sensor noise remains post-hoc.
+
+The active next step is `STAGE_2_LOCAL_OPERATING_POINT_SENSITIVITY.md`, followed by
+`STAGE_3_OOD_HORIZON_CONFIRMATION.md`.

@@ -1,168 +1,157 @@
 # OOD × Delay VLA Paper — Active Specification
 
-This directory is the **clean active specification** for the paper.
-
-The previous calendar-based files (`DAYS_1_3_SPEC.md`, `DAYS_4_8_SPEC.md`, `WEEK_2_SPEC.md`, `WEEK_3_SPEC.md`, `WEEK_4_SPEC.md`) are intentionally **not part of this pack**. The previous version manifest, cross-model baseline audit, and redundant experiment matrix are also removed.
-
-Historical baseline results may still be used as background evidence, but they do not control the new experiment plan.
-
-## Active scientific question
-
-> **Which kinds of distribution shift reduce a VLA policy's tolerance to inference delay, and under which behavioral demands?**
-
-A second question asks whether the answer changes between **Naive async** and **RTC**.
-
-## Active model and methods
+## Current status
 
 ```text
-Model:
-    lerobot/pi05_libero_finetuned
-
-Evaluation action horizon:
-    n_action_steps = 25
-
-Execution methods:
-    Naive async
-    RTC
+Revised Stage 0: complete
+Stage 1 broad OOD screen: complete
+Next: Stage 2 local operating-point sensitivity
 ```
 
-`n_action_steps=25` is the frozen revised evaluation setting for Stages 1 and 2. It was selected from ID-only Stage 0 evidence and must not be changed in response to OOD outcomes.
+## Current paper question
 
-## Canonical analysis taxonomy
+> **How does temporal action coverage determine asynchronous VLA robustness to
+> inference delay, and do distribution shifts move that robustness boundary?**
 
-### Task-demand groups
+Stage 1 did **not** show broad OOD amplification of +200 ms delay. The next
+experiments focus on the much stronger horizon-dependence signal.
 
-1. **Single-stage transport**
-2. **Articulated/contact-rich**
-3. **Multi-stage/sequential**
+## Completed Stage 0
 
-### Perturbation-mechanism groups
+Final revised calibration:
 
-1. **Trajectory adaptation**
-   - Object layout
-   - Robot initial state
-2. **Perceptual localization**
-   - Camera viewpoint
-   - Sensor noise
-3. **Appearance invariance**
-   - Lighting
-   - Background texture
-4. **Semantic grounding**
-   - Language instruction
+```text
+n_action_steps = 25
+3 tasks × 2 methods × 5 delays [0,100,200,300,400] × 6 seeds
+= 180 episodes
 
-The seven perturbation families are LIBERO-Plus categories. The four mechanism groups and three task-demand groups are **our analysis taxonomy**.
+selected d* = +200 ms
+```
 
-## Execution order
+The 25-action revision used ID-only evidence after the 10-action RTC setting
+performed poorly.
 
-### Stage 0 — ID-only latency calibration
-
-Run:
+## Completed Stage 1
 
 ```text
 3 tasks
-× 2 methods
-× 8 added delays [0,100,200,300,400,500,600,700 ms]
-× 2 seeds
-= 96 episodes
-```
-
-Output:
-
-```text
-selected_high_delay.json
-```
-
-This freezes `d*` **without using OOD outcomes**.
-
-### Stage 1 — broad OOD × delay screen
-
-New OOD runs:
-
-```text
-3 tasks
-× 7 perturbation families
-× 2 delays [Native, Native + d*]
-× 2 methods
+× 7 LIBERO-Plus perturbation families
+× 2 delays [Native, Native +200 ms]
+× 2 methods [Naive async, RTC]
 × 5 seeds
-= 420 new OOD episodes
+= 420 OOD episodes
+
++ 60 ID analysis controls
+= 480 Stage 1 analysis rows
 ```
 
-The Stage 1 analysis also reuses 24 matching ID low/high episodes from Stage 0:
+Headline result:
 
 ```text
-420 OOD + 60 ID = 480 analysis episodes
-24 ID episodes reused from Stage 0 + 36 new ID episodes
+ID:  60.0% -> 56.7%
+OOD: 60.0% -> 58.1%
+pooled I ≈ +1.4 percentage points
 ```
 
-Total unique Stage 0 + Stage 1 compute:
+Therefore: **no broad evidence that OOD amplifies +200 ms delay at
+`n_action_steps=25`.**
+
+## Next — Stage 2
+
+`STAGE_2_LOCAL_OPERATING_POINT_SENSITIVITY.md`
+
+Required RTC grid:
 
 ```text
-96 + 168 = 264 episodes
+n_action_steps = 10,15,20,25,30,35
+added delay = 100,200,300 ms
+3 ID tasks
+5 new seeds
+= 270 RTC episodes
 ```
 
-### Stage 2 — confirmatory follow-up
+Total Stage 2: **270 new episodes**.
 
-Only after Stage 1 is complete:
+## Then — Stage 3
 
-- apply the frozen selection rule;
-- choose the strongest eligible candidate interactions;
-- run **new held-out seeds**;
-- do not change `d*`, tasks, taxonomy, or selected OOD variants after inspecting confirmatory outcomes.
+`STAGE_3_OOD_HORIZON_CONFIRMATION.md`
 
-See `STAGE_2_CONFIRMATORY_FOLLOWUP.md`.
+Prespecified confirmatory families:
+- Object layout
+- Robot initial state
+- Lighting
 
-## Files
+Post-hoc replication:
+- Sensor noise
+
+Use:
+
+```text
+RTC
+n_action_steps = H_low,H_mid,25
+delay = Native,+200 ms
+held-out seeds = 14..21
+```
+
+`H_low` and `H_mid` are frozen from Stage 2 ID-only results before any new
+Stage 3 OOD outcomes; the documented fallback is `{10,20,25}`.
+
+With shared ID controls: **288 new episodes**.
+
+## Optional — Stage 4
+
+`STAGE_4_VLASH_SUBSET.md`
+
+Run a compact VLASH subset only if official code passes the π0.5/LIBERO
+compatibility gate after Stages 2 and 3.
+
+VLASH is **not required** for the core paper.
+
+## Active files
 
 | File | Purpose |
 |---|---|
-| `RESEARCH_CONTEXT.md` | current question, hypotheses, taxonomy, scope |
-| `STAGE_0_LATENCY_CALIBRATION.md` | exact latency calibration runs and `d*` rule |
-| `STAGE_1_EXPLORATORY_SCREEN.md` | exact 480-episode analysis plan across 96 condition blocks |
-| `STAGE_2_CONFIRMATORY_FOLLOWUP.md` | predefined follow-up rule after exploratory screening |
-| `METRICS_AND_LOGGING.md` | canonical timing, provenance, metrics, statistics |
-| `PAPER_OUTLINE.md` | paper structure and allowable claims |
+| `RESEARCH_CONTEXT.md` | current scientific framing |
+| `STAGE_0_LATENCY_CALIBRATION.md` | historical calibration spec |
+| `STAGE_0_N_ACTION_STEPS_25_CONDUCT.md` | actual revised Stage 0 conduct |
+| `STAGE_1_EXPLORATORY_SCREEN.md` | broad OOD × delay screen + result addendum |
+| `STAGE_2_LOCAL_OPERATING_POINT_SENSITIVITY.md` | highest-priority next experiment |
+| `STAGE_2_HORIZON_LATENCY_PHASE_DIAGRAM.md` | superseded full-grid pointer retained for provenance |
+| `STAGE_3_OOD_HORIZON_CONFIRMATION.md` | held-out OOD × horizon follow-up |
+| `STAGE_4_VLASH_SUBSET.md` | conditional external validation |
+| `STAGE_2_CONFIRMATORY_FOLLOWUP.md` | deprecated pointer retained for provenance |
+| `EXPERIMENT_MATRIX_POST_STAGE1.md` | concise new-run matrix |
+| `METRICS_AND_LOGGING.md` | canonical metrics/logging |
+| `PAPER_OUTLINE.md` | revised paper structure |
 | `IMPLEMENTATION_STATUS.md` | active checklist |
-| `DECISIONS.md` | frozen design decisions |
-| `KNOWN_ISSUES.md` | current risks and mitigation |
+| `DECISIONS.md` | frozen/superseding decisions |
+| `KNOWN_ISSUES.md` | current risks |
 
-## Explicitly out of scope for the critical path
+## Critical-path exclusions
 
-Do not add these before Stage 0 and Stage 1 are complete:
+Do not add:
+- SmolVLA;
+- OpenVLA-OFT;
+- new training/fine-tuning;
+- dynamic intervention benchmark;
+- hardware claims;
+- unrelated async baselines.
 
-```text
-phase-conditioned delay experiments
-dynamic target displacement
-VLASH
-SmolVLA
-OpenVLA-OFT
-FASTER
-Reflex
-VLA-Corrector
-new training or fine-tuning
-horizon sweeps
-```
+## Rough runtime with two A100s
 
-They may be reconsidered only after the primary OOD × delay result is known.
-
-## Runtime expectation with two GPUs
-
-Assuming roughly 3–5 minutes per episode and one independent worker per GPU:
+Using the prior rough assumption of 3–5 min/episode:
 
 ```text
-Stage 0: ~2.4–4.0 hours pure episode time
-Stage 1: ~4.2–7.0 hours pure episode time
-Combined: ~6.6–11.0 hours pure episode time
+Stage 2: ~7–12 h
+Stage 3: ~7–12 h
+Stage 4: ~2–4 h if run
 ```
 
-Budget additional time for environment startup, compilation, failed-run recovery, and analysis generation.
+Recompute from measured current median episode wall time before dispatch.
 
 ## Source anchors
 
-- Official LIBERO task map:
-  `https://github.com/Lifelong-Robot-Learning/LIBERO/blob/master/libero/libero/benchmark/libero_suite_task_map.py`
-- Official LIBERO-Plus:
-  `https://github.com/sylvestf/LIBERO-plus`
-- Official LIBERO-Plus task classification:
-  `https://github.com/sylvestf/LIBERO-plus/blob/main/libero/libero/benchmark/task_classification.json`
-- LeRobot LIBERO evaluation:
-  `https://huggingface.co/docs/lerobot/libero`
+- RTC paper: `https://arxiv.org/abs/2506.07339`
+- VLASH: `https://arxiv.org/abs/2512.01031`
+- LIBERO-Plus: `https://arxiv.org/abs/2510.13626`
+- LIBERO-Plus code: `https://github.com/sylvestf/LIBERO-plus`

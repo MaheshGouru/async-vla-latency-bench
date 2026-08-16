@@ -1,6 +1,6 @@
 # Metrics and Logging Specification
 
-This file defines canonical terms for Stage 0, Stage 1, and Stage 2.
+This file defines canonical terms for Stages 0–4.
 
 ## 1. Time bases
 
@@ -58,11 +58,24 @@ The original `500–700 ms` extension was dropped after the ID-only run provided
 sufficient non-saturated calibration evidence by `400 ms`. This revision was
 made before Stage 1 OOD outcomes.
 
-Stage 1 and Stage 2 use:
+Stage 1 uses:
 
 ```text
 Low  = Native          = added_delay_ms = 0
 High = Native + d*     = added_delay_ms = selected_high_delay_ms
+```
+
+Stage 2 local sensitivity uses the explicitly labeled added-delay values:
+
+```text
+100, 200, 300 ms
+```
+
+Stage 3 returns to the frozen Stage 1 comparison:
+
+```text
+Low  = Native
+High = Native + 200 ms
 ```
 
 ## 4. Logical delay
@@ -317,7 +330,13 @@ Always report:
 
 Do not describe a 5-seed exploratory cell as statistically significant without an appropriate prespecified analysis and uncertainty estimate.
 
-### Confirmatory Stage 2
+### Post-hoc sensitivity Stage 2
+
+Report the complete frozen local grid, raw counts, uncertainty, and normalized
+coverage diagnostics. Do not call Stage 2 confirmatory and do not use it to
+retroactively redefine the Stage 1 operating point.
+
+### Confirmatory Stage 3
 
 Report:
 
@@ -358,3 +377,71 @@ other
 ```
 
 Failure labels are descriptive and should not be treated as ground-truth model cognition.
+
+
+## 16. Horizon × latency fields
+
+Stages 2 and 3 add:
+
+```text
+configured_n_action_steps
+prediction_horizon_actions
+control_period_ms
+added_delay_steps
+total_logical_delay_steps
+coverage_ratio_added
+coverage_ratio_total
+rtc_frozen_prefix_steps
+rtc_guided_overlap_steps
+rtc_fresh_suffix_steps
+previous_chunk_remaining_at_request
+previous_chunk_remaining_at_response
+```
+
+Definitions:
+
+```text
+coverage_ratio_added =
+    added_delay_steps / configured_n_action_steps
+
+coverage_ratio_total =
+    total_logical_delay_steps / configured_n_action_steps
+```
+
+Do not call `configured_n_action_steps` RTC execution horizon `s` unless adapter
+inspection proves equivalence.
+
+## 17. Horizon-conditioned OOD interaction
+
+```text
+I_h =
+  [S(OOD, high, h) - S(OOD, low, h)]
+  -
+  [S(ID, high, h) - S(ID, low, h)]
+```
+
+Also report:
+
+```text
+ΔI_10→25 = I_25 - I_10
+```
+
+Do not interpret interactions at severe baseline floors.
+
+## 18. Experimental-status labels
+
+Every post-Stage-1 result must include:
+
+```text
+analysis_status ∈ {
+    exploratory,
+    posthoc_sensitivity,
+    prespecified_confirmatory,
+    posthoc_replication,
+    conditional_method_validation
+}
+```
+
+Stage 2 local operating-point analysis is `posthoc_sensitivity`.
+Sensor noise is `posthoc_replication`.
+VLASH, if run, is `conditional_method_validation`.

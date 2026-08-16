@@ -21,6 +21,13 @@
 | K017 | Stage 0 validation | 23 executed hold/underrun actions in seven downloaded episodes have null chunk and source-observation IDs while every episode is marked `ok` | canonical provenance invariants are violated and invalid runs entered aggregation | define provenance for holds or revise the schema explicitly, then make the validator reject invariant violations before aggregation |
 | K018 | Stage 1 ID reuse | 24 seed-0/1 ID controls are reused from Stage 0 without immutable runtime identity metadata | exact equivalence to new Stage 1 rows cannot be proven | preserve explicit source labels, report the limitation, and never present the reuse as revision-verified |
 
+| K019 | Horizon semantics | `n_action_steps` may not equal RTC paper execution horizon `s` | incorrect theoretical interpretation | audit adapter; use “configured action coverage” until proven |
+| K020 | Stage 1 null | broad OOD×delay interaction is near zero | original headline hypothesis unsupported | report null; test horizon-dependent boundary |
+| K021 | Horizon selection | 25 actions was chosen after ID-only 10-action failure | can appear tuned | disclose the revision and characterize the 10–35 local sensitivity surface without re-optimizing Stage 1 |
+| K022 | Multiple follow-ups | localized cells follow a broad screen | selective-inference risk | preserve tied families; label sensor noise post-hoc |
+| K023 | VLASH compatibility | fair LIBERO/LeRobot matching is not yet established | unfair baseline risk | strict compatibility gate; skip rather than approximate |
+| K024 | Compute | Required Stage 2 + primary Stage 3 add 510 episodes (558 including post-hoc sensor noise) | schedule risk | prioritize Stages 2/3; cut post-hoc sensor noise before primary cells, and cut VLASH first |
+
 ## Issue template
 
 ```text

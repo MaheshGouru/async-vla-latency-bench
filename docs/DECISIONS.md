@@ -227,6 +227,10 @@ eight consecutive seeds `14, 15, 16, 17, 18, 19, 20, 21`.
 calibration seeds. Stage 1 may reuse valid matching Stage 0 ID controls for
 seeds `0` and `1`; it must run new ID controls for seeds `2`, `3`, and `4`.
 
+**Status:** The seed values remain frozen but their stage label is superseded by
+D025: seeds `14..21` now belong to Stage 3 held-out confirmation, while Stage 2
+local sensitivity uses seeds `5..9`.
+
 ## D018 — Reuse Stage 0 seed-0/1 controls with a provenance limitation
 
 **Date:** 2026-08-14
@@ -242,3 +246,123 @@ new Stage 1 rows cannot be proven. Imported rows must retain
 analysis that pools them with new Stage 1 episodes.
 
 **Consequence:** Stage 1 contains 480 analysis rows but requires 456 new runs.
+
+
+## D019 — Stage 1 broad OOD interaction is treated as near-null
+
+**Date:** 2026-08-16
+
+**Decision:** Do not claim broad OOD amplification of +200 ms delay.
+
+**Evidence:** `I ≈ +1.4 pp` pooled.
+
+**Consequence:** Preserve the full null result and pivot the next experiment to
+the stronger horizon-dependence signal.
+
+## D020 — Initial full horizon × latency phase diagram plan (superseded)
+
+**Date:** 2026-08-16
+
+**Decision:** Run RTC on ID across:
+
+```text
+n_action_steps = 10,15,20,25
+added delay = 0,100,200,300,400,500,600,700 ms
+```
+
+with a sparse Naive control.
+
+**Rationale:** RTC theory explicitly couples inference delay and execution
+horizon, and project results differ sharply between 10 and 25 actions.
+
+**Status:** Superseded by D026's 270-episode local sensitivity design. Retained
+here as decision history; do not execute the original full grid.
+
+## D021 — Preserve Stage 1 family tie; sensor noise remains post-hoc
+
+**Date:** 2026-08-16
+
+**Decision:** Stage 3 confirmatory families are Object layout, Robot initial
+state, and Lighting. Sensor noise is a separate post-hoc replication.
+
+## D022 — OOD follow-up spans horizons
+
+**Date:** 2026-08-16
+
+**Decision:** Stage 3 uses `n_action_steps = 10,15,25`, Native/+200 ms, RTC, and
+held-out seeds 14..21.
+
+**Status:** The fixed `{10,15,25}` horizon choice is superseded by D027. Stage 3
+still spans three horizons, but the two values below 25 are selected from Stage 2
+ID-only results, with `{10,20,25}` as the documented fallback.
+
+## D023 — VLASH is conditional external validation
+
+**Date:** 2026-08-16
+
+**Decision:** Add a compact VLASH subset only after Stages 2 and 3 and only if
+official code passes a strict π0.5/LIBERO compatibility gate.
+
+**Consequence:** SmolVLA remains outside the critical path.
+
+## D024 — Do not equate `n_action_steps` with RTC formal horizon without audit
+
+**Date:** 2026-08-16
+
+**Decision:** Use the term **configured action coverage (`n_action_steps`)** until
+implementation inspection proves equivalence to RTC execution horizon `s`.
+
+
+## D025 — Fixed post-Stage-1 seed allocation
+
+**Date:** 2026-08-16
+
+**Decision:**
+
+```text
+Stage 2 local sensitivity: [5,6,7,8,9]
+Stage 3 held-out confirmation: [14,15,16,17,18,19,20,21]
+Stage 4 conditional VLASH: [22,23,24,25,26]
+```
+
+**Rationale:** These are disjoint from completed Stage 1 `[0..4]` and from the
+revised Stage 0 additional seeds `[10..13]`.
+
+**Consequence:** Use the same seed set in every condition within a stage. Invalid
+episodes are rerun with the same seed rather than replaced with a new seed.
+
+## D026 — Stage 2 is local sensitivity, not global horizon optimization
+
+**Date:** 2026-08-16
+
+**Decision:** Run:
+
+```text
+n_action_steps = 10,15,20,25,30,35
+added delay = 100,200,300 ms
+RTC
+seeds = 5..9
+```
+
+**Rationale:** 25/+200 is the frozen Stage 1 operating point. The experiment
+tests symmetric local perturbations plus the known 10-action brittle anchor.
+
+**Consequence:** Stage 2 does not redefine Stage 1's configuration even if another
+cell performs better.
+
+## D027 — Stage 3 horizons selected from ID-only Stage 2
+
+**Date:** 2026-08-16
+
+**Decision:** Stage 3 uses three horizons:
+- one lower degraded regime;
+- one intermediate regime;
+- 25-action Stage 1 reference.
+
+The first two are selected only from Stage 2 ID results before any new Stage 3 OOD
+outcomes.
+
+**Fallback:** `{10,20,25}` if Stage 2 does not distinguish a transition.
+
+**Consequence:** Do not hard-code `{10,15,25}` and do not use 30/35 to
+retrospectively replace Stage 1's reference point.

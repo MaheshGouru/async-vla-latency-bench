@@ -277,3 +277,16 @@ The defensible conclusion is:
 
 Do not write that the original `n_action_steps=10` calibration was reproduced or
 that the bundled `d*=200 ms` came from the original frozen two-seed rule.
+
+
+---
+
+## Follow-up consequence — 2026-08-16
+
+The 10-action versus 25-action difference is no longer treated only as a
+calibration nuisance. Stage 2 explicitly characterizes `n_action_steps × latency`
+on ID tasks.
+
+The 25-action Stage 1 operating point remains frozen and valid for Stage 1, but
+the final paper must disclose that temporal action coverage is itself a major
+experimental variable.
