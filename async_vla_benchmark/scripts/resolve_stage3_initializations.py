@@ -6,7 +6,10 @@ from collections import defaultdict
 from pathlib import Path
 
 from async_vla_benchmark.benchmark.config import load_config
-from async_vla_benchmark.benchmark.environment import get_task_info, initial_state_fingerprint, make_libero_env, seed_environment_rng
+from async_vla_benchmark.benchmark.environment import (
+    get_task_info, initial_state_fingerprint, make_libero_env,
+    make_libero_plus_env, seed_environment_rng,
+)
 from async_vla_benchmark.benchmark.logging import read_csv, write_csv
 from async_vla_benchmark.scripts.run_stage1 import _configure_libero_home
 
@@ -35,24 +38,31 @@ def main():
     keys = sorted({(r["task_key"], r["variant_name"], int(r["api_task_index"]), int(r["seed"])) for r in selected})
     for task_key, variant_name, task_index, seed in keys:
         row = next(r for r in selected if r["task_key"] == task_key and r["variant_name"] == variant_name and int(r["seed"]) == seed)
-        env = make_libero_env(row["suite"], task_index, seed=seed, control_mode=cfg.control_mode,
-            obs_type=cfg.obs_type, camera_name=cfg.camera_name, observation_width=cfg.observation_width,
-            observation_height=cfg.observation_height, init_states=cfg.init_states,
-            episode_length=cfg.episode_length, num_steps_wait=cfg.num_steps_wait)
-        try:
-            actual = get_task_info(env, row["suite"], task_index).task_name
-            if actual != variant_name: raise RuntimeError(f"task mismatch: {actual!r} != {variant_name!r}")
-            import torch
-            seed_environment_rng(seed); torch.manual_seed(seed)
-            observation, _ = env.reset(seed=seed)
-            method, fingerprint = initial_state_fingerprint(env, observation)
-            seed_environment_rng(seed); torch.manual_seed(seed)
-            repeated_observation, _ = env.reset(seed=seed)
-            repeated_method, repeated_fingerprint = initial_state_fingerprint(env, repeated_observation)
-            if (method, fingerprint) != (repeated_method, repeated_fingerprint):
-                raise RuntimeError(f"non-repeatable reset fingerprint for {task_key}/{variant_name}/seed={seed}")
-        finally:
-            if hasattr(env, "close"): env.close()
+        maker = make_libero_plus_env if args.scene == "ood" else make_libero_env
+
+        def resolve_fresh_environment():
+            # Match the production lifecycle exactly: construct a fresh wrapper
+            # (whose constructor performs its own reset), then perform the single
+            # seeded reset used by EpisodeRunner.run and fingerprint immediately.
+            seed_environment_rng(seed)
+            env = maker(row["suite"], task_index, seed=seed, control_mode=cfg.control_mode,
+                obs_type=cfg.obs_type, camera_name=cfg.camera_name, observation_width=cfg.observation_width,
+                observation_height=cfg.observation_height, init_states=cfg.init_states,
+                episode_length=cfg.episode_length, num_steps_wait=cfg.num_steps_wait)
+            try:
+                actual = get_task_info(env, row["suite"], task_index).task_name
+                if actual != variant_name: raise RuntimeError(f"task mismatch: {actual!r} != {variant_name!r}")
+                import torch
+                seed_environment_rng(seed); torch.manual_seed(seed)
+                observation, _ = env.reset(seed=seed)
+                return initial_state_fingerprint(env, observation)
+            finally:
+                if hasattr(env, "close"): env.close()
+
+        method, fingerprint = resolve_fresh_environment()
+        repeated_method, repeated_fingerprint = resolve_fresh_environment()
+        if (method, fingerprint) != (repeated_method, repeated_fingerprint):
+            raise RuntimeError(f"non-repeatable fresh-environment fingerprint for {task_key}/{variant_name}/seed={seed}")
         identities[(task_key, variant_name, seed, args.scene)] = ("libero_episode_index:0", method, fingerprint)
         audit_rows.append({"scene":args.scene,"task_key":task_key,"variant_name":variant_name,
             "api_task_index":task_index,"seed":seed,"initialization_index_or_id":"libero_episode_index:0",

@@ -5,7 +5,7 @@ import argparse, gc, hashlib, json, os, traceback
 from pathlib import Path
 
 from async_vla_benchmark.benchmark.config import load_config
-from async_vla_benchmark.benchmark.environment import get_task_info, make_libero_env
+from async_vla_benchmark.benchmark.environment import get_task_info, make_libero_env, make_libero_plus_env
 from async_vla_benchmark.benchmark.execution import run_episode
 from async_vla_benchmark.benchmark.latency import LatencyProfile
 from async_vla_benchmark.benchmark.logging import read_csv
@@ -140,7 +140,8 @@ def main():
                 episode_path = args.output_dir/"episodes"/f"{plan['run_id']}.json"
                 if args.resume and _artifact_state(args.output_dir, plan["run_id"]) == "valid": summary = json.loads(episode_path.read_text())
                 else:
-                    env = make_libero_env(plan["suite"], int(plan["api_task_index"]), seed=int(plan["seed"]), control_mode=cfg.control_mode, obs_type=cfg.obs_type, camera_name=cfg.camera_name, observation_width=cfg.observation_width, observation_height=cfg.observation_height, init_states=cfg.init_states, episode_length=cfg.episode_length, num_steps_wait=cfg.num_steps_wait)
+                    maker = make_libero_plus_env if args.scene == "ood" else make_libero_env
+                    env = maker(plan["suite"], int(plan["api_task_index"]), seed=int(plan["seed"]), control_mode=cfg.control_mode, obs_type=cfg.obs_type, camera_name=cfg.camera_name, observation_width=cfg.observation_width, observation_height=cfg.observation_height, init_states=cfg.init_states, episode_length=cfg.episode_length, num_steps_wait=cfg.num_steps_wait)
                     info = get_task_info(env, plan["suite"], int(plan["api_task_index"]))
                     if info.task_name != plan["variant_name"]: raise RuntimeError(f"task mismatch: {info.task_name!r} != {plan['variant_name']!r}")
                     delay = int(plan["added_delay_ms"])
