@@ -20,8 +20,12 @@ def main():
     assert len(results)==12 and {r["run_id"] for r in results}=={r["run_id"] for r in manifest}
     assert all(_artifact_state(args.output_dir,r["run_id"])=="valid" for r in manifest)
     summary=[]
-    for r in sorted(results,key=lambda x:(x["scene"],int(x["configured_n_action_steps"]),int(x["added_delay_ms"]))):
-        summary.append({k:r[k] for k in ("run_id","scene","configured_n_action_steps","added_delay_ms","success","analysis_status","initial_state_fingerprint")})
+    for r in sorted(results,key=lambda x:(x["scene_condition"],int(x["configured_n_action_steps"]),int(x["added_delay_ms"]))):
+        summary.append({"run_id":r["run_id"],"scene":r["scene_condition"],
+            "configured_n_action_steps":r["configured_n_action_steps"],
+            "added_delay_ms":r["added_delay_ms"],"success":r["success"],
+            "analysis_status":r["analysis_status"],
+            "initial_state_fingerprint":r["initial_state_fingerprint"]})
     analysis=args.output_dir/"analysis"; analysis.mkdir(exist_ok=True); write_csv(analysis/"stage3_seed999_smoke_summary.csv",summary)
     json_output = args.json_output or (Path.home()/"stage3"/"stage3_smoke_validation.json")
     json_output.parent.mkdir(parents=True,exist_ok=True)
