@@ -43,7 +43,7 @@ def test_same_seed_yields_same_initial_state():
         # GPU rasterization can differ by a handful of ±1 pixel values even
         # when the simulator state is identical. Pairing must therefore use the
         # underlying MuJoCo reset state rather than rendered-image bytes.
-        assert method_a == method_b == "mujoco_sim_state_sha256"
+        assert method_a == method_b == "mujoco_reset_state_v2_sha256"
         assert fingerprint_a == fingerprint_b
     finally:
         for env in (env_a, env_b):

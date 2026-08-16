@@ -8,21 +8,24 @@ Before making changes, read these files completely:
 
 ## Current objective
 
-Implement the Stage 1 π0.5 LIBERO-Plus exploratory OOD × inference-delay screen.
+Implement the frozen Stage 3 held-out OOD confirmation without modifying Stage 0
+or Stage 1 artifacts.
 
-Required Stage 1 execution conditions:
+Required Stage 3 execution conditions:
 
-- frozen `policy.n_action_steps=25`
-- frozen ID-calibrated `d*=200 ms`
-- Native and Native + `d*`
-- Naive asynchronous queue and RTC
-- three frozen base tasks and all seven LIBERO-Plus perturbation families
-- five Stage 1 seeds: `0, 1, 2, 3, 4`
-- 420 OOD episodes plus 60 shared ID controls
+- RTC only
+- `n_action_steps = {20,25,30}`
+- Native and Native + 200 ms
+- held-out seeds `14..21`
+- exact Stage 1 OOD variants frozen in `STAGE_3_OOD_HORIZON_CONFIRMATION.md`
+- 96 logically shared ID controls and 192 OOD episodes
+- sensor noise labeled only as `posthoc_replication`
+- strict initialization pairing across the six horizon/delay cells for each
+  `(task, variant, seed, scene)` key
 
-Reuse the 24 Stage 0 ID controls for seeds `0` and `1` without rerunning them,
-as an explicitly recorded provenance limitation. Run the 36 missing ID controls
-for seeds `2`, `3`, and `4`.
+Stage 2 is supporting sensitivity evidence only. It must not alter the frozen
+Stage 3 horizons, delays, seeds, or exact Stage 1 OOD variant identities. Surface
+documentation inconsistencies for review rather than changing the experiment.
 
 Do not implement VLASH, FASTER, DEHP, SmolVLA, OpenVLA, dynamic interventions,
 additional models, or policy training.

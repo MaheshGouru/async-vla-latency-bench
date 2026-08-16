@@ -44,17 +44,31 @@ def test_stage2_run_ids_encode_all_cell_dimensions(rows):
 
 
 def test_reset_state_fingerprint_is_stable_and_state_sensitive():
-    class State:
-        def __init__(self, values): self.values = values
-        def flatten(self): return self.values
+    class Data:
+        def __init__(self, values):
+            self.qpos=values; self.qvel=[0.0]; self.act=[]; self.ctrl=[]
+            self.mocap_pos=[]; self.mocap_quat=[]
     class Sim:
-        def __init__(self, values): self.values = values
-        def get_state(self): return State(self.values)
+        def __init__(self, values): self.data=Data(values)
     class Env:
         def __init__(self, values): self.sim = Sim(values)
     method_a, first = initial_state_fingerprint(Env([1.0, 2.0]), {})
     method_b, second = initial_state_fingerprint(Env([1.0, 2.0]), {})
     _, changed = initial_state_fingerprint(Env([1.0, 3.0]), {})
-    assert method_a == method_b == "mujoco_sim_state_sha256"
+    assert method_a == method_b == "mujoco_reset_state_v2_sha256"
     assert first == second
     assert first != changed
+
+
+def test_reset_state_fingerprint_ignores_time_and_sub_tolerance_noise():
+    class Data:
+        qvel=[0.0]; act=[]; ctrl=[]; mocap_pos=[]; mocap_quat=[]
+        def __init__(self,qpos,time): self.qpos=qpos; self.time=time
+    class Sim:
+        def __init__(self,qpos,time): self.data=Data(qpos,time)
+    class Env:
+        def __init__(self,qpos,time): self.sim=Sim(qpos,time)
+    _, baseline=initial_state_fingerprint(Env([1.0],0.0),{})
+    _, changed_time=initial_state_fingerprint(Env([1.0],99.0),{})
+    _, tiny_noise=initial_state_fingerprint(Env([1.0+1e-14],0.0),{})
+    assert baseline==changed_time==tiny_noise

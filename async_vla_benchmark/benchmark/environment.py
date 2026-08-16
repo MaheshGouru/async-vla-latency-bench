@@ -49,11 +49,28 @@ def initial_state_fingerprint(environment: Any, observation: Any) -> tuple[str, 
         sim = getattr(obj, "sim", None)
         if sim is not None:
             try:
-                state = sim.get_state()
-                flat = state.flatten() if hasattr(state, "flatten") else state
-                values = np.asarray(flat, dtype=np.float64)
-                payload = values.shape.__repr__().encode() + values.tobytes(order="C")
-                return "mujoco_sim_state_sha256", hashlib.sha256(payload).hexdigest()
+                # Versioned, named, scientifically relevant reset state. Exclude
+                # sim time and Python/object serialization. Canonical rounding at
+                # 1e-12 suppresses insignificant platform noise while remaining
+                # far below any meaningful LIBERO initialization displacement.
+                data = sim.data
+                components = ("qpos", "qvel", "act", "ctrl", "mocap_pos", "mocap_quat")
+                digest = hashlib.sha256(b"mujoco_reset_state_v2\0round_decimals=12\0")
+                found = 0
+                for name in components:
+                    value = getattr(data, name, None)
+                    if value is None:
+                        continue
+                    values = np.asarray(value, dtype=np.float64)
+                    canonical = np.ascontiguousarray(np.round(values, decimals=12))
+                    canonical[canonical == 0] = 0.0  # normalize negative zero
+                    digest.update(name.encode() + b"\0")
+                    digest.update(str(canonical.shape).encode() + b"\0")
+                    digest.update(canonical.astype("<f8", copy=False).tobytes(order="C"))
+                    found += 1
+                if found < 2:
+                    raise RuntimeError("MuJoCo simulator exposed insufficient named reset state")
+                return "mujoco_reset_state_v2_sha256", digest.hexdigest()
             except Exception:
                 pass
         for attr in ("env", "_env", "unwrapped"):
@@ -75,6 +92,9 @@ def initial_state_fingerprint(environment: Any, observation: Any) -> tuple[str, 
         if array.dtype.kind not in "biufc":
             return
         canonical = np.ascontiguousarray(array)
+        if canonical.dtype.kind in "fc":
+            canonical = np.ascontiguousarray(np.round(canonical.astype(np.float64), decimals=12))
+            canonical[canonical == 0] = 0.0
         digest.update(path.encode())
         digest.update(str(canonical.shape).encode())
         digest.update(str(canonical.dtype).encode())

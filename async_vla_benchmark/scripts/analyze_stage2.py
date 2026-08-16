@@ -3,6 +3,7 @@
 
 import argparse
 import math
+import os
 from pathlib import Path
 
 from async_vla_benchmark.benchmark.logging import read_csv, write_csv
@@ -74,6 +75,9 @@ def main() -> int:
                     "delta_from_native": float(shifted["success_rate"]) - float(baseline["success_rate"])})
     write_csv(args.output_dir / "stage2_delay_drop_from_native.csv", drops)
 
+    # Jupyter exports its inline backend through MPLBACKEND. That backend is not
+    # necessarily installed in the isolated benchmark venv used by notebooks.
+    os.environ["MPLBACKEND"] = "Agg"
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
