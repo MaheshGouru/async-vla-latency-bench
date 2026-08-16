@@ -68,7 +68,7 @@ High = Native + d*     = added_delay_ms = selected_high_delay_ms
 Stage 2 local sensitivity uses the explicitly labeled added-delay values:
 
 ```text
-100, 200, 300 ms
+Native (0), 100, 200, 300 ms
 ```
 
 Stage 3 returns to the frozen Stage 1 comparison:
@@ -445,3 +445,21 @@ analysis_status ∈ {
 Stage 2 local operating-point analysis is `posthoc_sensitivity`.
 Sensor noise is `posthoc_replication`.
 VLASH, if run, is `conditional_method_validation`.
+
+
+## 19. Stage 2 baseline-normalized sensitivity
+
+Because Stage 2 contains Native at every tested `n_action_steps`, report:
+
+```text
+native_success(h) = S(h, Native)
+
+delay_drop_100(h) = S(h,+100) - S(h,Native)
+delay_drop_200(h) = S(h,+200) - S(h,Native)
+delay_drop_300(h) = S(h,+300) - S(h,Native)
+```
+
+This separates the main effect of configured action coverage from the incremental
+effect of added delay.
+
+Use the same Stage 2 seeds `[5,6,7,8,9]` in every cell.

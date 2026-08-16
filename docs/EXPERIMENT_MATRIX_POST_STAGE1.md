@@ -17,11 +17,11 @@ Seed sets are fixed and disjoint across new stages.
 ```text
 RTC
 n_action_steps = 10,15,20,25,30,35
-added delay = 100,200,300 ms
+delay = Native,100,200,300 ms
 3 ID tasks
 5 seeds = 5..9
 
-6 × 3 × 3 × 5 = 270 episodes
+6 × 4 × 3 × 5 = 360 episodes
 ```
 
 Purpose: defend the already-used 25/+200 operating point against local
@@ -31,10 +31,10 @@ configuration sensitivity.
 
 ```text
 RTC
-3 horizons selected from Stage 2 ID-only results:
-    lower degraded
-    intermediate
-    25-action reference
+frozen horizons = 20,25,30
+    20 = -5 around Stage 1
+    25 = Stage 1 reference
+    30 = +5 around Stage 1
 
 delay = Native,+200 ms
 8 held-out seeds = 14..21

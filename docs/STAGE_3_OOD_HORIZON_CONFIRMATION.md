@@ -79,39 +79,35 @@ High = Native + 200 ms
 
 Do not recalibrate delay from Stage 2.
 
-## 4. Horizon selection
+## 4. Frozen Stage 3 horizons
 
-Do **not** hard-code `{10,15,25}` merely because those numbers were previously
-discussed.
-
-Use Stage 2 **ID-only** results to freeze three representative action-coverage
-values before any new Stage 3 OOD outcomes are observed:
-
-1. `H_low`: a lower-coverage value with clear RTC degradation at +200 ms;
-2. `H_mid`: a transition / intermediate value;
-3. `H_ref = 25`: the frozen Stage 1 reference operating point.
-
-Constraints:
+Use exactly:
 
 ```text
-H_low, H_mid ∈ {10,15,20}
-H_ref = 25
-H_low < H_mid < 25
+n_action_steps = {20, 25, 30}
 ```
 
-Selection must use only Stage 2 ID results.
+These values are frozen **before Stage 2 is run** and must not be changed after
+viewing Stage 2 outcomes.
 
-If Stage 2 shows no meaningful distinction among 10/15/20, default to:
+Rationale:
 
 ```text
-{10, 20, 25}
+20 = -5 actions relative to Stage 1
+25 = exact Stage 1 reference configuration
+30 = +5 actions relative to Stage 1
 ```
 
-and record that the fallback was used.
+This symmetric local neighborhood directly tests whether the Stage 1 OOD result at
+25 actions is robust to a small, reasonable action-coverage perturbation in either
+direction.
 
-Do not select 30 or 35 as the primary Stage 3 reference because the purpose is to
-test robustness around/leading into the already-used 25-action Stage 1 point, not
-to retrospectively replace it with a higher-performing configuration.
+Stage 2 may show that 20 or 30 performs poorly or that 35 performs better than 25.
+Do **not** replace the frozen Stage 3 values post-hoc. Such findings are themselves
+evidence about configuration sensitivity.
+
+The farther Stage 2 anchors (`10,15,35`) are used to contextualize the operating
+region, not to select Stage 3 conditions after seeing results.
 
 ## 5. Primary method
 
@@ -129,7 +125,7 @@ For each OOD candidate:
 ```text
 scene ∈ {ID, OOD}
 delay ∈ {Native, Native +200 ms}
-n_action_steps ∈ {H_low, H_mid, 25}
+n_action_steps ∈ {20, 25, 30}
 seed ∈ [14..21]
 method = RTC
 ```
@@ -185,13 +181,13 @@ Report:
 Primary confirmation asks whether the Stage 1 direction is reproduced at
 `h=25`.
 
-The additional lower horizons ask whether the localized interaction becomes
-stronger as action coverage is reduced.
+The 20- and 30-action conditions ask whether the localized Stage 1 interaction
+at 25 actions is robust to a symmetric ±5-action perturbation.
 
 ## 9. Required outputs
 
 ```text
-stage3_horizon_selection.json
+stage3_frozen_horizons.json
 stage3_manifest.csv
 stage3_episode_results.csv
 stage3_four_cell_by_horizon.csv

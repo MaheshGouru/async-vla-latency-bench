@@ -36,10 +36,10 @@ Frozen seeds:
 
 - [ ] audit RTC `n_action_steps` semantics
 - [ ] horizons = 10,15,20,25,30,35
-- [ ] delays = 100,200,300 ms
+- [ ] delays = Native,100,200,300 ms
 - [ ] all 3 ID tasks
 - [ ] same 5 seeds in every condition
-- [ ] 270 RTC episodes
+- [ ] 360 RTC episodes
 - [ ] local success surfaces
 - [ ] classify 25/+200 as stable/sensitive/under-covered
 - [ ] do not re-optimize Stage 1
@@ -52,9 +52,8 @@ Frozen held-out seeds:
 [14,15,16,17,18,19,20,21]
 ```
 
-- [ ] select `H_low` and `H_mid` from Stage 2 ID-only results
-- [ ] keep `H_ref=25`
-- [ ] freeze horizons before new OOD outcomes
+- [x] horizons frozen before Stage 2: `20,25,30`
+- [ ] do not change Stage 3 horizons after viewing Stage 2
 - [ ] object layout × long task
 - [ ] robot initial state × goal task
 - [ ] lighting × goal task
@@ -82,5 +81,5 @@ Frozen seeds if run:
 
 ```text
 Audit how `n_action_steps` maps into RTC execution semantics, then generate the
-270-row Stage 2 manifest using seeds [5,6,7,8,9].
+360-row Stage 2 manifest using seeds [5,6,7,8,9].
 ```

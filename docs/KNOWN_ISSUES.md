@@ -26,7 +26,10 @@
 | K021 | Horizon selection | 25 actions was chosen after ID-only 10-action failure | can appear tuned | disclose the revision and characterize the 10–35 local sensitivity surface without re-optimizing Stage 1 |
 | K022 | Multiple follow-ups | localized cells follow a broad screen | selective-inference risk | preserve tied families; label sensor noise post-hoc |
 | K023 | VLASH compatibility | fair LIBERO/LeRobot matching is not yet established | unfair baseline risk | strict compatibility gate; skip rather than approximate |
-| K024 | Compute | Required Stage 2 + primary Stage 3 add 510 episodes (558 including post-hoc sensor noise) | schedule risk | prioritize Stages 2/3; cut post-hoc sensor noise before primary cells, and cut VLASH first |
+| K024 | Compute | Required Stage 2 + primary Stage 3 add 600 episodes (648 including post-hoc sensor noise) | schedule risk | prioritize Stages 2/3; cut post-hoc sensor noise before primary cells, and cut VLASH first |
+
+| K025 | Missing same-seed Native baselines | Stage 2 originally omitted Native for horizons not present in completed Stage 0/1 | horizon main effects could be confused with added-delay sensitivity | include Native at every Stage 2 horizon using seeds 5..9 |
+| K026 | Adaptive Stage 3 horizon choice | choosing lower/transition horizons after seeing Stage 2 could add analyst discretion | OOD follow-up may look post-hoc optimized | freeze Stage 3 horizons at 20,25,30 before Stage 2 |
 
 ## Issue template
 

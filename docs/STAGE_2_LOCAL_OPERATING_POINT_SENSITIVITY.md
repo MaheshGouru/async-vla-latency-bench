@@ -50,7 +50,7 @@ operating point**.
 Use:
 
 ```text
-added_delay_ms ∈ {100, 200, 300}
+added_delay_ms ∈ {0, 100, 200, 300}
 ```
 
 Rationale:
@@ -58,14 +58,16 @@ Rationale:
 - `200 ms` is the frozen Stage 1 high-delay condition.
 - `100 ms` is a one-step local perturbation below it.
 - `300 ms` is a one-step local perturbation above it.
-- This symmetric ±100 ms window tests local sensitivity without repeating a broad
-  0–700 ms calibration sweep.
-- Native/0 ms behavior is already extensively characterized in completed Stage 0
-  and Stage 1 and is not required to answer whether the +200 ms operating point
-  is locally stable.
+- `0 ms` / Native is included as a **same-seed baseline at every tested
+  `n_action_steps`**. Completed Stage 0/1 do not provide Native controls for all
+  of `15,20,30,35`, so omitting Native would confound:
+  - a horizon being intrinsically weak even without added delay; and
+  - that horizon being specifically more sensitive to injected delay.
+- The 0/100/200/300-ms window remains local around the frozen +200-ms operating
+  point and does not repeat the earlier broad latency calibration.
 
-This experiment is therefore a **local robustness check**, not another latency
-calibration.
+This experiment is therefore a **local operating-point sensitivity check**, not a
+new latency calibration or global horizon optimization.
 
 ## 3. Fixed model, tasks, and method
 
@@ -113,14 +115,18 @@ assert sorted(set(row["seed"] for row in stage2_rows)) == SEEDS
 
 ```text
 6 n_action_steps values
-× 3 added-delay values
+× 4 delay values [Native, +100, +200, +300 ms]
 × 3 ID tasks
 × 5 fixed seeds
 × 1 method [RTC]
-= 270 episodes
+= 360 episodes
 ```
 
 This is the complete required Stage 2 matrix.
+
+The additional 90 Native episodes are required to separate the **main effect of
+action coverage** from **sensitivity to added delay** at each action-coverage
+setting.
 
 ## 6. Preflight implementation audit
 
@@ -181,7 +187,7 @@ For each task, tabulate/plot:
 
 ```text
 rows = n_action_steps [10,15,20,25,30,35]
-columns = added delay [100,200,300]
+columns = delay [Native,100,200,300]
 cell = success / 5
 ```
 
@@ -191,7 +197,7 @@ The immediate neighborhood is:
 
 ```text
 n_action_steps ∈ {20,25,30}
-delay ∈ {100,200,300}
+delay ∈ {Native,100,200,300}
 ```
 
 Do not define stability as "25 has the highest success."
@@ -203,14 +209,30 @@ Instead ask whether:
 3. ±100 ms around +200 does not completely reverse the conclusion;
 4. nearby configurations remain in the same broad success regime.
 
-### C. Diagnostic 10-action anchor
+### C. Baseline-normalized delay sensitivity
+
+For every `n_action_steps = h`, compute:
+
+```text
+Δ100(h) = S(h,+100) - S(h,Native)
+Δ200(h) = S(h,+200) - S(h,Native)
+Δ300(h) = S(h,+300) - S(h,Native)
+```
+
+This distinguishes the **horizon main effect** `S(h,Native)` from the incremental
+effect of added delay `S(h,+d) - S(h,Native)`.
+
+This separation is required for defending both parts of the Stage 1 operating
+point: `n_action_steps=25` and `d*=+200 ms`.
+
+### D. Diagnostic 10-action anchor
 
 Use `10` only to show whether the previously observed brittle regime persists
 under the same current runner/configuration.
 
 Do not use the 10-action result to reselect Stage 1 parameters.
 
-### D. Descriptive normalized coverage
+### E. Descriptive normalized coverage
 
 Plot success against:
 
@@ -230,8 +252,9 @@ Classify the frozen 25/+200 point as:
 
 ### Locally stable
 
-when nearby 20/25/30 × 100/200/300 cells show broadly consistent behavior and
-25/+200 is not an isolated peak.
+when the Native baselines at 20/25/30 are not qualitatively incompatible, the
+delay-induced drops around +200 ms are broadly consistent across the local
+20/25/30 neighborhood, and 25/+200 is not an isolated peak.
 
 ### Locally sensitive
 
@@ -253,6 +276,8 @@ stage2_local_sensitivity_manifest.csv
 stage2_local_sensitivity_episode_results.csv
 stage2_local_sensitivity_summary.csv
 stage2_local_neighborhood.csv
+stage2_native_baseline_by_horizon.csv
+stage2_delay_drop_from_native.csv
 
 stage2_local_surface_spatial.png
 stage2_local_surface_goal.png

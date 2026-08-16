@@ -152,3 +152,21 @@ Preferred only if supported:
 > delay and available temporal action coverage. At a robust operating point,
 > distribution shift does not universally amplify delay, but selected shifts can
 > move the temporal robustness boundary.
+
+
+## Post-Stage-1 configuration-sensitivity note
+
+Stage 2 uses a same-seed ID matrix over:
+
+```text
+n_action_steps = 10,15,20,25,30,35
+delay = Native,+100,+200,+300 ms
+seeds = 5..9
+```
+
+Native controls at every horizon separate the horizon main effect from incremental
+added-delay sensitivity.
+
+Stage 3 horizons are frozen at `{20,25,30}` before Stage 2 execution. This is a
+symmetric ±5-action neighborhood around the completed Stage 1 reference at 25,
+not a horizon set selected after viewing Stage 2.

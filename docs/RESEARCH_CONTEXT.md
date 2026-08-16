@@ -130,3 +130,29 @@ Do not claim:
 - a new async algorithm;
 - safety or hardware validity;
 - universal superiority of RTC/VLASH.
+
+
+## Frozen post-Stage-1 sensitivity design
+
+Stage 2:
+
+```text
+RTC
+n_action_steps = 10,15,20,25,30,35
+delay = Native,+100,+200,+300 ms
+seeds = 5,6,7,8,9
+```
+
+Native at every horizon distinguishes an action-coverage main effect from
+sensitivity to injected delay.
+
+Stage 3:
+
+```text
+n_action_steps = 20,25,30
+delay = Native,+200 ms
+seeds = 14..21
+```
+
+The Stage 3 horizon set is frozen before Stage 2 and is not selected after
+inspecting Stage 2.

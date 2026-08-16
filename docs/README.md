@@ -64,13 +64,13 @@ Required RTC grid:
 
 ```text
 n_action_steps = 10,15,20,25,30,35
-added delay = 100,200,300 ms
+delay = Native,100,200,300 ms
 3 ID tasks
 5 new seeds
-= 270 RTC episodes
+= 360 RTC episodes
 ```
 
-Total Stage 2: **270 new episodes**.
+Total Stage 2: **360 new episodes**.
 
 ## Then — Stage 3
 
@@ -88,13 +88,14 @@ Use:
 
 ```text
 RTC
-n_action_steps = H_low,H_mid,25
+n_action_steps = 20,25,30
 delay = Native,+200 ms
 held-out seeds = 14..21
 ```
 
-`H_low` and `H_mid` are frozen from Stage 2 ID-only results before any new
-Stage 3 OOD outcomes; the documented fallback is `{10,20,25}`.
+The Stage 3 horizons are frozen **before Stage 2 execution** as the symmetric
+local neighborhood `{20,25,30}` around the completed Stage 1 reference at 25
+actions. They must not be changed after viewing Stage 2 outcomes.
 
 With shared ID controls: **288 new episodes**.
 
@@ -142,7 +143,7 @@ Do not add:
 Using the prior rough assumption of 3–5 min/episode:
 
 ```text
-Stage 2: ~7–12 h
+Stage 2: ~9–15 h
 Stage 3: ~7–12 h
 Stage 4: ~2–4 h if run
 ```

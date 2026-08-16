@@ -275,8 +275,9 @@ with a sparse Naive control.
 **Rationale:** RTC theory explicitly couples inference delay and execution
 horizon, and project results differ sharply between 10 and 25 actions.
 
-**Status:** Superseded by D026's 270-episode local sensitivity design. Retained
-here as decision history; do not execute the original full grid.
+**Status:** Superseded by D026's local sensitivity design, which D028 subsequently
+expanded to 360 episodes by adding same-seed Native baselines. Retained here as
+decision history; do not execute the original full grid.
 
 ## D021 — Preserve Stage 1 family tie; sensor noise remains post-hoc
 
@@ -366,3 +367,44 @@ outcomes.
 
 **Consequence:** Do not hard-code `{10,15,25}` and do not use 30/35 to
 retrospectively replace Stage 1's reference point.
+
+
+## D028 — Add same-seed Native baselines to Stage 2
+
+**Date:** 2026-08-16
+
+**Decision:** Supersede D026's 270-episode matrix with:
+
+```text
+RTC
+n_action_steps = 10,15,20,25,30,35
+delay = Native,100,200,300 ms
+tasks = 3 ID tasks
+seeds = 5,6,7,8,9
+total = 360 episodes
+```
+
+**Rationale:** Native performance must be measured at every tested
+`n_action_steps` under the same Stage 2 seeds. Otherwise an intrinsically weak
+horizon can be mistaken for delay sensitivity.
+
+**Consequence:** Stage 2 separately reports each horizon's Native baseline and the
+success drop from Native at +100/+200/+300 ms. Stage 0 and Stage 1 remain unchanged.
+
+## D029 — Freeze Stage 3 horizons before Stage 2
+
+**Date:** 2026-08-16
+
+**Decision:** Supersede D027's adaptive horizon-selection rule. Stage 3 uses:
+
+```text
+n_action_steps = 20,25,30
+```
+
+**Rationale:** These are a symmetric ±5-action neighborhood around the exact
+Stage 1 reference at 25 actions. Choosing lower/transition horizons after viewing
+Stage 2 would introduce avoidable analyst discretion and could bias the OOD
+follow-up.
+
+**Consequence:** Do not replace 20 or 30 after Stage 2 even if another horizon
+performs better. Stage 2 is sensitivity analysis, not Stage 3 condition selection.
