@@ -1,4 +1,5 @@
 import pytest
+import numpy as np
 
 from async_vla_benchmark.benchmark.environment import EnvironmentUnavailable, make_libero_env
 
@@ -26,12 +27,25 @@ def test_same_seed_yields_same_initial_state():
     except EnvironmentUnavailable:
         pytest.skip("LeRobot/LIBERO not installed")
 
-    obs_a = env_a.reset(seed=42)
-    obs_b = env_b.reset(seed=42)
-    assert obs_a.keys() == obs_b.keys()
-    for key in obs_a:
-        if isinstance(obs_a[key], dict):
-            for sub in obs_a[key]:
-                assert (obs_a[key][sub] == obs_b[key][sub]).all()
-        else:
-            assert (obs_a[key] == obs_b[key]).all()
+    try:
+        reset_a = env_a.reset(seed=42)
+        reset_b = env_b.reset(seed=42)
+        # Gymnasium returns (observation, info); retain compatibility with older
+        # Gym-style wrappers that returned the observation directly.
+        obs_a = reset_a[0] if isinstance(reset_a, tuple) else reset_a
+        obs_b = reset_b[0] if isinstance(reset_b, tuple) else reset_b
+
+        def assert_same(left, right):
+            if isinstance(left, dict):
+                assert isinstance(right, dict)
+                assert left.keys() == right.keys()
+                for key in left:
+                    assert_same(left[key], right[key])
+                return
+            np.testing.assert_array_equal(np.asarray(left), np.asarray(right))
+
+        assert_same(obs_a, obs_b)
+    finally:
+        for env in (env_a, env_b):
+            if hasattr(env, "close"):
+                env.close()
