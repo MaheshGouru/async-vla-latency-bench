@@ -18,8 +18,8 @@ from async_vla_benchmark.scripts.run_stage1 import _configure_libero_home, _envi
 def _ensure_ood_native_prefix(scene):
     if scene != "ood": return
     native = Path.home() / "stage1-native"
-    if native.exists() and os.environ.get("STAGE1_NATIVE_REEXEC") != str(native):
-        environment = os.environ.copy(); environment["STAGE1_NATIVE_REEXEC"] = str(native)
+    if native.exists() and os.environ.get("STAGE3_NATIVE_REEXEC") != str(native):
+        environment = os.environ.copy(); environment["STAGE3_NATIVE_REEXEC"] = str(native)
         environment["MAGICK_HOME"] = str(native)
         environment["PATH"] = str(native / "bin") + os.pathsep + environment.get("PATH", "")
         environment["LD_LIBRARY_PATH"] = str(native / "lib") + os.pathsep + environment.get("LD_LIBRARY_PATH", "")
@@ -111,6 +111,8 @@ def main():
     p.add_argument("--exclude-posthoc", action="store_true"); p.add_argument("--resume", action="store_true")
     p.add_argument("--dry-run", action="store_true"); p.add_argument("--verbose", action="store_true"); args = p.parse_args()
     _ensure_ood_native_prefix(args.scene)
+    if args.scene == "ood":
+        from wand.api import library as _wand_library  # noqa: F401
     cfg = load_config(args.config); _configure_libero_home(args.scene)
     plans = [r for r in read_csv(args.manifest) if r["scene"] == args.scene]
     plans = _select(plans, "configured_n_action_steps", args.horizon); plans = _select(plans, "added_delay_ms", args.delay)

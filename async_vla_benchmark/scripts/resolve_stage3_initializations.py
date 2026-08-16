@@ -24,12 +24,15 @@ def main():
     args = parser.parse_args()
     if args.scene == "ood":
         native = Path.home() / "stage1-native"
-        if native.exists() and os.environ.get("STAGE1_NATIVE_REEXEC") != str(native):
-            environment = os.environ.copy(); environment["STAGE1_NATIVE_REEXEC"] = str(native)
+        if native.exists() and os.environ.get("STAGE3_NATIVE_REEXEC") != str(native):
+            environment = os.environ.copy(); environment["STAGE3_NATIVE_REEXEC"] = str(native)
             environment["MAGICK_HOME"] = str(native)
             environment["PATH"] = str(native / "bin") + os.pathsep + environment.get("PATH", "")
             environment["LD_LIBRARY_PATH"] = str(native / "lib") + os.pathsep + environment.get("LD_LIBRARY_PATH", "")
             os.execve(os.sys.executable, [os.sys.executable, *os.sys.argv], environment)
+        # Load Conda's MagickWand before LIBERO/PyTorch so its transitive C++
+        # runtime wins the loader-order race in the no-sudo Jupyter image.
+        from wand.api import library as _wand_library  # noqa: F401
     cfg = load_config(args.config); rows = read_csv(args.manifest)
     if len(rows) != args.expected_rows: raise ValueError(f"expected {args.expected_rows} Stage 3 rows, got {len(rows)}")
     _configure_libero_home(args.scene)
