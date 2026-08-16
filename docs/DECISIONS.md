@@ -275,9 +275,9 @@ with a sparse Naive control.
 **Rationale:** RTC theory explicitly couples inference delay and execution
 horizon, and project results differ sharply between 10 and 25 actions.
 
-**Status:** Superseded by D026's local sensitivity design, which D028 subsequently
-expanded to 360 episodes by adding same-seed Native baselines. Retained here as
-decision history; do not execute the original full grid.
+**Status:** Superseded first by D026's 270-episode local sensitivity proposal and
+then by D028's active 360-episode matrix with same-seed Native baselines. Retained
+here as decision history; do not execute the original full grid.
 
 ## D021 — Preserve Stage 1 family tie; sensor noise remains post-hoc
 
@@ -332,7 +332,7 @@ revised Stage 0 additional seeds `[10..13]`.
 **Consequence:** Use the same seed set in every condition within a stage. Invalid
 episodes are rerun with the same seed rather than replaced with a new seed.
 
-## D026 — Stage 2 is local sensitivity, not global horizon optimization
+## D026 — Stage 2 is local sensitivity, not global horizon optimization (superseded matrix)
 
 **Date:** 2026-08-16
 
@@ -350,6 +350,11 @@ tests symmetric local perturbations plus the known 10-action brittle anchor.
 
 **Consequence:** Stage 2 does not redefine Stage 1's configuration even if another
 cell performs better.
+
+**Status:** The scientific purpose and six-horizon set remain active, but this
+three-delay, 270-episode matrix is superseded by D028. The required Stage 2
+matrix includes Native at every horizon and contains 360 episodes. This entry is
+retained as provenance for the earlier proposal; do not execute it.
 
 ## D027 — Stage 3 horizons selected from ID-only Stage 2
 
@@ -408,3 +413,52 @@ follow-up.
 
 **Consequence:** Do not replace 20 or 30 after Stage 2 even if another horizon
 performs better. Stage 2 is sensitivity analysis, not Stage 3 condition selection.
+
+
+## D030 — Replicate conditions, not completed episode seeds
+
+**Date:** 2026-08-16
+
+**Decision:** New stages use disjoint seed blocks rather than recycling completed
+Stage 0/1 episode seeds.
+
+```text
+Stage 2: 5..9
+Stage 3: 14..21
+Stage 4: 22..26
+```
+
+**Rationale:** This gives independent replication while preserving comparability.
+
+**Consequence:** Matching is strict within each new stage. For a fixed
+task/variant/seed, horizon and delay comparisons must share the same initialization
+identity.
+
+## D031 — Freeze exact Stage 1 OOD variant identities for Stage 3
+
+**Date:** 2026-08-16
+
+**Decision:** The Stage 3 OOD follow-ups use these exact Stage 1 variants:
+
+| Follow-up status | Task | Perturbation | `classification_id` | `api_task_index` | Exact Stage 1 `variant_name` |
+|---|---|---|---:|---:|---|
+| Prespecified confirmatory | `long_stove_moka` | `object_layout` | `1941` | `1940` | `KITCHEN_SCENE3_turn_on_the_stove_and_put_the_moka_pot_on_it_add_25` |
+| Prespecified confirmatory | `goal_drawer` | `robot_initial_state` | `285` | `284` | `open_the_middle_drawer_of_the_cabinet_view_0_0_100_0_0_initstate_71` |
+| Prespecified confirmatory | `goal_drawer` | `light_conditions` | `2313` | `2312` | `open_the_middle_drawer_of_the_cabinet_light_1` |
+| Secondary post-hoc replication | `goal_drawer` | `sensor_noise` | `1509` | `1508` | `open_the_middle_drawer_of_the_cabinet_view_0_0_100_0_0_initstate_0_noise_1` |
+
+**Consequence:** `classification_id`, `api_task_index`, `variant_name`, and
+difficulty level are immutable experimental fields. Do not select another variant
+from the same family.
+
+## D032 — Seed equality is not sufficient evidence of episode matching
+
+**Date:** 2026-08-16
+
+**Decision:** Future manifests record an explicit initialization index/ID or stable
+reset-state fingerprint.
+
+**Rationale:** A seed may control multiple sources of randomness and does not by
+itself prove that two runs began from the same simulator state.
+
+**Consequence:** Validate episode pairing before using paired statistical analyses.

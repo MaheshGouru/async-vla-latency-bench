@@ -72,6 +72,9 @@ delay = Native,100,200,300 ms
 
 Total Stage 2: **360 new episodes**.
 
+Combined required Stage 2 + primary Stage 3: **600 episodes**. Including the
+Stage 3 post-hoc sensor-noise replication gives **648 episodes**.
+
 ## Then — Stage 3
 
 `STAGE_3_OOD_HORIZON_CONFIRMATION.md`
@@ -156,3 +159,19 @@ Recompute from measured current median episode wall time before dispatch.
 - VLASH: `https://arxiv.org/abs/2512.01031`
 - LIBERO-Plus: `https://arxiv.org/abs/2510.13626`
 - LIBERO-Plus code: `https://github.com/sylvestf/LIBERO-plus`
+
+
+## Episode matching
+
+See:
+
+```text
+EPISODE_MATCHING_AND_VARIANT_FREEZE.md
+```
+
+Future stages use new seed blocks rather than recycling Stage 0/1 episodes.
+
+- Stage 2: pair horizon/delay cells internally on task + seed + initialization.
+- Stage 3: reuse the **exact Stage 1 OOD variant identities** with held-out seeds.
+- Stage 4: if run, pair RTC/VLASH on the exact same task/variant/seed/scene/delay
+  episode definition.

@@ -128,6 +128,47 @@ The additional 90 Native episodes are required to separate the **main effect of
 action coverage** from **sensitivity to added delay** at each action-coverage
 setting.
 
+## 5A. Episode-level pairing
+
+The completed Stage 0 result table used seeds:
+
+```text
+[0,1,10,11,12,13]
+```
+
+Stage 2 intentionally uses the independent block:
+
+```text
+[5,6,7,8,9]
+```
+
+Do not reuse Stage 0 rows as Stage 2 replicates.
+
+For every fixed `(task_key, seed)`, all 24 Stage 2 configurations:
+
+```text
+6 n_action_steps × 4 delays
+```
+
+must use the same seeded base-task initialization.
+
+Required manifest identity fields:
+
+```text
+task_key
+suite
+task_id
+task_name
+seed
+initialization_index_or_id
+initial_state_fingerprint
+```
+
+The sensitivity comparison is paired **within Stage 2**, not by recycling Stage
+0/1 episode seeds.
+
+See `EPISODE_MATCHING_AND_VARIANT_FREEZE.md`.
+
 ## 6. Preflight implementation audit
 
 Before dispatch:

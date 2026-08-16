@@ -1,5 +1,6 @@
 """Lazy LIBERO environment integration and control-frequency resolution."""
 
+import hashlib
 from dataclasses import dataclass
 from typing import Any
 
@@ -25,6 +26,62 @@ class TaskInfo:
     task_id: int
     task_name: str
     language_instruction: str
+
+
+def initial_state_fingerprint(environment: Any, observation: Any) -> tuple[str, str]:
+    """Return a stable fingerprint of the MuJoCo reset state.
+
+    The wrapper stack differs across LeRobot/LIBERO releases, so walk common
+    wrapper links and prefer the simulator's complete flattened state. A
+    policy-observation hash is a fail-closed fallback when the pinned wrapper
+    exposes no simulator object. The method is returned with the digest so a
+    manifest never silently mixes the two representations.
+    """
+    import numpy as np
+
+    visited: set[int] = set()
+    pending = [environment]
+    while pending:
+        obj = pending.pop()
+        if obj is None or id(obj) in visited:
+            continue
+        visited.add(id(obj))
+        sim = getattr(obj, "sim", None)
+        if sim is not None:
+            try:
+                state = sim.get_state()
+                flat = state.flatten() if hasattr(state, "flatten") else state
+                values = np.asarray(flat, dtype=np.float64)
+                payload = values.shape.__repr__().encode() + values.tobytes(order="C")
+                return "mujoco_sim_state_sha256", hashlib.sha256(payload).hexdigest()
+            except Exception:
+                pass
+        for attr in ("env", "_env", "unwrapped"):
+            child = getattr(obj, attr, None)
+            if child is not None and child is not obj:
+                pending.append(child)
+
+    digest = hashlib.sha256()
+
+    def update(value: Any, path: str) -> None:
+        if isinstance(value, dict):
+            for key in sorted(value):
+                update(value[key], f"{path}/{key}")
+            return
+        try:
+            array = np.asarray(value)
+        except Exception:
+            return
+        if array.dtype.kind not in "biufc":
+            return
+        canonical = np.ascontiguousarray(array)
+        digest.update(path.encode())
+        digest.update(str(canonical.shape).encode())
+        digest.update(str(canonical.dtype).encode())
+        digest.update(canonical.tobytes(order="C"))
+
+    update(observation, "observation")
+    return "reset_observation_sha256", digest.hexdigest()
 
 
 def _find_control_freq(environment: Any) -> float | None:

@@ -39,6 +39,8 @@ Frozen seeds:
 - [ ] delays = Native,100,200,300 ms
 - [ ] all 3 ID tasks
 - [ ] same 5 seeds in every condition
+- [ ] validate Stage 2 initialization pairing across all horizon/delay cells
+- [ ] record `initialization_index_or_id` or reset-state fingerprint
 - [ ] 360 RTC episodes
 - [ ] local success surfaces
 - [ ] classify 25/+200 as stable/sensitive/under-covered
@@ -60,6 +62,8 @@ Frozen held-out seeds:
 - [ ] sensor noise × goal task only as post-hoc replication
 - [ ] Native/+200 ms
 - [ ] same 8 seeds in every condition
+- [ ] freeze exact Stage 1 `classification_id` / `api_task_index` / `variant_name`
+- [ ] validate horizon/delay pairing within every Stage 3 seed
 - [ ] 240 episodes primary, 288 including sensor noise
 
 ## Stage 4 — conditional

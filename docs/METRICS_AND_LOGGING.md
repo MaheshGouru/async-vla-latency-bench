@@ -71,6 +71,9 @@ Stage 2 local sensitivity uses the explicitly labeled added-delay values:
 Native (0), 100, 200, 300 ms
 ```
 
+Native is a measured-latency condition with `added_delay_ms=0`, not an ideal or
+zero-request-latency condition. It is required at every Stage 2 horizon.
+
 Stage 3 returns to the frozen Stage 1 comparison:
 
 ```text
@@ -463,3 +466,46 @@ This separates the main effect of configured action coverage from the incrementa
 effect of added delay.
 
 Use the same Stage 2 seeds `[5,6,7,8,9]` in every cell.
+
+
+## 20. Episode identity and cross-condition pairing
+
+All post-Stage-1 manifests must log:
+
+```text
+task_key
+suite
+base_task_id
+base_task_name
+seed
+initialization_index_or_id
+initial_state_fingerprint
+scene
+perturbation_key
+classification_id
+api_task_index
+variant_name
+difficulty_level
+```
+
+For ID rows, perturbation-specific identifiers are null.
+
+### Stage 2 pairing key
+
+```text
+(task_key, seed)
+```
+
+All horizon × delay cells must share the same initialization identity.
+
+### Stage 3 pairing key
+
+```text
+(task_key, variant_name, seed, scene)
+```
+
+All `{20,25,30} × {Native,+200}` cells must share the same initialization identity
+where benchmark semantics permit.
+
+Do not interpret seed equality alone as proof of identical initialization. Validate
+or fingerprint the reset state.

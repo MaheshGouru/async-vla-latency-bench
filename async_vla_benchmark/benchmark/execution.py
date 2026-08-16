@@ -145,6 +145,8 @@ class EpisodeRunner:
         self._total_model_inference_ms = 0.0
         self._wall_clock_runtime_seconds = 0.0
         self._success = False
+        self._initial_state_fingerprint = None
+        self._initial_state_fingerprint_method = None
 
     def _new_observation_id(self) -> str:
         obs_id = f"{self.episode_id}_obs{self._observation_counter}"
@@ -269,7 +271,25 @@ class EpisodeRunner:
                 "gpu_event_ms": timing.get("gpu_event_ms"),
                 "cuda_synchronized": timing.get("cuda_synchronized", False),
                 "added_latency_ms": self.latency_profile.added_latency_ms,
+                "total_logical_latency_ms": self.latency_profile.logical_latency_ms(
+                    timing["request_latency_ms"]
+                ),
                 "delay_steps": delay_steps,
+                "logical_delay_steps": delay_steps,
+                "configured_n_action_steps": self.fixed_horizon,
+                "prediction_horizon_actions": getattr(self.policy.config, "chunk_size", None),
+                "rtc_configured_execution_horizon": execution_horizon,
+                "request_threshold_actions": self.queue.request_threshold,
+                "control_period_ms": self.control_period_seconds * 1000.0,
+                "coverage_ratio_added": (
+                    (self.latency_profile.added_latency_ms / (self.control_period_seconds * 1000.0))
+                    / self.fixed_horizon
+                ),
+                "coverage_ratio_total": delay_steps / self.fixed_horizon,
+                "previous_chunk_remaining_at_request": (
+                    0 if prev_raw_remainder is None else int(prev_raw_remainder.shape[0])
+                ),
+                "previous_chunk_remaining_at_response": None,
                 # Spec section 15/21: the value actually passed to RTC as
                 # `inference_delay`, logged separately from the realized `delay_steps`
                 # above. Validation has to inspect what RTC received -- checking
@@ -290,6 +310,20 @@ class EpisodeRunner:
                     rtc_counts["frozen_prefix_actions"] if rtc_counts else None
                 ),
                 "rtc_guided_actions": rtc_counts["guided_actions"] if rtc_counts else None,
+                "rtc_fresh_suffix_actions": (
+                    max(0, self.fixed_horizon - rtc_counts["effective_execution_horizon"])
+                    if rtc_counts else None
+                ),
+                # Stage 2 paper-facing aliases use "steps" while the legacy
+                # diagnostics above retain their established "actions" names.
+                "rtc_frozen_prefix_steps": (
+                    rtc_counts["frozen_prefix_actions"] if rtc_counts else None
+                ),
+                "rtc_guided_overlap_steps": rtc_counts["guided_actions"] if rtc_counts else None,
+                "rtc_fresh_suffix_steps": (
+                    max(0, self.fixed_horizon - rtc_counts["effective_execution_horizon"])
+                    if rtc_counts else None
+                ),
                 "strategy": self.strategy,
                 "latency_profile": self.latency_profile.name,
                 "fixed_horizon": self.fixed_horizon,
@@ -323,6 +357,13 @@ class EpisodeRunner:
         if pending is None:
             return None
         queued, chunk_ref, _ = pending.payload
+        # How much of the previous chunk is still actionable when this response
+        # becomes available. This differs from the request-time overlap whenever
+        # logical latency consumes queued actions while the request is in flight.
+        for request in reversed(self.requests):
+            if request["request_id"] == pending.request_id:
+                request["previous_chunk_remaining_at_response"] = len(self.queue)
+                break
         self.queue.replace(pending.request_id, queued)
         return chunk_ref
 
@@ -436,6 +477,10 @@ class EpisodeRunner:
 
         torch.manual_seed(seed)
         obs, info = self.env.reset(seed=seed)
+        from .environment import initial_state_fingerprint
+        method, fingerprint = initial_state_fingerprint(self.env, obs)
+        self._initial_state_fingerprint_method = method
+        self._initial_state_fingerprint = fingerprint
         done = False
         success = False
         control_step = 1
@@ -529,6 +574,9 @@ class EpisodeRunner:
             "queue_underrun_steps": sum(1 for a in self.actions if a["is_queue_underrun"]),
             "hold_action_steps": sum(1 for a in self.actions if a["is_hold_action"]),
             "discarded_old_actions": self.queue.discarded_old_actions,
+            "initialization_index_or_id": "libero_episode_index:0",
+            "initial_state_fingerprint": self._initial_state_fingerprint,
+            "initial_state_fingerprint_method": self._initial_state_fingerprint_method,
             "mean_action_delta_l2": statistics.mean(deltas) if deltas else float("nan"),
             "mean_action_acceleration_l2": mean_continuity([a["action_vector"] for a in self.actions], 2),
             "mean_action_jerk_l2": mean_continuity([a["action_vector"] for a in self.actions], 3),
@@ -554,6 +602,8 @@ class EpisodeRunner:
             "rtc_mean_effective_execution_horizon",
             "rtc_inference_delay_mismatch_rate",
             "rtc_mean_absolute_inference_delay_error_steps",
+            "rtc_mean_frozen_prefix_actions",
+            "rtc_mean_fresh_suffix_actions",
         )
         if not self.use_rtc or not self.requests:
             return dict.fromkeys(keys)
@@ -562,6 +612,8 @@ class EpisodeRunner:
         guided = [r["rtc_guided_actions"] for r in self.requests]
         effective_horizons = [r["rtc_effective_execution_horizon"] for r in self.requests]
         errors = [r["rtc_inference_delay_error_steps"] for r in self.requests]
+        frozen = [r["rtc_frozen_prefix_actions"] for r in self.requests]
+        fresh = [r["rtc_fresh_suffix_actions"] for r in self.requests]
         return {
             "rtc_mean_overlap_actions": statistics.mean(overlaps),
             "rtc_mean_guided_actions": statistics.mean(guided),
@@ -571,6 +623,8 @@ class EpisodeRunner:
             "rtc_mean_absolute_inference_delay_error_steps": statistics.mean(
                 abs(e) for e in errors
             ),
+            "rtc_mean_frozen_prefix_actions": statistics.mean(frozen),
+            "rtc_mean_fresh_suffix_actions": statistics.mean(fresh),
         }
 
     def _write_outputs(self) -> None:

@@ -68,6 +68,48 @@ Goal drawer × Sensor noise
 Sensor noise must remain labeled post-hoc because it did not pass the original
 family-level selection rule.
 
+## 2A. Exact frozen Stage 1 variant identities
+
+The Stage 1 resolved-variant manifest freezes:
+
+| Follow-up status | Task | Perturbation | `classification_id` | `api_task_index` | Exact Stage 1 `variant_name` |
+|---|---|---|---:|---:|---|
+| Prespecified confirmatory | `long_stove_moka` | `object_layout` | `1941` | `1940` | `KITCHEN_SCENE3_turn_on_the_stove_and_put_the_moka_pot_on_it_add_25` |
+| Prespecified confirmatory | `goal_drawer` | `robot_initial_state` | `285` | `284` | `open_the_middle_drawer_of_the_cabinet_view_0_0_100_0_0_initstate_71` |
+| Prespecified confirmatory | `goal_drawer` | `light_conditions` | `2313` | `2312` | `open_the_middle_drawer_of_the_cabinet_light_1` |
+| Secondary post-hoc replication | `goal_drawer` | `sensor_noise` | `1509` | `1508` | `open_the_middle_drawer_of_the_cabinet_view_0_0_100_0_0_initstate_0_noise_1` |
+
+These identifiers are part of the experimental specification.
+
+Before dispatch, assert exact equality for:
+
+```text
+classification_id
+api_task_index
+variant_name
+difficulty_level
+```
+
+Do not substitute another variant from the same family.
+
+### Episode pairing
+
+Stage 3 uses new held-out seeds `[14..21]`; it does **not** reuse Stage 1 seeds.
+
+Within Stage 3, for a fixed task/variant/seed/scene, every:
+
+```text
+n_action_steps = 20,25,30
+delay = Native,+200
+```
+
+must use the same seeded initialization wherever the benchmark semantics permit.
+
+ID and OOD are paired on all non-perturbed factors. Do not force geometric identity
+when the perturbation itself is object layout or robot initial state.
+
+See `EPISODE_MATCHING_AND_VARIANT_FREEZE.md`.
+
 ## 3. Delay
 
 Keep the completed Stage 1 comparison:

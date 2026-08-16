@@ -48,6 +48,27 @@ Stop if:
 - action/control semantics are incomparable;
 - integration threatens the paper deadline.
 
+## 2A. Episode matching requirement
+
+If Stage 4 runs, it must reuse the exact `classification_id`, `api_task_index`, and
+`variant_name` carried from Stage 1 into Stage 3.
+
+For each selected condition, RTC and VLASH must share:
+
+```text
+task
+variant
+seed
+scene
+delay
+initialization identity
+```
+
+Only execution method may differ.
+
+If the official VLASH stack cannot preserve these episode semantics, fail the
+compatibility gate.
+
 ## 3. Candidate selection
 
 Run at most two **prespecified Stage 3 candidates that replicate**.

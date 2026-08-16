@@ -31,6 +31,9 @@
 | K025 | Missing same-seed Native baselines | Stage 2 originally omitted Native for horizons not present in completed Stage 0/1 | horizon main effects could be confused with added-delay sensitivity | include Native at every Stage 2 horizon using seeds 5..9 |
 | K026 | Adaptive Stage 3 horizon choice | choosing lower/transition horizons after seeing Stage 2 could add analyst discretion | OOD follow-up may look post-hoc optimized | freeze Stage 3 horizons at 20,25,30 before Stage 2 |
 
+| K027 | Episode identity | seed equality may not guarantee identical simulator reset | paired comparisons can be invalid | record initialization ID or reset-state fingerprint and assert matching |
+| K028 | OOD variant drift | future follow-up could accidentally choose another variant from same family | changes the tested condition | freeze Stage 1 classification ID, API index, exact variant name, and difficulty |
+
 ## Issue template
 
 ```text
