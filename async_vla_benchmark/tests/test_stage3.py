@@ -4,7 +4,7 @@ import pytest
 from async_vla_benchmark.benchmark.stage3 import ADDED_DELAYS_MS,HORIZONS,OOD_VARIANTS,SEEDS,stage3_manifest
 from async_vla_benchmark.scripts.analyze_stage3 import paired_interaction_values
 from async_vla_benchmark.scripts.run_stage3 import _artifact_state, _select
-from async_vla_benchmark.benchmark.execution import ExecutionEngine
+from async_vla_benchmark.benchmark.execution import EpisodeRunner
 
 @pytest.fixture
 def rows(): return stage3_manifest({"git_sha":"a"*40,"lerobot_git_sha":"b"*40,"libero_plus_git_sha":"c"*40,"model_revision":"d"*40})
@@ -33,7 +33,7 @@ def test_shared_id_and_coupled_rtc(rows):
 
 
 def test_rtc_delay_estimate_is_request_specific_and_causal():
-    source=inspect.getsource(ExecutionEngine._estimate_inference_delay_steps)
+    source=inspect.getsource(EpisodeRunner._estimate_inference_delay_steps)
     assert 'self.requests' in source
     assert 'measured_request_latency_ms' in source
     assert 'estimate_inference_delay_steps' in source
