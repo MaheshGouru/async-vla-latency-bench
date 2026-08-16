@@ -26,7 +26,7 @@ Execution methods:
     RTC
 ```
 
-`n_action_steps=25` is the evaluation setting (D002, amended 2026-08-11; LeRobot's documented default of 10 leaves the action queue with no latency headroom at 20 Hz). Do not infer it from the checkpoint's training configuration.
+`n_action_steps=25` is the frozen revised evaluation setting for Stages 1 and 2. It was selected from ID-only Stage 0 evidence and must not be changed in response to OOD outcomes.
 
 ## Canonical analysis taxonomy
 
@@ -61,9 +61,9 @@ Run:
 ```text
 3 tasks
 × 2 methods
-× 5 added delays [0,100,200,300,400 ms]
-× 6 seeds [0,1,10,11,12,13]
-= 180 episodes
+× 8 added delays [0,100,200,300,400,500,600,700 ms]
+× 2 seeds
+= 96 episodes
 ```
 
 Output:
@@ -83,14 +83,15 @@ New OOD runs:
 × 7 perturbation families
 × 2 delays [Native, Native + d*]
 × 2 methods
-× 2 seeds
-= 168 new OOD episodes
+× 5 seeds
+= 420 new OOD episodes
 ```
 
 The Stage 1 analysis also reuses 24 matching ID low/high episodes from Stage 0:
 
 ```text
-168 OOD + 24 reused ID = 192 analysis episodes
+420 OOD + 60 ID = 480 analysis episodes
+24 ID episodes reused from Stage 0 + 36 new ID episodes
 ```
 
 Total unique Stage 0 + Stage 1 compute:
@@ -116,7 +117,7 @@ See `STAGE_2_CONFIRMATORY_FOLLOWUP.md`.
 |---|---|
 | `RESEARCH_CONTEXT.md` | current question, hypotheses, taxonomy, scope |
 | `STAGE_0_LATENCY_CALIBRATION.md` | exact latency calibration runs and `d*` rule |
-| `STAGE_1_EXPLORATORY_SCREEN.md` | exact 192-cell analysis plan, including all episode rows |
+| `STAGE_1_EXPLORATORY_SCREEN.md` | exact 480-episode analysis plan across 96 condition blocks |
 | `STAGE_2_CONFIRMATORY_FOLLOWUP.md` | predefined follow-up rule after exploratory screening |
 | `METRICS_AND_LOGGING.md` | canonical timing, provenance, metrics, statistics |
 | `PAPER_OUTLINE.md` | paper structure and allowable claims |

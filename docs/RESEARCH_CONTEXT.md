@@ -42,6 +42,10 @@ Main evaluation override:
 policy.n_action_steps = 25
 ```
 
+This revised horizon was selected using ID-only Stage 0 evidence after the
+10-action configuration showed poor success. It must remain frozen throughout
+Stages 1 and 2 and be disclosed as a post-pretest protocol revision.
+
 No additional VLA model is required for the primary paper.
 
 ## Primary execution methods

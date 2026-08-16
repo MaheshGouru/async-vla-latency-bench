@@ -20,6 +20,12 @@ stage1_table_perturbation_summary.csv
 
 All Stage 0 and Stage 1 configuration must remain frozen.
 
+The frozen action horizon is:
+
+```text
+policy.n_action_steps = 25
+```
+
 ## 2. Candidate eligibility
 
 A perturbation family is eligible only when:
@@ -59,25 +65,19 @@ Optional third candidate:
 Stage 1 used:
 
 ```text
-0, 1
+0, 1, 2, 3, 4
 ```
 
 Preferred Stage 2 held-out seeds:
 
 ```text
-2, 3, 4, 5, 6, 7, 8, 9
+14, 15, 16, 17, 18, 19, 20, 21
 ```
 
-Target:
+Frozen target:
 
 ```text
 8 new held-out seeds
-```
-
-Minimum when time-constrained:
-
-```text
-5 new held-out seeds: 2, 3, 4, 5, 6
 ```
 
 Do not change the held-out set based on intermediate outcomes.
@@ -142,7 +142,9 @@ For two selected candidates:
 - if both use the same task: **96 new episodes**;
 - if they use two different tasks: **128 new episodes**.
 
-With 5 new seeds, multiply these budgets by `5/8`.
+Do not reduce the confirmatory set after inspecting intermediate outcomes. If
+resource constraints prevent completing all eight seeds, report Stage 2 as
+incomplete rather than silently redefining the frozen design.
 
 ## 8. Primary confirmatory quantities
 

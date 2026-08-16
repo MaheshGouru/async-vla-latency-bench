@@ -223,7 +223,7 @@ Required:
 - simulation only;
 - three base tasks;
 - one selected variant per task × perturbation family in Stage 1;
-- exploratory Stage 1 has only two seeds;
+- exploratory Stage 1 has five seeds per cell and still requires held-out confirmation;
 - internal taxonomy is not canonical;
 - LIBERO-Plus perturbations may have unequal difficulty;
 - confirmation is selective by design and must be reported transparently;
@@ -253,7 +253,7 @@ Target:
 
 Include:
 
-- all 192 Stage 1 analysis rows/cells summarized;
+- all 480 Stage 1 analysis episodes summarized across the 96 condition blocks;
 - resolved LIBERO-Plus variant mapping;
 - complete null results;
 - invalid-run accounting;

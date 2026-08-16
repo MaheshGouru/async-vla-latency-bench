@@ -48,6 +48,12 @@ STAGE0_CONFIG_PATH = Path(
 # keyed by episode_id alone, so a shared root would let calibration runs collide
 # with the Days 1-3 core/horizon outputs.
 STAGE0_PATH = MOUNT_PATH / "stage0"
+STAGE1_CONFIG_PATH = Path(
+    "/root/async-vla-latency-bench/async_vla_benchmark/configs/stage1.yaml"
+)
+STAGE1_PATH = MOUNT_PATH / "stage1"
+STAGE1_VARIANTS = STAGE1_PATH / "stage1_resolved_variants.csv"
+STAGE1_MANIFEST = STAGE1_PATH / "stage1_manifest.csv"
 
 image = modal.Image.from_dockerfile(
     Path(__file__).parent / "Dockerfile.modal",
@@ -419,6 +425,78 @@ def select_high_delay(require_complete: bool = True):
     return result
 
 
+@app.function(image=image_libero_plus, gpu="A100-40GB", volumes={str(MOUNT_PATH): volume}, timeout=60 * 60)
+def resolve_stage1_variants():
+    result = _run_script(["async_vla_benchmark.scripts.resolve_stage1_variants", "--output", str(STAGE1_VARIANTS)])
+    volume.commit()
+    return result
+
+
+@app.function(volumes={str(MOUNT_PATH): volume}, timeout=30 * 60)
+def make_stage1_manifest(benchmark_git_sha: str):
+    if not benchmark_git_sha:
+        raise ValueError("benchmark_git_sha is required and must identify the deployed code")
+    result = _run_script([
+        "async_vla_benchmark.scripts.make_stage1_manifest", "--variants", str(STAGE1_VARIANTS),
+        "--selected-delay", str(STAGE0_PATH / "selected_high_delay.json"), "--output", str(STAGE1_MANIFEST),
+        "--git-sha", benchmark_git_sha, "--lerobot-git-sha", LEROOT_COMMIT,
+        "--libero-plus-git-sha", LIBERO_PLUS_SHA,
+        "--model-revision", "8e174154ef5f6c60a8da12ae99c303d8963138c1",
+    ])
+    volume.commit()
+    return result
+
+
+@app.function(volumes={str(MOUNT_PATH): volume}, timeout=30 * 60)
+def import_stage0_controls():
+    result = _run_script([
+        "async_vla_benchmark.scripts.import_stage0_controls", "--manifest", str(STAGE1_MANIFEST),
+        "--stage0-dir", str(STAGE0_PATH), "--stage1-dir", str(STAGE1_PATH),
+    ])
+    volume.commit()
+    return result
+
+
+def _stage1_run_command(scene: str, seeds: str, tasks: str, methods: str, perturbations: str, resume: bool):
+    cmd = ["async_vla_benchmark.scripts.run_stage1", "--config", str(STAGE1_CONFIG_PATH),
+           "--manifest", str(STAGE1_MANIFEST), "--output-dir", str(STAGE1_PATH), "--scene", scene]
+    for flag, values in (("--seed", seeds), ("--task", tasks), ("--method", methods), ("--perturbation", perturbations)):
+        for value in filter(None, (item.strip() for item in values.split(","))): cmd.extend([flag, value])
+    if resume: cmd.append("--resume")
+    return cmd
+
+
+@app.function(gpu="A100-40GB", volumes={str(MOUNT_PATH): volume}, secrets=[modal.Secret.from_name("hf-token")], timeout=10 * 60 * 60)
+def run_stage1_id(seeds: str = "2,3,4", tasks: str = "", methods: str = "", resume: bool = True):
+    try: return _run_script(_stage1_run_command("id", seeds, tasks, methods, "", resume))
+    finally: volume.commit()
+
+
+@app.function(image=image_libero_plus, gpu="A100-40GB", volumes={str(MOUNT_PATH): volume}, secrets=[modal.Secret.from_name("hf-token")], timeout=10 * 60 * 60)
+def run_stage1_ood(seeds: str = "", tasks: str = "", methods: str = "", perturbations: str = "", resume: bool = True):
+    try: return _run_script(_stage1_run_command("ood", seeds, tasks, methods, perturbations, resume))
+    finally: volume.commit()
+
+
+@app.function(volumes={str(MOUNT_PATH): volume}, timeout=30 * 60)
+def validate_stage1(allow_incomplete: bool = False):
+    cmd = ["async_vla_benchmark.scripts.validate_stage1", "--manifest", str(STAGE1_MANIFEST), "--output-dir", str(STAGE1_PATH)]
+    if allow_incomplete: cmd.append("--allow-incomplete")
+    return _run_script(cmd)
+
+
+@app.function(volumes={str(MOUNT_PATH): volume}, timeout=30 * 60)
+def analyze_stage1():
+    result = _run_script(["async_vla_benchmark.scripts.analyze_stage1", "--results", str(STAGE1_PATH / "stage1_episode_results.csv"), "--output-dir", str(STAGE1_PATH / "analysis")])
+    volume.commit(); return result
+
+
+@app.function(volumes={str(MOUNT_PATH): volume}, timeout=30 * 60)
+def plot_stage1():
+    result = _run_script(["async_vla_benchmark.scripts.plot_stage1", "--results", str(STAGE1_PATH / "stage1_episode_results.csv"), "--tables-dir", str(STAGE1_PATH / "analysis"), "--output-dir", str(STAGE1_PATH / "analysis")])
+    volume.commit(); return result
+
+
 @app.function(
     gpu="A100-40GB",
     volumes={str(MOUNT_PATH): volume},
@@ -512,6 +590,9 @@ def main(
     resume: bool = True,
     methods: str = "",
     require_complete: bool = True,
+    benchmark_git_sha: str = "",
+    perturbations: str = "",
+    allow_incomplete: bool = False,
 ):
     """Dispatch a benchmark pipeline step to Modal from your local machine.
 
@@ -540,6 +621,15 @@ def main(
         "stage0_preflight": lambda: stage0_preflight.spawn(),
         "stage0": lambda: run_stage0.spawn(native_only, resume, tasks, methods),
         "stage0_select": lambda: select_high_delay.spawn(require_complete),
+        # Stage 1, in required order.
+        "stage1_resolve": lambda: resolve_stage1_variants.spawn(),
+        "stage1_manifest": lambda: make_stage1_manifest.spawn(benchmark_git_sha),
+        "stage1_import_id": lambda: import_stage0_controls.spawn(),
+        "stage1_run_id": lambda: run_stage1_id.spawn(seeds or "2,3,4", tasks, methods, resume),
+        "stage1_run_ood": lambda: run_stage1_ood.spawn(seeds, tasks, methods, perturbations, resume),
+        "stage1_validate": lambda: validate_stage1.spawn(allow_incomplete),
+        "stage1_analyze": lambda: analyze_stage1.spawn(),
+        "stage1_plots": lambda: plot_stage1.spawn(),
     }
     if command == "status":
         if not call_id:
@@ -551,7 +641,9 @@ def main(
         raise ValueError(
             "unknown command "
             f"{command}; choose inspect/select/profile/run/validate/figures/"
-            "diagnose/diagnose_scale/diagnose_raw_scale/diagnose_libero_plus/status"
+            "diagnose/diagnose_scale/diagnose_raw_scale/diagnose_libero_plus/"
+            "stage1_resolve/stage1_manifest/stage1_import_id/stage1_run_id/"
+            "stage1_run_ood/stage1_validate/stage1_analyze/stage1_plots/status"
         )
     call = dispatch[command]()
     print(f"dispatched {command}; call_id={call.object_id}")

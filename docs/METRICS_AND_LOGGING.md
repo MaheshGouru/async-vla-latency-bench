@@ -54,6 +54,10 @@ Stage 0 tests:
 0, 100, 200, 300, 400 ms
 ```
 
+The original `500–700 ms` extension was dropped after the ID-only run provided
+sufficient non-saturated calibration evidence by `400 ms`. This revision was
+made before Stage 1 OOD outcomes.
+
 Stage 1 and Stage 2 use:
 
 ```text
@@ -311,7 +315,7 @@ Always report:
 - null results;
 - invalid/missing runs.
 
-Do not describe a 2-seed cell as statistically significant.
+Do not describe a 5-seed exploratory cell as statistically significant without an appropriate prespecified analysis and uncertainty estimate.
 
 ### Confirmatory Stage 2
 

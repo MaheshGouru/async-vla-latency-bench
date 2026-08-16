@@ -3,22 +3,29 @@
 Before making changes, read these files completely:
 
 1. `docs/RESEARCH_CONTEXT.md`
-2. `docs/DAYS_1_3_SPEC.md`
+2. `docs/STAGE_1_EXPLORATORY_SCREEN.md`
+3. `docs/METRICS_AND_LOGGING.md`
 
 ## Current objective
 
-Implement only the Days 1–3 π0.5-LIBERO latency benchmark.
+Implement the Stage 1 π0.5 LIBERO-Plus exploratory OOD × inference-delay screen.
 
-Required execution conditions:
+Required Stage 1 execution conditions:
 
-- Ideal synchronous
-- Blocking synchronous
-- Naive asynchronous queue
-- RTC
-- Fixed execution-horizon sweep
+- frozen `policy.n_action_steps=25`
+- frozen ID-calibrated `d*=200 ms`
+- Native and Native + `d*`
+- Naive asynchronous queue and RTC
+- three frozen base tasks and all seven LIBERO-Plus perturbation families
+- five Stage 1 seeds: `0, 1, 2, 3, 4`
+- 420 OOD episodes plus 60 shared ID controls
 
-Do not implement VLASH, FASTER, DEHP, SmolVLA, OpenVLA, OOD
-perturbations, dynamic interventions, or policy training yet.
+Reuse the 24 Stage 0 ID controls for seeds `0` and `1` without rerunning them,
+as an explicitly recorded provenance limitation. Run the 36 missing ID controls
+for seeds `2`, `3`, and `4`.
+
+Do not implement VLASH, FASTER, DEHP, SmolVLA, OpenVLA, dynamic interventions,
+additional models, or policy training.
 
 ## Working rules
 

@@ -254,6 +254,13 @@ class EpisodeRunner:
                 "request_logical_time_seconds": source_obs.logical_time_seconds,
                 "response_available_step": available_step,
                 "measured_request_latency_ms": timing["request_latency_ms"],
+                "observation_capture_time": timing["observation_capture_time"],
+                "preprocessing_start_time": timing["preprocessing_start_time"],
+                "preprocessing_end_time": timing["preprocessing_end_time"],
+                "inference_start_time": timing["inference_start_time"],
+                "inference_end_time": timing["inference_end_time"],
+                "postprocessing_end_time": timing["postprocessing_end_time"],
+                "request_complete_time": timing["request_complete_time"],
                 "model_latency_ms": timing["model_latency_ms"],
                 "preprocessing_latency_ms": timing["preprocessing_latency_ms"],
                 "postprocessing_latency_ms": timing["postprocessing_latency_ms"],
@@ -361,6 +368,8 @@ class EpisodeRunner:
             source_obs_id = queued.source_observation_id
             source_obs_step = queued.source_observation_step
         return action, {
+            "action_source": "hold" if is_hold else "policy",
+            "hold_reason": "queue_underrun" if is_underrun else None,
             "is_hold_action": is_hold,
             "is_queue_underrun": is_underrun,
             "queue_depth_before": queue_depth_before,
@@ -385,8 +394,8 @@ class EpisodeRunner:
     ) -> None:
         source_step = meta.get("source_observation_step")
         if source_step is None:
-            age_steps = 0
-            age_ms = 0.0
+            age_steps = None
+            age_ms = None
         else:
             age_steps = action_age_steps(control_step, source_step)
             age_ms = action_age_ms(age_steps, self.control_period_seconds)
@@ -398,6 +407,8 @@ class EpisodeRunner:
                 "strategy": self.strategy,
                 "latency_profile": self.latency_profile.name,
                 "fixed_horizon": self.fixed_horizon,
+                "action_source": meta["action_source"],
+                "hold_reason": meta["hold_reason"],
                 "chunk_id": meta.get("chunk_id"),
                 "chunk_action_index": meta.get("chunk_action_index"),
                 "source_observation_id": meta.get("source_observation_id"),
@@ -489,7 +500,7 @@ class EpisodeRunner:
         import statistics
 
         request_latencies = [r["measured_request_latency_ms"] for r in self.requests]
-        action_ages = [a["action_age_ms"] for a in self.actions]
+        action_ages = [a["action_age_ms"] for a in self.actions if a["action_age_ms"] is not None]
         queue_depths = [a["queue_depth_before"] for a in self.actions]
         deltas = [np.linalg.norm(np.array(a["action_vector"][:6])) for a in self.actions]
 

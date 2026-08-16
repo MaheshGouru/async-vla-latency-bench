@@ -75,14 +75,23 @@ def _check_delay_conversion(requests: list[dict], control_period_seconds: float)
 def _check_action_records(actions: list[dict], chunk_ids: set, request_source_ids: set) -> list[str]:
     errors = []
     for a in actions:
-        if a["action_age_steps"] < 0:
+        if a["action_age_steps"] is not None and a["action_age_steps"] < 0:
             errors.append(f"action {a['control_step']}: negative action age")
         # queue_depth_before == 0 is the expected, correct value for a hold
         # action (the queue ran dry before this step's pop) -- only negative
         # depths are actually invalid.
         if a["queue_depth_before"] < 0 or a["queue_depth_after"] < 0:
             errors.append(f"action {a['control_step']}: invalid queue depth")
-        if not a["is_hold_action"]:
+        if a["is_hold_action"]:
+            if "action_source" in a and a["action_source"] != "hold":
+                errors.append(f"action {a['control_step']}: hold has wrong action_source")
+            if "action_source" in a and (a["action_age_steps"] is not None or a["action_age_ms"] is not None):
+                errors.append(f"action {a['control_step']}: hold must have null policy action age")
+            if "hold_reason" in a and not a["hold_reason"]:
+                errors.append(f"action {a['control_step']}: hold is missing hold_reason")
+        else:
+            if "action_source" in a and a["action_source"] != "policy":
+                errors.append(f"action {a['control_step']}: policy action has wrong action_source")
             if a["chunk_id"] not in chunk_ids:
                 errors.append(f"action {a['control_step']}: references missing chunk {a['chunk_id']}")
             if a["source_observation_id"] not in request_source_ids:

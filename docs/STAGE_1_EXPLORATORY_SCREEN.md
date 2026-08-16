@@ -49,18 +49,15 @@ Use exactly:
 lerobot/pi05_libero_finetuned
 ```
 
-The LeRobot checkpoint is trained on `HuggingFaceVLA/libero`, and the official LeRobot LIBERO evaluation uses `n_action_steps = 10`. This pack does not, for the queue-headroom reason recorded in D002 and STAGE_0 section 2.1:
+The LeRobot checkpoint is trained on `HuggingFaceVLA/libero`, and the documented
+default LeRobot LIBERO evaluation uses `n_action_steps=10`. This benchmark's
+revised, frozen evaluation setting is:
 
 ```text
 policy.n_action_steps = 25
-request_threshold_actions = 25
 ```
 
-Keep `n_action_steps=25` for Stage 1 (amended 2026-08-11; was `10`). This is not
-optional bookkeeping: Stage 1's ID controls are Stage 0's Native and `d*`
-episodes, and they are only the same condition if the execution configuration is
-identical. Running Stage 1 at a different horizon would silently make the reused
-controls incomparable to the OOD arm.
+Keep `n_action_steps=25` for Stage 1.
 
 ### Execution methods
 
@@ -379,7 +376,8 @@ Do not start the screen until `stage1_resolved_variants.csv` and these revisions
 
 Before Stage 1, run [`STAGE_0_LATENCY_CALIBRATION.md`](STAGE_0_LATENCY_CALIBRATION.md).
 
-Stage 0 uses **ID only** to select one frozen high-delay value `d*` from `+100` through `+700 ms`.
+Stage 0 uses **ID only** to select one frozen high-delay value `d*` from the
+accepted `+100`, `+200`, `+300`, and `+400 ms` calibration candidates.
 
 Stage 1 then **does test OOD under latency**: every one of the 21 selected LIBERO-Plus OOD variants is evaluated at both **Native** and **Native + d*** under both **Naive async** and **RTC**.
 
@@ -423,6 +421,7 @@ Test candidate added delays:
 100 ms
 200 ms
 300 ms
+400 ms
 ```
 
 using the three standard LIBERO base tasks and both execution methods.
@@ -444,7 +443,7 @@ HIGH_DELAY_MS = d*
 is frozen.
 
 Do **not**:
-- use `+700 ms` by default;
+- use a delay outside the accepted Stage 0 calibration grid;
 - choose a different high delay for RTC and naive async;
 - choose a different high delay for each task;
 - recalibrate using OOD outcomes.
@@ -473,19 +472,22 @@ execution_method:
     rtc
 
 seed:
-    2 exploratory seeds
+    5 exploratory seeds
 ```
 
-Use the same two seed values in every condition.
+Use the same five seed values in every condition.
 
 Recommended frozen seeds:
 
 ```text
 seed = 0
 seed = 1
+seed = 2
+seed = 3
+seed = 4
 ```
 
-If the existing harness requires another seed convention, choose two fixed seeds before running and record them here. Do not change seeds by condition.
+If the existing harness requires another seed convention, choose five fixed seeds before running and record them here. Do not change seeds by condition.
 
 ### OOD episodes
 
@@ -494,8 +496,8 @@ If the existing harness requires another seed convention, choose two fixed seeds
 × 7 perturbations
 × 2 delays
 × 2 execution methods
-× 2 seeds
-= 168 OOD episodes
+× 5 seeds
+= 420 OOD episodes
 ```
 
 ### Shared ID controls
@@ -506,14 +508,30 @@ The same ID condition is reused across all seven perturbations:
 3 tasks
 × 2 delays
 × 2 execution methods
-× 2 seeds
-= 24 ID episodes
+× 5 seeds
+= 60 ID episodes
+```
+
+Stage 0 provides the 24 low/high ID controls for seeds `0` and `1` when all
+configuration and provenance fields match. Stage 1 must add the corresponding
+36 ID controls for seeds `2`, `3`, and `4`:
+
+```text
+3 tasks × 2 delays × 2 methods × 3 additional seeds
+= 36 new ID episodes
 ```
 
 ### Total Stage 1 budget
 
 ```text
-168 OOD + 24 ID = 192 episodes
+420 OOD + 60 ID = 480 episodes
+```
+
+Expected new execution after valid Stage 0 reuse:
+
+```text
+420 new OOD + 36 new ID = 456 new episodes
+24 reused Stage 0 ID + 456 new = 480 analysis episodes
 ```
 
 Do **not** rerun ID separately for each perturbation family.
@@ -524,308 +542,147 @@ Do **not** rerun ID separately for each perturbation family.
 This section enumerates the **entire Stage 1 run plan** using the same display terminology as the analysis taxonomy.
 
 - **96 unique condition blocks**
-- **2 fixed seeds per condition** (`0`, `1`)
-- **192 total episodes**
+- **5 fixed seeds per condition** (`0`, `1`, `2`, `3`, `4`)
+- **480 total episodes**
 - ID controls are shared across perturbation families and are therefore listed only once per task × method × delay.
 - For OOD rows, the exact LIBERO-Plus `classification_id`, `api_task_index`, and `variant_name` are filled from `stage1_resolved_variants.csv` before execution.
 
 ### 7A.1 Condition-level matrix — 96 conditions
 | # | Scene | Task-demand group | Suite:task_id | Perturbation | Perturbation mechanism | Method | Delay | Seeds | Episodes |
 |---:|---|---|---|---|---|---|---|---|---:|
-| 1 | ID | Single-stage transport | `libero_spatial:2` | ID control | ID control | Naive async | Native | `0, 1` | 2 |
-| 2 | ID | Single-stage transport | `libero_spatial:2` | ID control | ID control | Naive async | Native + d* | `0, 1` | 2 |
-| 3 | ID | Single-stage transport | `libero_spatial:2` | ID control | ID control | RTC | Native | `0, 1` | 2 |
-| 4 | ID | Single-stage transport | `libero_spatial:2` | ID control | ID control | RTC | Native + d* | `0, 1` | 2 |
-| 5 | ID | Articulated/contact-rich | `libero_goal:0` | ID control | ID control | Naive async | Native | `0, 1` | 2 |
-| 6 | ID | Articulated/contact-rich | `libero_goal:0` | ID control | ID control | Naive async | Native + d* | `0, 1` | 2 |
-| 7 | ID | Articulated/contact-rich | `libero_goal:0` | ID control | ID control | RTC | Native | `0, 1` | 2 |
-| 8 | ID | Articulated/contact-rich | `libero_goal:0` | ID control | ID control | RTC | Native + d* | `0, 1` | 2 |
-| 9 | ID | Multi-stage/sequential | `libero_10:2` | ID control | ID control | Naive async | Native | `0, 1` | 2 |
-| 10 | ID | Multi-stage/sequential | `libero_10:2` | ID control | ID control | Naive async | Native + d* | `0, 1` | 2 |
-| 11 | ID | Multi-stage/sequential | `libero_10:2` | ID control | ID control | RTC | Native | `0, 1` | 2 |
-| 12 | ID | Multi-stage/sequential | `libero_10:2` | ID control | ID control | RTC | Native + d* | `0, 1` | 2 |
-| 13 | OOD | Single-stage transport | `libero_spatial:2` | Object layout | Trajectory adaptation | Naive async | Native | `0, 1` | 2 |
-| 14 | OOD | Single-stage transport | `libero_spatial:2` | Object layout | Trajectory adaptation | Naive async | Native + d* | `0, 1` | 2 |
-| 15 | OOD | Single-stage transport | `libero_spatial:2` | Object layout | Trajectory adaptation | RTC | Native | `0, 1` | 2 |
-| 16 | OOD | Single-stage transport | `libero_spatial:2` | Object layout | Trajectory adaptation | RTC | Native + d* | `0, 1` | 2 |
-| 17 | OOD | Single-stage transport | `libero_spatial:2` | Robot initial state | Trajectory adaptation | Naive async | Native | `0, 1` | 2 |
-| 18 | OOD | Single-stage transport | `libero_spatial:2` | Robot initial state | Trajectory adaptation | Naive async | Native + d* | `0, 1` | 2 |
-| 19 | OOD | Single-stage transport | `libero_spatial:2` | Robot initial state | Trajectory adaptation | RTC | Native | `0, 1` | 2 |
-| 20 | OOD | Single-stage transport | `libero_spatial:2` | Robot initial state | Trajectory adaptation | RTC | Native + d* | `0, 1` | 2 |
-| 21 | OOD | Single-stage transport | `libero_spatial:2` | Camera viewpoint | Perceptual localization | Naive async | Native | `0, 1` | 2 |
-| 22 | OOD | Single-stage transport | `libero_spatial:2` | Camera viewpoint | Perceptual localization | Naive async | Native + d* | `0, 1` | 2 |
-| 23 | OOD | Single-stage transport | `libero_spatial:2` | Camera viewpoint | Perceptual localization | RTC | Native | `0, 1` | 2 |
-| 24 | OOD | Single-stage transport | `libero_spatial:2` | Camera viewpoint | Perceptual localization | RTC | Native + d* | `0, 1` | 2 |
-| 25 | OOD | Single-stage transport | `libero_spatial:2` | Sensor noise | Perceptual localization | Naive async | Native | `0, 1` | 2 |
-| 26 | OOD | Single-stage transport | `libero_spatial:2` | Sensor noise | Perceptual localization | Naive async | Native + d* | `0, 1` | 2 |
-| 27 | OOD | Single-stage transport | `libero_spatial:2` | Sensor noise | Perceptual localization | RTC | Native | `0, 1` | 2 |
-| 28 | OOD | Single-stage transport | `libero_spatial:2` | Sensor noise | Perceptual localization | RTC | Native + d* | `0, 1` | 2 |
-| 29 | OOD | Single-stage transport | `libero_spatial:2` | Lighting | Appearance invariance | Naive async | Native | `0, 1` | 2 |
-| 30 | OOD | Single-stage transport | `libero_spatial:2` | Lighting | Appearance invariance | Naive async | Native + d* | `0, 1` | 2 |
-| 31 | OOD | Single-stage transport | `libero_spatial:2` | Lighting | Appearance invariance | RTC | Native | `0, 1` | 2 |
-| 32 | OOD | Single-stage transport | `libero_spatial:2` | Lighting | Appearance invariance | RTC | Native + d* | `0, 1` | 2 |
-| 33 | OOD | Single-stage transport | `libero_spatial:2` | Background texture | Appearance invariance | Naive async | Native | `0, 1` | 2 |
-| 34 | OOD | Single-stage transport | `libero_spatial:2` | Background texture | Appearance invariance | Naive async | Native + d* | `0, 1` | 2 |
-| 35 | OOD | Single-stage transport | `libero_spatial:2` | Background texture | Appearance invariance | RTC | Native | `0, 1` | 2 |
-| 36 | OOD | Single-stage transport | `libero_spatial:2` | Background texture | Appearance invariance | RTC | Native + d* | `0, 1` | 2 |
-| 37 | OOD | Single-stage transport | `libero_spatial:2` | Language instruction | Semantic grounding | Naive async | Native | `0, 1` | 2 |
-| 38 | OOD | Single-stage transport | `libero_spatial:2` | Language instruction | Semantic grounding | Naive async | Native + d* | `0, 1` | 2 |
-| 39 | OOD | Single-stage transport | `libero_spatial:2` | Language instruction | Semantic grounding | RTC | Native | `0, 1` | 2 |
-| 40 | OOD | Single-stage transport | `libero_spatial:2` | Language instruction | Semantic grounding | RTC | Native + d* | `0, 1` | 2 |
-| 41 | OOD | Articulated/contact-rich | `libero_goal:0` | Object layout | Trajectory adaptation | Naive async | Native | `0, 1` | 2 |
-| 42 | OOD | Articulated/contact-rich | `libero_goal:0` | Object layout | Trajectory adaptation | Naive async | Native + d* | `0, 1` | 2 |
-| 43 | OOD | Articulated/contact-rich | `libero_goal:0` | Object layout | Trajectory adaptation | RTC | Native | `0, 1` | 2 |
-| 44 | OOD | Articulated/contact-rich | `libero_goal:0` | Object layout | Trajectory adaptation | RTC | Native + d* | `0, 1` | 2 |
-| 45 | OOD | Articulated/contact-rich | `libero_goal:0` | Robot initial state | Trajectory adaptation | Naive async | Native | `0, 1` | 2 |
-| 46 | OOD | Articulated/contact-rich | `libero_goal:0` | Robot initial state | Trajectory adaptation | Naive async | Native + d* | `0, 1` | 2 |
-| 47 | OOD | Articulated/contact-rich | `libero_goal:0` | Robot initial state | Trajectory adaptation | RTC | Native | `0, 1` | 2 |
-| 48 | OOD | Articulated/contact-rich | `libero_goal:0` | Robot initial state | Trajectory adaptation | RTC | Native + d* | `0, 1` | 2 |
-| 49 | OOD | Articulated/contact-rich | `libero_goal:0` | Camera viewpoint | Perceptual localization | Naive async | Native | `0, 1` | 2 |
-| 50 | OOD | Articulated/contact-rich | `libero_goal:0` | Camera viewpoint | Perceptual localization | Naive async | Native + d* | `0, 1` | 2 |
-| 51 | OOD | Articulated/contact-rich | `libero_goal:0` | Camera viewpoint | Perceptual localization | RTC | Native | `0, 1` | 2 |
-| 52 | OOD | Articulated/contact-rich | `libero_goal:0` | Camera viewpoint | Perceptual localization | RTC | Native + d* | `0, 1` | 2 |
-| 53 | OOD | Articulated/contact-rich | `libero_goal:0` | Sensor noise | Perceptual localization | Naive async | Native | `0, 1` | 2 |
-| 54 | OOD | Articulated/contact-rich | `libero_goal:0` | Sensor noise | Perceptual localization | Naive async | Native + d* | `0, 1` | 2 |
-| 55 | OOD | Articulated/contact-rich | `libero_goal:0` | Sensor noise | Perceptual localization | RTC | Native | `0, 1` | 2 |
-| 56 | OOD | Articulated/contact-rich | `libero_goal:0` | Sensor noise | Perceptual localization | RTC | Native + d* | `0, 1` | 2 |
-| 57 | OOD | Articulated/contact-rich | `libero_goal:0` | Lighting | Appearance invariance | Naive async | Native | `0, 1` | 2 |
-| 58 | OOD | Articulated/contact-rich | `libero_goal:0` | Lighting | Appearance invariance | Naive async | Native + d* | `0, 1` | 2 |
-| 59 | OOD | Articulated/contact-rich | `libero_goal:0` | Lighting | Appearance invariance | RTC | Native | `0, 1` | 2 |
-| 60 | OOD | Articulated/contact-rich | `libero_goal:0` | Lighting | Appearance invariance | RTC | Native + d* | `0, 1` | 2 |
-| 61 | OOD | Articulated/contact-rich | `libero_goal:0` | Background texture | Appearance invariance | Naive async | Native | `0, 1` | 2 |
-| 62 | OOD | Articulated/contact-rich | `libero_goal:0` | Background texture | Appearance invariance | Naive async | Native + d* | `0, 1` | 2 |
-| 63 | OOD | Articulated/contact-rich | `libero_goal:0` | Background texture | Appearance invariance | RTC | Native | `0, 1` | 2 |
-| 64 | OOD | Articulated/contact-rich | `libero_goal:0` | Background texture | Appearance invariance | RTC | Native + d* | `0, 1` | 2 |
-| 65 | OOD | Articulated/contact-rich | `libero_goal:0` | Language instruction | Semantic grounding | Naive async | Native | `0, 1` | 2 |
-| 66 | OOD | Articulated/contact-rich | `libero_goal:0` | Language instruction | Semantic grounding | Naive async | Native + d* | `0, 1` | 2 |
-| 67 | OOD | Articulated/contact-rich | `libero_goal:0` | Language instruction | Semantic grounding | RTC | Native | `0, 1` | 2 |
-| 68 | OOD | Articulated/contact-rich | `libero_goal:0` | Language instruction | Semantic grounding | RTC | Native + d* | `0, 1` | 2 |
-| 69 | OOD | Multi-stage/sequential | `libero_10:2` | Object layout | Trajectory adaptation | Naive async | Native | `0, 1` | 2 |
-| 70 | OOD | Multi-stage/sequential | `libero_10:2` | Object layout | Trajectory adaptation | Naive async | Native + d* | `0, 1` | 2 |
-| 71 | OOD | Multi-stage/sequential | `libero_10:2` | Object layout | Trajectory adaptation | RTC | Native | `0, 1` | 2 |
-| 72 | OOD | Multi-stage/sequential | `libero_10:2` | Object layout | Trajectory adaptation | RTC | Native + d* | `0, 1` | 2 |
-| 73 | OOD | Multi-stage/sequential | `libero_10:2` | Robot initial state | Trajectory adaptation | Naive async | Native | `0, 1` | 2 |
-| 74 | OOD | Multi-stage/sequential | `libero_10:2` | Robot initial state | Trajectory adaptation | Naive async | Native + d* | `0, 1` | 2 |
-| 75 | OOD | Multi-stage/sequential | `libero_10:2` | Robot initial state | Trajectory adaptation | RTC | Native | `0, 1` | 2 |
-| 76 | OOD | Multi-stage/sequential | `libero_10:2` | Robot initial state | Trajectory adaptation | RTC | Native + d* | `0, 1` | 2 |
-| 77 | OOD | Multi-stage/sequential | `libero_10:2` | Camera viewpoint | Perceptual localization | Naive async | Native | `0, 1` | 2 |
-| 78 | OOD | Multi-stage/sequential | `libero_10:2` | Camera viewpoint | Perceptual localization | Naive async | Native + d* | `0, 1` | 2 |
-| 79 | OOD | Multi-stage/sequential | `libero_10:2` | Camera viewpoint | Perceptual localization | RTC | Native | `0, 1` | 2 |
-| 80 | OOD | Multi-stage/sequential | `libero_10:2` | Camera viewpoint | Perceptual localization | RTC | Native + d* | `0, 1` | 2 |
-| 81 | OOD | Multi-stage/sequential | `libero_10:2` | Sensor noise | Perceptual localization | Naive async | Native | `0, 1` | 2 |
-| 82 | OOD | Multi-stage/sequential | `libero_10:2` | Sensor noise | Perceptual localization | Naive async | Native + d* | `0, 1` | 2 |
-| 83 | OOD | Multi-stage/sequential | `libero_10:2` | Sensor noise | Perceptual localization | RTC | Native | `0, 1` | 2 |
-| 84 | OOD | Multi-stage/sequential | `libero_10:2` | Sensor noise | Perceptual localization | RTC | Native + d* | `0, 1` | 2 |
-| 85 | OOD | Multi-stage/sequential | `libero_10:2` | Lighting | Appearance invariance | Naive async | Native | `0, 1` | 2 |
-| 86 | OOD | Multi-stage/sequential | `libero_10:2` | Lighting | Appearance invariance | Naive async | Native + d* | `0, 1` | 2 |
-| 87 | OOD | Multi-stage/sequential | `libero_10:2` | Lighting | Appearance invariance | RTC | Native | `0, 1` | 2 |
-| 88 | OOD | Multi-stage/sequential | `libero_10:2` | Lighting | Appearance invariance | RTC | Native + d* | `0, 1` | 2 |
-| 89 | OOD | Multi-stage/sequential | `libero_10:2` | Background texture | Appearance invariance | Naive async | Native | `0, 1` | 2 |
-| 90 | OOD | Multi-stage/sequential | `libero_10:2` | Background texture | Appearance invariance | Naive async | Native + d* | `0, 1` | 2 |
-| 91 | OOD | Multi-stage/sequential | `libero_10:2` | Background texture | Appearance invariance | RTC | Native | `0, 1` | 2 |
-| 92 | OOD | Multi-stage/sequential | `libero_10:2` | Background texture | Appearance invariance | RTC | Native + d* | `0, 1` | 2 |
-| 93 | OOD | Multi-stage/sequential | `libero_10:2` | Language instruction | Semantic grounding | Naive async | Native | `0, 1` | 2 |
-| 94 | OOD | Multi-stage/sequential | `libero_10:2` | Language instruction | Semantic grounding | Naive async | Native + d* | `0, 1` | 2 |
-| 95 | OOD | Multi-stage/sequential | `libero_10:2` | Language instruction | Semantic grounding | RTC | Native | `0, 1` | 2 |
-| 96 | OOD | Multi-stage/sequential | `libero_10:2` | Language instruction | Semantic grounding | RTC | Native + d* | `0, 1` | 2 |
+| 1 | ID | Single-stage transport | `libero_spatial:2` | ID control | ID control | Naive async | Native | `0, 1, 2, 3, 4` | 5 |
+| 2 | ID | Single-stage transport | `libero_spatial:2` | ID control | ID control | Naive async | Native + d* | `0, 1, 2, 3, 4` | 5 |
+| 3 | ID | Single-stage transport | `libero_spatial:2` | ID control | ID control | RTC | Native | `0, 1, 2, 3, 4` | 5 |
+| 4 | ID | Single-stage transport | `libero_spatial:2` | ID control | ID control | RTC | Native + d* | `0, 1, 2, 3, 4` | 5 |
+| 5 | ID | Articulated/contact-rich | `libero_goal:0` | ID control | ID control | Naive async | Native | `0, 1, 2, 3, 4` | 5 |
+| 6 | ID | Articulated/contact-rich | `libero_goal:0` | ID control | ID control | Naive async | Native + d* | `0, 1, 2, 3, 4` | 5 |
+| 7 | ID | Articulated/contact-rich | `libero_goal:0` | ID control | ID control | RTC | Native | `0, 1, 2, 3, 4` | 5 |
+| 8 | ID | Articulated/contact-rich | `libero_goal:0` | ID control | ID control | RTC | Native + d* | `0, 1, 2, 3, 4` | 5 |
+| 9 | ID | Multi-stage/sequential | `libero_10:2` | ID control | ID control | Naive async | Native | `0, 1, 2, 3, 4` | 5 |
+| 10 | ID | Multi-stage/sequential | `libero_10:2` | ID control | ID control | Naive async | Native + d* | `0, 1, 2, 3, 4` | 5 |
+| 11 | ID | Multi-stage/sequential | `libero_10:2` | ID control | ID control | RTC | Native | `0, 1, 2, 3, 4` | 5 |
+| 12 | ID | Multi-stage/sequential | `libero_10:2` | ID control | ID control | RTC | Native + d* | `0, 1, 2, 3, 4` | 5 |
+| 13 | OOD | Single-stage transport | `libero_spatial:2` | Object layout | Trajectory adaptation | Naive async | Native | `0, 1, 2, 3, 4` | 5 |
+| 14 | OOD | Single-stage transport | `libero_spatial:2` | Object layout | Trajectory adaptation | Naive async | Native + d* | `0, 1, 2, 3, 4` | 5 |
+| 15 | OOD | Single-stage transport | `libero_spatial:2` | Object layout | Trajectory adaptation | RTC | Native | `0, 1, 2, 3, 4` | 5 |
+| 16 | OOD | Single-stage transport | `libero_spatial:2` | Object layout | Trajectory adaptation | RTC | Native + d* | `0, 1, 2, 3, 4` | 5 |
+| 17 | OOD | Single-stage transport | `libero_spatial:2` | Robot initial state | Trajectory adaptation | Naive async | Native | `0, 1, 2, 3, 4` | 5 |
+| 18 | OOD | Single-stage transport | `libero_spatial:2` | Robot initial state | Trajectory adaptation | Naive async | Native + d* | `0, 1, 2, 3, 4` | 5 |
+| 19 | OOD | Single-stage transport | `libero_spatial:2` | Robot initial state | Trajectory adaptation | RTC | Native | `0, 1, 2, 3, 4` | 5 |
+| 20 | OOD | Single-stage transport | `libero_spatial:2` | Robot initial state | Trajectory adaptation | RTC | Native + d* | `0, 1, 2, 3, 4` | 5 |
+| 21 | OOD | Single-stage transport | `libero_spatial:2` | Camera viewpoint | Perceptual localization | Naive async | Native | `0, 1, 2, 3, 4` | 5 |
+| 22 | OOD | Single-stage transport | `libero_spatial:2` | Camera viewpoint | Perceptual localization | Naive async | Native + d* | `0, 1, 2, 3, 4` | 5 |
+| 23 | OOD | Single-stage transport | `libero_spatial:2` | Camera viewpoint | Perceptual localization | RTC | Native | `0, 1, 2, 3, 4` | 5 |
+| 24 | OOD | Single-stage transport | `libero_spatial:2` | Camera viewpoint | Perceptual localization | RTC | Native + d* | `0, 1, 2, 3, 4` | 5 |
+| 25 | OOD | Single-stage transport | `libero_spatial:2` | Sensor noise | Perceptual localization | Naive async | Native | `0, 1, 2, 3, 4` | 5 |
+| 26 | OOD | Single-stage transport | `libero_spatial:2` | Sensor noise | Perceptual localization | Naive async | Native + d* | `0, 1, 2, 3, 4` | 5 |
+| 27 | OOD | Single-stage transport | `libero_spatial:2` | Sensor noise | Perceptual localization | RTC | Native | `0, 1, 2, 3, 4` | 5 |
+| 28 | OOD | Single-stage transport | `libero_spatial:2` | Sensor noise | Perceptual localization | RTC | Native + d* | `0, 1, 2, 3, 4` | 5 |
+| 29 | OOD | Single-stage transport | `libero_spatial:2` | Lighting | Appearance invariance | Naive async | Native | `0, 1, 2, 3, 4` | 5 |
+| 30 | OOD | Single-stage transport | `libero_spatial:2` | Lighting | Appearance invariance | Naive async | Native + d* | `0, 1, 2, 3, 4` | 5 |
+| 31 | OOD | Single-stage transport | `libero_spatial:2` | Lighting | Appearance invariance | RTC | Native | `0, 1, 2, 3, 4` | 5 |
+| 32 | OOD | Single-stage transport | `libero_spatial:2` | Lighting | Appearance invariance | RTC | Native + d* | `0, 1, 2, 3, 4` | 5 |
+| 33 | OOD | Single-stage transport | `libero_spatial:2` | Background texture | Appearance invariance | Naive async | Native | `0, 1, 2, 3, 4` | 5 |
+| 34 | OOD | Single-stage transport | `libero_spatial:2` | Background texture | Appearance invariance | Naive async | Native + d* | `0, 1, 2, 3, 4` | 5 |
+| 35 | OOD | Single-stage transport | `libero_spatial:2` | Background texture | Appearance invariance | RTC | Native | `0, 1, 2, 3, 4` | 5 |
+| 36 | OOD | Single-stage transport | `libero_spatial:2` | Background texture | Appearance invariance | RTC | Native + d* | `0, 1, 2, 3, 4` | 5 |
+| 37 | OOD | Single-stage transport | `libero_spatial:2` | Language instruction | Semantic grounding | Naive async | Native | `0, 1, 2, 3, 4` | 5 |
+| 38 | OOD | Single-stage transport | `libero_spatial:2` | Language instruction | Semantic grounding | Naive async | Native + d* | `0, 1, 2, 3, 4` | 5 |
+| 39 | OOD | Single-stage transport | `libero_spatial:2` | Language instruction | Semantic grounding | RTC | Native | `0, 1, 2, 3, 4` | 5 |
+| 40 | OOD | Single-stage transport | `libero_spatial:2` | Language instruction | Semantic grounding | RTC | Native + d* | `0, 1, 2, 3, 4` | 5 |
+| 41 | OOD | Articulated/contact-rich | `libero_goal:0` | Object layout | Trajectory adaptation | Naive async | Native | `0, 1, 2, 3, 4` | 5 |
+| 42 | OOD | Articulated/contact-rich | `libero_goal:0` | Object layout | Trajectory adaptation | Naive async | Native + d* | `0, 1, 2, 3, 4` | 5 |
+| 43 | OOD | Articulated/contact-rich | `libero_goal:0` | Object layout | Trajectory adaptation | RTC | Native | `0, 1, 2, 3, 4` | 5 |
+| 44 | OOD | Articulated/contact-rich | `libero_goal:0` | Object layout | Trajectory adaptation | RTC | Native + d* | `0, 1, 2, 3, 4` | 5 |
+| 45 | OOD | Articulated/contact-rich | `libero_goal:0` | Robot initial state | Trajectory adaptation | Naive async | Native | `0, 1, 2, 3, 4` | 5 |
+| 46 | OOD | Articulated/contact-rich | `libero_goal:0` | Robot initial state | Trajectory adaptation | Naive async | Native + d* | `0, 1, 2, 3, 4` | 5 |
+| 47 | OOD | Articulated/contact-rich | `libero_goal:0` | Robot initial state | Trajectory adaptation | RTC | Native | `0, 1, 2, 3, 4` | 5 |
+| 48 | OOD | Articulated/contact-rich | `libero_goal:0` | Robot initial state | Trajectory adaptation | RTC | Native + d* | `0, 1, 2, 3, 4` | 5 |
+| 49 | OOD | Articulated/contact-rich | `libero_goal:0` | Camera viewpoint | Perceptual localization | Naive async | Native | `0, 1, 2, 3, 4` | 5 |
+| 50 | OOD | Articulated/contact-rich | `libero_goal:0` | Camera viewpoint | Perceptual localization | Naive async | Native + d* | `0, 1, 2, 3, 4` | 5 |
+| 51 | OOD | Articulated/contact-rich | `libero_goal:0` | Camera viewpoint | Perceptual localization | RTC | Native | `0, 1, 2, 3, 4` | 5 |
+| 52 | OOD | Articulated/contact-rich | `libero_goal:0` | Camera viewpoint | Perceptual localization | RTC | Native + d* | `0, 1, 2, 3, 4` | 5 |
+| 53 | OOD | Articulated/contact-rich | `libero_goal:0` | Sensor noise | Perceptual localization | Naive async | Native | `0, 1, 2, 3, 4` | 5 |
+| 54 | OOD | Articulated/contact-rich | `libero_goal:0` | Sensor noise | Perceptual localization | Naive async | Native + d* | `0, 1, 2, 3, 4` | 5 |
+| 55 | OOD | Articulated/contact-rich | `libero_goal:0` | Sensor noise | Perceptual localization | RTC | Native | `0, 1, 2, 3, 4` | 5 |
+| 56 | OOD | Articulated/contact-rich | `libero_goal:0` | Sensor noise | Perceptual localization | RTC | Native + d* | `0, 1, 2, 3, 4` | 5 |
+| 57 | OOD | Articulated/contact-rich | `libero_goal:0` | Lighting | Appearance invariance | Naive async | Native | `0, 1, 2, 3, 4` | 5 |
+| 58 | OOD | Articulated/contact-rich | `libero_goal:0` | Lighting | Appearance invariance | Naive async | Native + d* | `0, 1, 2, 3, 4` | 5 |
+| 59 | OOD | Articulated/contact-rich | `libero_goal:0` | Lighting | Appearance invariance | RTC | Native | `0, 1, 2, 3, 4` | 5 |
+| 60 | OOD | Articulated/contact-rich | `libero_goal:0` | Lighting | Appearance invariance | RTC | Native + d* | `0, 1, 2, 3, 4` | 5 |
+| 61 | OOD | Articulated/contact-rich | `libero_goal:0` | Background texture | Appearance invariance | Naive async | Native | `0, 1, 2, 3, 4` | 5 |
+| 62 | OOD | Articulated/contact-rich | `libero_goal:0` | Background texture | Appearance invariance | Naive async | Native + d* | `0, 1, 2, 3, 4` | 5 |
+| 63 | OOD | Articulated/contact-rich | `libero_goal:0` | Background texture | Appearance invariance | RTC | Native | `0, 1, 2, 3, 4` | 5 |
+| 64 | OOD | Articulated/contact-rich | `libero_goal:0` | Background texture | Appearance invariance | RTC | Native + d* | `0, 1, 2, 3, 4` | 5 |
+| 65 | OOD | Articulated/contact-rich | `libero_goal:0` | Language instruction | Semantic grounding | Naive async | Native | `0, 1, 2, 3, 4` | 5 |
+| 66 | OOD | Articulated/contact-rich | `libero_goal:0` | Language instruction | Semantic grounding | Naive async | Native + d* | `0, 1, 2, 3, 4` | 5 |
+| 67 | OOD | Articulated/contact-rich | `libero_goal:0` | Language instruction | Semantic grounding | RTC | Native | `0, 1, 2, 3, 4` | 5 |
+| 68 | OOD | Articulated/contact-rich | `libero_goal:0` | Language instruction | Semantic grounding | RTC | Native + d* | `0, 1, 2, 3, 4` | 5 |
+| 69 | OOD | Multi-stage/sequential | `libero_10:2` | Object layout | Trajectory adaptation | Naive async | Native | `0, 1, 2, 3, 4` | 5 |
+| 70 | OOD | Multi-stage/sequential | `libero_10:2` | Object layout | Trajectory adaptation | Naive async | Native + d* | `0, 1, 2, 3, 4` | 5 |
+| 71 | OOD | Multi-stage/sequential | `libero_10:2` | Object layout | Trajectory adaptation | RTC | Native | `0, 1, 2, 3, 4` | 5 |
+| 72 | OOD | Multi-stage/sequential | `libero_10:2` | Object layout | Trajectory adaptation | RTC | Native + d* | `0, 1, 2, 3, 4` | 5 |
+| 73 | OOD | Multi-stage/sequential | `libero_10:2` | Robot initial state | Trajectory adaptation | Naive async | Native | `0, 1, 2, 3, 4` | 5 |
+| 74 | OOD | Multi-stage/sequential | `libero_10:2` | Robot initial state | Trajectory adaptation | Naive async | Native + d* | `0, 1, 2, 3, 4` | 5 |
+| 75 | OOD | Multi-stage/sequential | `libero_10:2` | Robot initial state | Trajectory adaptation | RTC | Native | `0, 1, 2, 3, 4` | 5 |
+| 76 | OOD | Multi-stage/sequential | `libero_10:2` | Robot initial state | Trajectory adaptation | RTC | Native + d* | `0, 1, 2, 3, 4` | 5 |
+| 77 | OOD | Multi-stage/sequential | `libero_10:2` | Camera viewpoint | Perceptual localization | Naive async | Native | `0, 1, 2, 3, 4` | 5 |
+| 78 | OOD | Multi-stage/sequential | `libero_10:2` | Camera viewpoint | Perceptual localization | Naive async | Native + d* | `0, 1, 2, 3, 4` | 5 |
+| 79 | OOD | Multi-stage/sequential | `libero_10:2` | Camera viewpoint | Perceptual localization | RTC | Native | `0, 1, 2, 3, 4` | 5 |
+| 80 | OOD | Multi-stage/sequential | `libero_10:2` | Camera viewpoint | Perceptual localization | RTC | Native + d* | `0, 1, 2, 3, 4` | 5 |
+| 81 | OOD | Multi-stage/sequential | `libero_10:2` | Sensor noise | Perceptual localization | Naive async | Native | `0, 1, 2, 3, 4` | 5 |
+| 82 | OOD | Multi-stage/sequential | `libero_10:2` | Sensor noise | Perceptual localization | Naive async | Native + d* | `0, 1, 2, 3, 4` | 5 |
+| 83 | OOD | Multi-stage/sequential | `libero_10:2` | Sensor noise | Perceptual localization | RTC | Native | `0, 1, 2, 3, 4` | 5 |
+| 84 | OOD | Multi-stage/sequential | `libero_10:2` | Sensor noise | Perceptual localization | RTC | Native + d* | `0, 1, 2, 3, 4` | 5 |
+| 85 | OOD | Multi-stage/sequential | `libero_10:2` | Lighting | Appearance invariance | Naive async | Native | `0, 1, 2, 3, 4` | 5 |
+| 86 | OOD | Multi-stage/sequential | `libero_10:2` | Lighting | Appearance invariance | Naive async | Native + d* | `0, 1, 2, 3, 4` | 5 |
+| 87 | OOD | Multi-stage/sequential | `libero_10:2` | Lighting | Appearance invariance | RTC | Native | `0, 1, 2, 3, 4` | 5 |
+| 88 | OOD | Multi-stage/sequential | `libero_10:2` | Lighting | Appearance invariance | RTC | Native + d* | `0, 1, 2, 3, 4` | 5 |
+| 89 | OOD | Multi-stage/sequential | `libero_10:2` | Background texture | Appearance invariance | Naive async | Native | `0, 1, 2, 3, 4` | 5 |
+| 90 | OOD | Multi-stage/sequential | `libero_10:2` | Background texture | Appearance invariance | Naive async | Native + d* | `0, 1, 2, 3, 4` | 5 |
+| 91 | OOD | Multi-stage/sequential | `libero_10:2` | Background texture | Appearance invariance | RTC | Native | `0, 1, 2, 3, 4` | 5 |
+| 92 | OOD | Multi-stage/sequential | `libero_10:2` | Background texture | Appearance invariance | RTC | Native + d* | `0, 1, 2, 3, 4` | 5 |
+| 93 | OOD | Multi-stage/sequential | `libero_10:2` | Language instruction | Semantic grounding | Naive async | Native | `0, 1, 2, 3, 4` | 5 |
+| 94 | OOD | Multi-stage/sequential | `libero_10:2` | Language instruction | Semantic grounding | Naive async | Native + d* | `0, 1, 2, 3, 4` | 5 |
+| 95 | OOD | Multi-stage/sequential | `libero_10:2` | Language instruction | Semantic grounding | RTC | Native | `0, 1, 2, 3, 4` | 5 |
+| 96 | OOD | Multi-stage/sequential | `libero_10:2` | Language instruction | Semantic grounding | RTC | Native + d* | `0, 1, 2, 3, 4` | 5 |
 
-### 7A.2 Episode-level execution manifest — all 192 planned episodes
-This table is the exact planned episode set. It can be copied directly into a run manifest generator.
+### 7A.2 Episode-level execution manifest generation — all 480 planned episodes
 
-| Exp. | Scene | Task-demand group | Suite:task_id | Perturbation | Mechanism group | Method | Delay | Seed | Variant source |
-|---:|---|---|---|---|---|---|---|---:|---|
-| E001 | ID | Single-stage transport | `libero_spatial:2` | ID control | ID control | Naive async | Native | 0 | Standard LIBERO base task |
-| E002 | ID | Single-stage transport | `libero_spatial:2` | ID control | ID control | Naive async | Native | 1 | Standard LIBERO base task |
-| E003 | ID | Single-stage transport | `libero_spatial:2` | ID control | ID control | Naive async | Native + d* | 0 | Standard LIBERO base task |
-| E004 | ID | Single-stage transport | `libero_spatial:2` | ID control | ID control | Naive async | Native + d* | 1 | Standard LIBERO base task |
-| E005 | ID | Single-stage transport | `libero_spatial:2` | ID control | ID control | RTC | Native | 0 | Standard LIBERO base task |
-| E006 | ID | Single-stage transport | `libero_spatial:2` | ID control | ID control | RTC | Native | 1 | Standard LIBERO base task |
-| E007 | ID | Single-stage transport | `libero_spatial:2` | ID control | ID control | RTC | Native + d* | 0 | Standard LIBERO base task |
-| E008 | ID | Single-stage transport | `libero_spatial:2` | ID control | ID control | RTC | Native + d* | 1 | Standard LIBERO base task |
-| E009 | ID | Articulated/contact-rich | `libero_goal:0` | ID control | ID control | Naive async | Native | 0 | Standard LIBERO base task |
-| E010 | ID | Articulated/contact-rich | `libero_goal:0` | ID control | ID control | Naive async | Native | 1 | Standard LIBERO base task |
-| E011 | ID | Articulated/contact-rich | `libero_goal:0` | ID control | ID control | Naive async | Native + d* | 0 | Standard LIBERO base task |
-| E012 | ID | Articulated/contact-rich | `libero_goal:0` | ID control | ID control | Naive async | Native + d* | 1 | Standard LIBERO base task |
-| E013 | ID | Articulated/contact-rich | `libero_goal:0` | ID control | ID control | RTC | Native | 0 | Standard LIBERO base task |
-| E014 | ID | Articulated/contact-rich | `libero_goal:0` | ID control | ID control | RTC | Native | 1 | Standard LIBERO base task |
-| E015 | ID | Articulated/contact-rich | `libero_goal:0` | ID control | ID control | RTC | Native + d* | 0 | Standard LIBERO base task |
-| E016 | ID | Articulated/contact-rich | `libero_goal:0` | ID control | ID control | RTC | Native + d* | 1 | Standard LIBERO base task |
-| E017 | ID | Multi-stage/sequential | `libero_10:2` | ID control | ID control | Naive async | Native | 0 | Standard LIBERO base task |
-| E018 | ID | Multi-stage/sequential | `libero_10:2` | ID control | ID control | Naive async | Native | 1 | Standard LIBERO base task |
-| E019 | ID | Multi-stage/sequential | `libero_10:2` | ID control | ID control | Naive async | Native + d* | 0 | Standard LIBERO base task |
-| E020 | ID | Multi-stage/sequential | `libero_10:2` | ID control | ID control | Naive async | Native + d* | 1 | Standard LIBERO base task |
-| E021 | ID | Multi-stage/sequential | `libero_10:2` | ID control | ID control | RTC | Native | 0 | Standard LIBERO base task |
-| E022 | ID | Multi-stage/sequential | `libero_10:2` | ID control | ID control | RTC | Native | 1 | Standard LIBERO base task |
-| E023 | ID | Multi-stage/sequential | `libero_10:2` | ID control | ID control | RTC | Native + d* | 0 | Standard LIBERO base task |
-| E024 | ID | Multi-stage/sequential | `libero_10:2` | ID control | ID control | RTC | Native + d* | 1 | Standard LIBERO base task |
-| E025 | OOD | Single-stage transport | `libero_spatial:2` | Object layout | Trajectory adaptation | Naive async | Native | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E026 | OOD | Single-stage transport | `libero_spatial:2` | Object layout | Trajectory adaptation | Naive async | Native | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E027 | OOD | Single-stage transport | `libero_spatial:2` | Object layout | Trajectory adaptation | Naive async | Native + d* | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E028 | OOD | Single-stage transport | `libero_spatial:2` | Object layout | Trajectory adaptation | Naive async | Native + d* | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E029 | OOD | Single-stage transport | `libero_spatial:2` | Object layout | Trajectory adaptation | RTC | Native | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E030 | OOD | Single-stage transport | `libero_spatial:2` | Object layout | Trajectory adaptation | RTC | Native | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E031 | OOD | Single-stage transport | `libero_spatial:2` | Object layout | Trajectory adaptation | RTC | Native + d* | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E032 | OOD | Single-stage transport | `libero_spatial:2` | Object layout | Trajectory adaptation | RTC | Native + d* | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E033 | OOD | Single-stage transport | `libero_spatial:2` | Robot initial state | Trajectory adaptation | Naive async | Native | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E034 | OOD | Single-stage transport | `libero_spatial:2` | Robot initial state | Trajectory adaptation | Naive async | Native | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E035 | OOD | Single-stage transport | `libero_spatial:2` | Robot initial state | Trajectory adaptation | Naive async | Native + d* | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E036 | OOD | Single-stage transport | `libero_spatial:2` | Robot initial state | Trajectory adaptation | Naive async | Native + d* | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E037 | OOD | Single-stage transport | `libero_spatial:2` | Robot initial state | Trajectory adaptation | RTC | Native | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E038 | OOD | Single-stage transport | `libero_spatial:2` | Robot initial state | Trajectory adaptation | RTC | Native | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E039 | OOD | Single-stage transport | `libero_spatial:2` | Robot initial state | Trajectory adaptation | RTC | Native + d* | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E040 | OOD | Single-stage transport | `libero_spatial:2` | Robot initial state | Trajectory adaptation | RTC | Native + d* | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E041 | OOD | Single-stage transport | `libero_spatial:2` | Camera viewpoint | Perceptual localization | Naive async | Native | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E042 | OOD | Single-stage transport | `libero_spatial:2` | Camera viewpoint | Perceptual localization | Naive async | Native | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E043 | OOD | Single-stage transport | `libero_spatial:2` | Camera viewpoint | Perceptual localization | Naive async | Native + d* | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E044 | OOD | Single-stage transport | `libero_spatial:2` | Camera viewpoint | Perceptual localization | Naive async | Native + d* | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E045 | OOD | Single-stage transport | `libero_spatial:2` | Camera viewpoint | Perceptual localization | RTC | Native | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E046 | OOD | Single-stage transport | `libero_spatial:2` | Camera viewpoint | Perceptual localization | RTC | Native | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E047 | OOD | Single-stage transport | `libero_spatial:2` | Camera viewpoint | Perceptual localization | RTC | Native + d* | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E048 | OOD | Single-stage transport | `libero_spatial:2` | Camera viewpoint | Perceptual localization | RTC | Native + d* | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E049 | OOD | Single-stage transport | `libero_spatial:2` | Sensor noise | Perceptual localization | Naive async | Native | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E050 | OOD | Single-stage transport | `libero_spatial:2` | Sensor noise | Perceptual localization | Naive async | Native | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E051 | OOD | Single-stage transport | `libero_spatial:2` | Sensor noise | Perceptual localization | Naive async | Native + d* | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E052 | OOD | Single-stage transport | `libero_spatial:2` | Sensor noise | Perceptual localization | Naive async | Native + d* | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E053 | OOD | Single-stage transport | `libero_spatial:2` | Sensor noise | Perceptual localization | RTC | Native | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E054 | OOD | Single-stage transport | `libero_spatial:2` | Sensor noise | Perceptual localization | RTC | Native | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E055 | OOD | Single-stage transport | `libero_spatial:2` | Sensor noise | Perceptual localization | RTC | Native + d* | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E056 | OOD | Single-stage transport | `libero_spatial:2` | Sensor noise | Perceptual localization | RTC | Native + d* | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E057 | OOD | Single-stage transport | `libero_spatial:2` | Lighting | Appearance invariance | Naive async | Native | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E058 | OOD | Single-stage transport | `libero_spatial:2` | Lighting | Appearance invariance | Naive async | Native | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E059 | OOD | Single-stage transport | `libero_spatial:2` | Lighting | Appearance invariance | Naive async | Native + d* | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E060 | OOD | Single-stage transport | `libero_spatial:2` | Lighting | Appearance invariance | Naive async | Native + d* | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E061 | OOD | Single-stage transport | `libero_spatial:2` | Lighting | Appearance invariance | RTC | Native | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E062 | OOD | Single-stage transport | `libero_spatial:2` | Lighting | Appearance invariance | RTC | Native | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E063 | OOD | Single-stage transport | `libero_spatial:2` | Lighting | Appearance invariance | RTC | Native + d* | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E064 | OOD | Single-stage transport | `libero_spatial:2` | Lighting | Appearance invariance | RTC | Native + d* | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E065 | OOD | Single-stage transport | `libero_spatial:2` | Background texture | Appearance invariance | Naive async | Native | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E066 | OOD | Single-stage transport | `libero_spatial:2` | Background texture | Appearance invariance | Naive async | Native | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E067 | OOD | Single-stage transport | `libero_spatial:2` | Background texture | Appearance invariance | Naive async | Native + d* | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E068 | OOD | Single-stage transport | `libero_spatial:2` | Background texture | Appearance invariance | Naive async | Native + d* | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E069 | OOD | Single-stage transport | `libero_spatial:2` | Background texture | Appearance invariance | RTC | Native | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E070 | OOD | Single-stage transport | `libero_spatial:2` | Background texture | Appearance invariance | RTC | Native | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E071 | OOD | Single-stage transport | `libero_spatial:2` | Background texture | Appearance invariance | RTC | Native + d* | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E072 | OOD | Single-stage transport | `libero_spatial:2` | Background texture | Appearance invariance | RTC | Native + d* | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E073 | OOD | Single-stage transport | `libero_spatial:2` | Language instruction | Semantic grounding | Naive async | Native | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E074 | OOD | Single-stage transport | `libero_spatial:2` | Language instruction | Semantic grounding | Naive async | Native | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E075 | OOD | Single-stage transport | `libero_spatial:2` | Language instruction | Semantic grounding | Naive async | Native + d* | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E076 | OOD | Single-stage transport | `libero_spatial:2` | Language instruction | Semantic grounding | Naive async | Native + d* | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E077 | OOD | Single-stage transport | `libero_spatial:2` | Language instruction | Semantic grounding | RTC | Native | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E078 | OOD | Single-stage transport | `libero_spatial:2` | Language instruction | Semantic grounding | RTC | Native | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E079 | OOD | Single-stage transport | `libero_spatial:2` | Language instruction | Semantic grounding | RTC | Native + d* | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E080 | OOD | Single-stage transport | `libero_spatial:2` | Language instruction | Semantic grounding | RTC | Native + d* | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E081 | OOD | Articulated/contact-rich | `libero_goal:0` | Object layout | Trajectory adaptation | Naive async | Native | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E082 | OOD | Articulated/contact-rich | `libero_goal:0` | Object layout | Trajectory adaptation | Naive async | Native | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E083 | OOD | Articulated/contact-rich | `libero_goal:0` | Object layout | Trajectory adaptation | Naive async | Native + d* | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E084 | OOD | Articulated/contact-rich | `libero_goal:0` | Object layout | Trajectory adaptation | Naive async | Native + d* | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E085 | OOD | Articulated/contact-rich | `libero_goal:0` | Object layout | Trajectory adaptation | RTC | Native | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E086 | OOD | Articulated/contact-rich | `libero_goal:0` | Object layout | Trajectory adaptation | RTC | Native | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E087 | OOD | Articulated/contact-rich | `libero_goal:0` | Object layout | Trajectory adaptation | RTC | Native + d* | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E088 | OOD | Articulated/contact-rich | `libero_goal:0` | Object layout | Trajectory adaptation | RTC | Native + d* | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E089 | OOD | Articulated/contact-rich | `libero_goal:0` | Robot initial state | Trajectory adaptation | Naive async | Native | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E090 | OOD | Articulated/contact-rich | `libero_goal:0` | Robot initial state | Trajectory adaptation | Naive async | Native | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E091 | OOD | Articulated/contact-rich | `libero_goal:0` | Robot initial state | Trajectory adaptation | Naive async | Native + d* | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E092 | OOD | Articulated/contact-rich | `libero_goal:0` | Robot initial state | Trajectory adaptation | Naive async | Native + d* | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E093 | OOD | Articulated/contact-rich | `libero_goal:0` | Robot initial state | Trajectory adaptation | RTC | Native | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E094 | OOD | Articulated/contact-rich | `libero_goal:0` | Robot initial state | Trajectory adaptation | RTC | Native | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E095 | OOD | Articulated/contact-rich | `libero_goal:0` | Robot initial state | Trajectory adaptation | RTC | Native + d* | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E096 | OOD | Articulated/contact-rich | `libero_goal:0` | Robot initial state | Trajectory adaptation | RTC | Native + d* | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E097 | OOD | Articulated/contact-rich | `libero_goal:0` | Camera viewpoint | Perceptual localization | Naive async | Native | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E098 | OOD | Articulated/contact-rich | `libero_goal:0` | Camera viewpoint | Perceptual localization | Naive async | Native | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E099 | OOD | Articulated/contact-rich | `libero_goal:0` | Camera viewpoint | Perceptual localization | Naive async | Native + d* | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E100 | OOD | Articulated/contact-rich | `libero_goal:0` | Camera viewpoint | Perceptual localization | Naive async | Native + d* | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E101 | OOD | Articulated/contact-rich | `libero_goal:0` | Camera viewpoint | Perceptual localization | RTC | Native | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E102 | OOD | Articulated/contact-rich | `libero_goal:0` | Camera viewpoint | Perceptual localization | RTC | Native | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E103 | OOD | Articulated/contact-rich | `libero_goal:0` | Camera viewpoint | Perceptual localization | RTC | Native + d* | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E104 | OOD | Articulated/contact-rich | `libero_goal:0` | Camera viewpoint | Perceptual localization | RTC | Native + d* | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E105 | OOD | Articulated/contact-rich | `libero_goal:0` | Sensor noise | Perceptual localization | Naive async | Native | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E106 | OOD | Articulated/contact-rich | `libero_goal:0` | Sensor noise | Perceptual localization | Naive async | Native | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E107 | OOD | Articulated/contact-rich | `libero_goal:0` | Sensor noise | Perceptual localization | Naive async | Native + d* | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E108 | OOD | Articulated/contact-rich | `libero_goal:0` | Sensor noise | Perceptual localization | Naive async | Native + d* | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E109 | OOD | Articulated/contact-rich | `libero_goal:0` | Sensor noise | Perceptual localization | RTC | Native | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E110 | OOD | Articulated/contact-rich | `libero_goal:0` | Sensor noise | Perceptual localization | RTC | Native | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E111 | OOD | Articulated/contact-rich | `libero_goal:0` | Sensor noise | Perceptual localization | RTC | Native + d* | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E112 | OOD | Articulated/contact-rich | `libero_goal:0` | Sensor noise | Perceptual localization | RTC | Native + d* | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E113 | OOD | Articulated/contact-rich | `libero_goal:0` | Lighting | Appearance invariance | Naive async | Native | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E114 | OOD | Articulated/contact-rich | `libero_goal:0` | Lighting | Appearance invariance | Naive async | Native | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E115 | OOD | Articulated/contact-rich | `libero_goal:0` | Lighting | Appearance invariance | Naive async | Native + d* | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E116 | OOD | Articulated/contact-rich | `libero_goal:0` | Lighting | Appearance invariance | Naive async | Native + d* | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E117 | OOD | Articulated/contact-rich | `libero_goal:0` | Lighting | Appearance invariance | RTC | Native | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E118 | OOD | Articulated/contact-rich | `libero_goal:0` | Lighting | Appearance invariance | RTC | Native | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E119 | OOD | Articulated/contact-rich | `libero_goal:0` | Lighting | Appearance invariance | RTC | Native + d* | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E120 | OOD | Articulated/contact-rich | `libero_goal:0` | Lighting | Appearance invariance | RTC | Native + d* | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E121 | OOD | Articulated/contact-rich | `libero_goal:0` | Background texture | Appearance invariance | Naive async | Native | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E122 | OOD | Articulated/contact-rich | `libero_goal:0` | Background texture | Appearance invariance | Naive async | Native | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E123 | OOD | Articulated/contact-rich | `libero_goal:0` | Background texture | Appearance invariance | Naive async | Native + d* | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E124 | OOD | Articulated/contact-rich | `libero_goal:0` | Background texture | Appearance invariance | Naive async | Native + d* | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E125 | OOD | Articulated/contact-rich | `libero_goal:0` | Background texture | Appearance invariance | RTC | Native | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E126 | OOD | Articulated/contact-rich | `libero_goal:0` | Background texture | Appearance invariance | RTC | Native | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E127 | OOD | Articulated/contact-rich | `libero_goal:0` | Background texture | Appearance invariance | RTC | Native + d* | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E128 | OOD | Articulated/contact-rich | `libero_goal:0` | Background texture | Appearance invariance | RTC | Native + d* | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E129 | OOD | Articulated/contact-rich | `libero_goal:0` | Language instruction | Semantic grounding | Naive async | Native | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E130 | OOD | Articulated/contact-rich | `libero_goal:0` | Language instruction | Semantic grounding | Naive async | Native | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E131 | OOD | Articulated/contact-rich | `libero_goal:0` | Language instruction | Semantic grounding | Naive async | Native + d* | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E132 | OOD | Articulated/contact-rich | `libero_goal:0` | Language instruction | Semantic grounding | Naive async | Native + d* | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E133 | OOD | Articulated/contact-rich | `libero_goal:0` | Language instruction | Semantic grounding | RTC | Native | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E134 | OOD | Articulated/contact-rich | `libero_goal:0` | Language instruction | Semantic grounding | RTC | Native | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E135 | OOD | Articulated/contact-rich | `libero_goal:0` | Language instruction | Semantic grounding | RTC | Native + d* | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E136 | OOD | Articulated/contact-rich | `libero_goal:0` | Language instruction | Semantic grounding | RTC | Native + d* | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E137 | OOD | Multi-stage/sequential | `libero_10:2` | Object layout | Trajectory adaptation | Naive async | Native | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E138 | OOD | Multi-stage/sequential | `libero_10:2` | Object layout | Trajectory adaptation | Naive async | Native | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E139 | OOD | Multi-stage/sequential | `libero_10:2` | Object layout | Trajectory adaptation | Naive async | Native + d* | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E140 | OOD | Multi-stage/sequential | `libero_10:2` | Object layout | Trajectory adaptation | Naive async | Native + d* | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E141 | OOD | Multi-stage/sequential | `libero_10:2` | Object layout | Trajectory adaptation | RTC | Native | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E142 | OOD | Multi-stage/sequential | `libero_10:2` | Object layout | Trajectory adaptation | RTC | Native | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E143 | OOD | Multi-stage/sequential | `libero_10:2` | Object layout | Trajectory adaptation | RTC | Native + d* | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E144 | OOD | Multi-stage/sequential | `libero_10:2` | Object layout | Trajectory adaptation | RTC | Native + d* | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E145 | OOD | Multi-stage/sequential | `libero_10:2` | Robot initial state | Trajectory adaptation | Naive async | Native | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E146 | OOD | Multi-stage/sequential | `libero_10:2` | Robot initial state | Trajectory adaptation | Naive async | Native | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E147 | OOD | Multi-stage/sequential | `libero_10:2` | Robot initial state | Trajectory adaptation | Naive async | Native + d* | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E148 | OOD | Multi-stage/sequential | `libero_10:2` | Robot initial state | Trajectory adaptation | Naive async | Native + d* | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E149 | OOD | Multi-stage/sequential | `libero_10:2` | Robot initial state | Trajectory adaptation | RTC | Native | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E150 | OOD | Multi-stage/sequential | `libero_10:2` | Robot initial state | Trajectory adaptation | RTC | Native | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E151 | OOD | Multi-stage/sequential | `libero_10:2` | Robot initial state | Trajectory adaptation | RTC | Native + d* | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E152 | OOD | Multi-stage/sequential | `libero_10:2` | Robot initial state | Trajectory adaptation | RTC | Native + d* | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E153 | OOD | Multi-stage/sequential | `libero_10:2` | Camera viewpoint | Perceptual localization | Naive async | Native | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E154 | OOD | Multi-stage/sequential | `libero_10:2` | Camera viewpoint | Perceptual localization | Naive async | Native | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E155 | OOD | Multi-stage/sequential | `libero_10:2` | Camera viewpoint | Perceptual localization | Naive async | Native + d* | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E156 | OOD | Multi-stage/sequential | `libero_10:2` | Camera viewpoint | Perceptual localization | Naive async | Native + d* | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E157 | OOD | Multi-stage/sequential | `libero_10:2` | Camera viewpoint | Perceptual localization | RTC | Native | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E158 | OOD | Multi-stage/sequential | `libero_10:2` | Camera viewpoint | Perceptual localization | RTC | Native | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E159 | OOD | Multi-stage/sequential | `libero_10:2` | Camera viewpoint | Perceptual localization | RTC | Native + d* | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E160 | OOD | Multi-stage/sequential | `libero_10:2` | Camera viewpoint | Perceptual localization | RTC | Native + d* | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E161 | OOD | Multi-stage/sequential | `libero_10:2` | Sensor noise | Perceptual localization | Naive async | Native | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E162 | OOD | Multi-stage/sequential | `libero_10:2` | Sensor noise | Perceptual localization | Naive async | Native | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E163 | OOD | Multi-stage/sequential | `libero_10:2` | Sensor noise | Perceptual localization | Naive async | Native + d* | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E164 | OOD | Multi-stage/sequential | `libero_10:2` | Sensor noise | Perceptual localization | Naive async | Native + d* | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E165 | OOD | Multi-stage/sequential | `libero_10:2` | Sensor noise | Perceptual localization | RTC | Native | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E166 | OOD | Multi-stage/sequential | `libero_10:2` | Sensor noise | Perceptual localization | RTC | Native | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E167 | OOD | Multi-stage/sequential | `libero_10:2` | Sensor noise | Perceptual localization | RTC | Native + d* | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E168 | OOD | Multi-stage/sequential | `libero_10:2` | Sensor noise | Perceptual localization | RTC | Native + d* | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E169 | OOD | Multi-stage/sequential | `libero_10:2` | Lighting | Appearance invariance | Naive async | Native | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E170 | OOD | Multi-stage/sequential | `libero_10:2` | Lighting | Appearance invariance | Naive async | Native | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E171 | OOD | Multi-stage/sequential | `libero_10:2` | Lighting | Appearance invariance | Naive async | Native + d* | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E172 | OOD | Multi-stage/sequential | `libero_10:2` | Lighting | Appearance invariance | Naive async | Native + d* | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E173 | OOD | Multi-stage/sequential | `libero_10:2` | Lighting | Appearance invariance | RTC | Native | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E174 | OOD | Multi-stage/sequential | `libero_10:2` | Lighting | Appearance invariance | RTC | Native | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E175 | OOD | Multi-stage/sequential | `libero_10:2` | Lighting | Appearance invariance | RTC | Native + d* | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E176 | OOD | Multi-stage/sequential | `libero_10:2` | Lighting | Appearance invariance | RTC | Native + d* | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E177 | OOD | Multi-stage/sequential | `libero_10:2` | Background texture | Appearance invariance | Naive async | Native | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E178 | OOD | Multi-stage/sequential | `libero_10:2` | Background texture | Appearance invariance | Naive async | Native | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E179 | OOD | Multi-stage/sequential | `libero_10:2` | Background texture | Appearance invariance | Naive async | Native + d* | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E180 | OOD | Multi-stage/sequential | `libero_10:2` | Background texture | Appearance invariance | Naive async | Native + d* | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E181 | OOD | Multi-stage/sequential | `libero_10:2` | Background texture | Appearance invariance | RTC | Native | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E182 | OOD | Multi-stage/sequential | `libero_10:2` | Background texture | Appearance invariance | RTC | Native | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E183 | OOD | Multi-stage/sequential | `libero_10:2` | Background texture | Appearance invariance | RTC | Native + d* | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E184 | OOD | Multi-stage/sequential | `libero_10:2` | Background texture | Appearance invariance | RTC | Native + d* | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E185 | OOD | Multi-stage/sequential | `libero_10:2` | Language instruction | Semantic grounding | Naive async | Native | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E186 | OOD | Multi-stage/sequential | `libero_10:2` | Language instruction | Semantic grounding | Naive async | Native | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E187 | OOD | Multi-stage/sequential | `libero_10:2` | Language instruction | Semantic grounding | Naive async | Native + d* | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E188 | OOD | Multi-stage/sequential | `libero_10:2` | Language instruction | Semantic grounding | Naive async | Native + d* | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E189 | OOD | Multi-stage/sequential | `libero_10:2` | Language instruction | Semantic grounding | RTC | Native | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E190 | OOD | Multi-stage/sequential | `libero_10:2` | Language instruction | Semantic grounding | RTC | Native | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E191 | OOD | Multi-stage/sequential | `libero_10:2` | Language instruction | Semantic grounding | RTC | Native + d* | 0 | Resolved LIBERO-Plus variant (freeze before outcomes) |
-| E192 | OOD | Multi-stage/sequential | `libero_10:2` | Language instruction | Semantic grounding | RTC | Native + d* | 1 | Resolved LIBERO-Plus variant (freeze before outcomes) |
+Materialize the episode-level manifest by expanding every one of the 96 condition rows above over the frozen seed set:
+
+```text
+0, 1, 2, 3, 4
+```
+
+For each condition row, emit five episode rows in ascending seed order. Assign `exp_id` sequentially from `E001` through `E480` after expansion. The generated manifest must contain exactly:
+
+```text
+96 condition blocks × 5 seeds = 480 episode rows
+60 ID rows
+420 OOD rows
+```
+
+Required expansion logic:
+
+```python
+SEEDS = [0, 1, 2, 3, 4]
+
+episodes = []
+for condition in condition_rows:  # the frozen 96-row matrix in Section 7A.1
+    for seed in SEEDS:
+        episodes.append({**condition, "seed": seed})
+
+assert len(episodes) == 480
+assert sum(row["scene"] == "ID" for row in episodes) == 60
+assert sum(row["scene"] == "OOD" for row in episodes) == 420
+assert sorted(set(row["seed"] for row in episodes)) == SEEDS
+
+for index, row in enumerate(episodes, start=1):
+    row["exp_id"] = f"E{index:03d}"
+```
+
+Save the materialized result as `stage1_manifest.csv`. Do not generate seeds conditionally or omit failed seed-condition pairs from the manifest. The exact OOD variant fields still come from the frozen `stage1_resolved_variants.csv`.
 
 ### 7A.3 Canonical display terms for all generated outputs
 Every plot/table generator should map machine keys to the following display labels:
@@ -1071,11 +928,11 @@ means the delay penalty is approximately unchanged by that OOD shift.
 I > 0
 ```
 
-means delay is less damaging under that OOD condition; treat this cautiously, especially with two seeds.
+means delay is less damaging under that OOD condition; treat this cautiously, especially with only five exploratory seeds.
 
 ### Stage 1 wording
 
-Do not say “significant” based on two seeds.
+Do not describe a five-seed exploratory cell as statistically significant without an appropriate prespecified analysis and uncertainty estimate.
 
 Use:
 
@@ -1435,7 +1292,7 @@ This determines which task × perturbation combinations receive additional seeds
 
 The confirmation stage uses **new seeds**.
 
-Do not simply count the original two Stage 1 seeds as if the hypothesis had been specified before seeing them. Report Stage 1 as exploratory and the additional seeds as confirmatory.
+Do not simply count the original five Stage 1 seeds as if the hypothesis had been specified before seeing them. Report Stage 1 as exploratory and the additional seeds as confirmatory.
 
 ---
 
@@ -1537,9 +1394,9 @@ STAGE_1_OBSERVATIONS.md
 Before interpreting any result, assert:
 
 ```text
-expected total episodes = 192
+expected total episodes = 480
 all 21 OOD variants were frozen before outcome inspection
-same two seeds used everywhere
+same five seeds used everywhere
 same high-delay d* used everywhere
 same policy checkpoint used everywhere
 same n_action_steps=25 used everywhere
@@ -1590,7 +1447,7 @@ Primary benchmark/model sources used to define this specification:
   - Sensor Noise
 - LIBERO-Plus provides `task_classification.json` mapping task IDs to perturbation categories and difficulty levels.
 - The official LIBERO-Plus benchmark implementation contains thousands of perturbed tasks per suite and retrieves tasks using zero-based `get_task(i)`.
-- The LeRobot π0.5 LIBERO checkpoint is trained using `HuggingFaceVLA/libero`, and the documented evaluation uses `n_action_steps=10`; this pack runs `n_action_steps=25` instead (D002, amended 2026-08-11) because a 10-action chunk gives the action queue no latency headroom at 20 Hz.
+- The LeRobot π0.5 LIBERO checkpoint is trained using `HuggingFaceVLA/libero`. This benchmark uses the frozen revised evaluation setting `n_action_steps=25`; this is a disclosed deviation from the documented default evaluation setting of 10.
 
 ---
 
@@ -1601,7 +1458,7 @@ POLICY:
     lerobot/pi05_libero_finetuned
 
 N_ACTION_STEPS:
-    10
+    25
 
 TASKS:
     libero_spatial:2
@@ -1641,16 +1498,16 @@ DELAYS:
     high = native + frozen ID-calibrated d*
 
 SEEDS:
-    2 fixed exploratory seeds
+    5 fixed exploratory seeds: 0, 1, 2, 3, 4
 
 OOD EPISODES:
-    168
+    420
 
 SHARED ID EPISODES:
-    24
+    60
 
 TOTAL:
-    192
+    480
 
 PRIMARY STATISTIC:
     I = [S(OOD,high)-S(OOD,low)]

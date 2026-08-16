@@ -23,33 +23,10 @@ lerobot/pi05_libero_finetuned
 with evaluation:
 
 ```text
-n_action_steps = 25
-request_threshold_actions = 25
+n_action_steps = 10
 ```
 
 No second VLA model is required for the primary result.
-
-**Amended:** 2026-08-11 — `n_action_steps` was `10`, with
-`request_threshold_actions = ceil(H/2) = 5` per spec §16.
-
-**Reason:** LIBERO runs at 20 Hz, so a chunk of `H` actions covers `H x 50 ms` of
-robot time — the total request latency the action queue can absorb before it
-underruns. At `H = 10` that budget is 500 ms against ~500 ms of measured native
-inference (~660 ms for RTC), so the queue was starved before any artificial delay
-was added. The first Stage 0 calibration held the arm on ~33-44% of control steps
-at zero added delay and ~65-70% at +700 ms; all 96 of its failures were step-cap
-timeouts. Its `d* = 100 ms` therefore described queue starvation, not the
-policy's tolerance to stale actions. `H = 25` gives a 1250 ms budget, and the
-threshold is raised to `H` because the `ceil(H/2)` default spends half that
-budget draining before the request is issued.
-
-**Consequence:** This is a change of control regime, not just of plumbing — 25
-steps of open-loop execution per observation is a different condition from 10.
-Days 1-3 results ran at `H = 10` (horizon sweep `[2, 5, 10]`, all further into
-the same starvation regime) and are **not** directly comparable to Stage 0
-onward; treat them as a separate `H = 10` condition or re-run them. Both values
-apply identically to `naive_async` and `rtc`, preserving K009. Days 1-3 configs
-keep the §16 default; the override is Stage 0 only.
 
 ## D003 — Execution methods
 
@@ -116,25 +93,10 @@ Semantic grounding
 **Decision:** Test added delay:
 
 ```text
-0, 100, 200, 300, 400 ms
+0, 100, 200, 300, 400, 500, 600, 700 ms
 ```
 
 using ID only.
-
-**Amended:** 2026-08-11 — the grid ran to `700 ms`.
-
-**Reason:** The ceiling is set by RTC, not by the horizon. RTC discards the
-leading `delay_steps` actions of each chunk, so its usable chunk is
-`chunk_size - delay_steps` against a wait of `delay_steps`; the queue starves
-once `delay_steps` exceeds half the raw chunk (25 steps / 1250 ms for pi05's
-50-action chunk), at **any** `n_action_steps`. RTC's measured inference is
-~660-735 ms, leaving ~500 ms of addable delay before that ceiling and ~400 ms
-with margin against its p95. Levels beyond that re-measure queue starvation
-rather than delay tolerance.
-
-**Consequence:** Fallback 3 of the §8.4 selection rule now resolves to `400 ms`
-rather than `700 ms`. It is implemented as `max(candidates)`, so it tracks this
-grid automatically.
 
 ## D008 — Stage 1 latency levels
 
@@ -200,30 +162,83 @@ EXPERIMENT_MATRIX.md
 
 Their useful implementation/statistical constraints have been folded into the active files.
 
-## D014 — Stage 0 replication
+## D014 — Revised candidate action horizon after ID-only pretest
 
-**Date:** 2026-08-11
+**Date:** 2026-08-12
 
-**Decision:** Stage 0 calibration uses six seeds:
+**Decision:** Record `policy.n_action_steps=25` as the revised candidate execution
+horizon after the completed `n_action_steps=10` ID calibration showed poor
+success. The decision was based only on ID results; no OOD outcomes were used.
+
+**Evidence:** On the 60 directly matched task × method × delay × seed episodes,
+the 25-step configuration achieved 30/60 successes versus 8/60 for the 10-step
+configuration. The gain was concentrated in RTC (22/30 versus 1/30); Naive async
+was nearly unchanged (8/30 versus 7/30).
+
+**Consequence:** Treat the 25-step bundle as a revised exploratory protocol, not
+as a compliant rerun of the original Stage 0 specification. Freeze one action
+horizon before Stage 1, use it unchanged across all matched ID/OOD comparisons,
+and retain the post-hoc ID-based choice as a disclosed limitation. The revised
+conduct is documented in `STAGE_0_N_ACTION_STEPS_25_CONDUCT.md`.
+
+## D015 — Increase Stage 1 exploratory replication to five seeds
+
+**Date:** 2026-08-12
+
+**Decision:** Supersede D009's two-seed Stage 1 design with five fixed exploratory
+seeds:
 
 ```text
-0, 1, 10, 11, 12, 13
+0, 1, 2, 3, 4
 ```
 
-Seeds `0` and `1` stay first and remain the pair Stage 1 reuses for its 24 ID
-controls. The extras skip `2-9`, which STAGE_2 §4 reserves as held-out
-confirmatory seeds.
+Stage 2 held-out seeds must not overlap this set. The preferred Stage 2 set is
+superseded by D017 below.
 
-**Reason:** Two seeds made §8.1 viability (`Native success >= 1/2`) turn on a
-single episode, since a cell's native rate could only be `0`, `0.5`, or `1.0` —
-and viability determines which cells the pooled curve is computed over. Separately,
-§8.3 selects the *smallest* qualifying delay, so `d*` is an order statistic:
-at six episodes per pooled point the standard error is ~20 points, the same size
-as the 20-point drop criterion, which biases `d*` downward rather than merely
-scattering it. Six seeds give 18 episodes per point and ~11 points of error.
+**Consequence:** Stage 1 expands to 420 OOD episodes and 60 shared ID-control
+episodes, for 480 analysis episodes. Valid Stage 0 low/high controls for seeds
+`0` and `1` may supply 24 ID rows; Stage 1 adds 36 ID controls for seeds `2`,
+`3`, and `4`. Five seeds reduce rate granularity but Stage 1 remains exploratory.
 
-**Consequence:** D009 is unchanged — Stage 1 remains a two-seed exploratory
-screen, and Stage 2 remains the confirmatory stage. This decision applies to
-Stage 0 only, where `d*` is a single frozen parameter that 168 Stage 1 and
-~96-128 Stage 2 episodes inherit and that no amount of held-out replication can
-repair after the fact. Stage 0 grows from 96 to 180 episodes.
+## D016 — Freeze the revised Stage 0 calibration protocol
+
+**Date:** 2026-08-12
+
+**Decision:** Accept the completed ID-only Stage 0 revision using
+`n_action_steps=25`, seeds `0, 1, 10, 11, 12, 13`, and added delays
+`0, 100, 200, 300, 400 ms`. The originally proposed `500–700 ms` extension is
+not required because the calibration supplied the needed operating-point
+evidence by `400 ms`.
+
+**Consequence:** Freeze `n_action_steps=25` and the selected `d*` before Stage 1.
+Disclose that the horizon and grid were revised using ID-only evidence. Do not
+describe the run as a reproduction of the original 10-action protocol.
+Provenance and hold-action limitations remain reportable data-quality
+limitations, but missing `500–700 ms` cells are no longer a blocker.
+
+## D017 — Freeze disjoint Stage 1 and Stage 2 seed sets
+
+**Date:** 2026-08-12
+
+**Decision:** Stage 1 uses five consecutive seeds `0, 1, 2, 3, 4`. Stage 2 uses
+eight consecutive seeds `14, 15, 16, 17, 18, 19, 20, 21`.
+
+**Consequence:** Stage 2 seeds are disjoint from both Stage 1 and the six Stage 0
+calibration seeds. Stage 1 may reuse valid matching Stage 0 ID controls for
+seeds `0` and `1`; it must run new ID controls for seeds `2`, `3`, and `4`.
+
+## D018 — Reuse Stage 0 seed-0/1 controls with a provenance limitation
+
+**Date:** 2026-08-14
+
+**Decision:** Reuse the 24 Stage 0 ID controls at Native and Native + 200 ms for
+seeds `0` and `1`. Do not rerun those episodes. Stage 1 runs the 36 missing ID
+controls for seeds `2`, `3`, and `4`, plus all 420 OOD episodes.
+
+**Limitation:** The Stage 0 bundle does not contain immutable repository,
+checkpoint, and environment identity fields, so exact runtime equivalence with
+new Stage 1 rows cannot be proven. Imported rows must retain
+`source=stage0_reuse_unverified_identity`; this limitation must accompany every
+analysis that pools them with new Stage 1 episodes.
+
+**Consequence:** Stage 1 contains 480 analysis rows but requires 456 new runs.
