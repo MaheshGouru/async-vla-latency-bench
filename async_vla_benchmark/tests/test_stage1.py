@@ -39,6 +39,26 @@ def test_resolver_produces_21_level_two_variants():
     assert all(row.difficulty_level == 2 for row in rows)
 
 
+def test_resolver_ignores_unscored_variants():
+    classification, names = {}, {}
+    next_id = 1
+    for task in STAGE0_TASKS:
+        entries, suite_names = [], []
+        for perturbation in PERTURBATIONS:
+            for difficulty in (None, 2):
+                name = f"{task.expected_task_name}__{perturbation.key}__d{difficulty}"
+                entries.append({"id": next_id, "name": name, "category": perturbation.official_category, "difficulty_level": difficulty})
+                while len(suite_names) < next_id:
+                    suite_names.append(f"unused_{len(suite_names)}")
+                suite_names[next_id - 1] = name
+                next_id += 1
+        classification[task.suite] = entries
+        names[task.suite] = suite_names
+    rows = resolve_variants(classification, names)
+    assert len(rows) == 21
+    assert all(row.difficulty_level == 2 for row in rows)
+
+
 def test_manifest_is_frozen_480_row_design():
     provenance = {"git_sha": "g", "lerobot_git_sha": "l", "libero_plus_git_sha": "p", "model_revision": "m"}
     rows = stage1_manifest(_resolved(), 200, provenance)

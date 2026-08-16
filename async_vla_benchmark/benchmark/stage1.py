@@ -78,8 +78,21 @@ def resolve_variants(
                 raise ValueError(
                     f"no variant for {task.task_key}/{perturbation.key}"
                 )
+            # The official classification file also contains unscored entries
+            # (`difficulty_level: null`). They cannot participate in the frozen
+            # nearest-to-level-2 rule; retain only explicitly scored variants.
+            scored = [
+                entry for entry in candidates
+                if entry.get("difficulty_level") is not None
+                and str(entry.get("difficulty_level", "")).strip() != ""
+            ]
+            if not scored:
+                raise ValueError(
+                    f"no numerically scored variant for {task.task_key}/{perturbation.key}; "
+                    f"found {len(candidates)} unscored candidate(s)"
+                )
             chosen = min(
-                candidates,
+                scored,
                 key=lambda entry: (
                     abs(int(entry["difficulty_level"]) - 2),
                     int(entry["id"]),
