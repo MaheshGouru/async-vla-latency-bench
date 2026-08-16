@@ -9,6 +9,15 @@ class EnvironmentUnavailable(RuntimeError):
     pass
 
 
+def seed_environment_rng(seed: int) -> None:
+    """Seed process-global RNGs consumed by LIBERO/robosuite reset logic."""
+    import random
+    import numpy as np
+
+    random.seed(seed)
+    np.random.seed(seed)
+
+
 def require_lerobot_libero() -> None:
     try:
         import lerobot  # noqa: F401
@@ -160,6 +169,7 @@ def make_libero_env(
     num_steps_wait: int = 10,
 ) -> Any:
     """Build a single LIBERO environment with deterministic initial-state selection."""
+    seed_environment_rng(seed)
     require_lerobot_libero()
     from lerobot.envs.libero import LiberoEnv, _get_suite
 
@@ -213,6 +223,7 @@ def make_libero_plus_env(
     Use `benchmark.ood_tasks` to resolve which `task_id` corresponds to which
     perturbation category/difficulty for a given suite.
     """
+    seed_environment_rng(seed)
     require_lerobot_libero()
     from lerobot.envs.libero import LiberoEnv, _get_suite
 

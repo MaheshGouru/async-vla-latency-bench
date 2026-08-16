@@ -474,9 +474,13 @@ class EpisodeRunner:
         # deterministic. Seeding here ties the whole episode's RNG stream to the same
         # seed already used for env determinism, without touching LeRobot internals.
         import torch
+        from .environment import seed_environment_rng
 
-        torch.manual_seed(seed)
+        seed_environment_rng(seed)
         obs, info = self.env.reset(seed=seed)
+        # Reset environment RNGs first; then start π0.5's policy RNG stream from
+        # the same episode seed so environment internals cannot consume it.
+        torch.manual_seed(seed)
         from .environment import initial_state_fingerprint
         method, fingerprint = initial_state_fingerprint(self.env, obs)
         self._initial_state_fingerprint_method = method

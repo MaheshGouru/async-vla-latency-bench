@@ -6,7 +6,7 @@ from collections import defaultdict
 from pathlib import Path
 
 from async_vla_benchmark.benchmark.config import load_config
-from async_vla_benchmark.benchmark.environment import get_task_info, initial_state_fingerprint, make_libero_env
+from async_vla_benchmark.benchmark.environment import get_task_info, initial_state_fingerprint, make_libero_env, seed_environment_rng
 from async_vla_benchmark.benchmark.logging import read_csv, write_csv
 from async_vla_benchmark.scripts.run_stage1 import _configure_libero_home
 
@@ -43,9 +43,10 @@ def main():
             actual = get_task_info(env, row["suite"], task_index).task_name
             if actual != variant_name: raise RuntimeError(f"task mismatch: {actual!r} != {variant_name!r}")
             import torch
-            torch.manual_seed(seed)
+            seed_environment_rng(seed); torch.manual_seed(seed)
             observation, _ = env.reset(seed=seed)
             method, fingerprint = initial_state_fingerprint(env, observation)
+            seed_environment_rng(seed); torch.manual_seed(seed)
             repeated_observation, _ = env.reset(seed=seed)
             repeated_method, repeated_fingerprint = initial_state_fingerprint(env, repeated_observation)
             if (method, fingerprint) != (repeated_method, repeated_fingerprint):
