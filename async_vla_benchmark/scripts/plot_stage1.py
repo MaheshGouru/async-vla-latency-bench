@@ -2,6 +2,7 @@
 """Generate all required Stage 1 figures from validated CSV artifacts."""
 
 import argparse
+import os
 from pathlib import Path
 
 from async_vla_benchmark.benchmark.logging import read_csv
@@ -9,6 +10,7 @@ from async_vla_benchmark.benchmark.stage1 import PERTURBATIONS, TASK_GROUP_LABEL
 
 
 def main() -> int:
+    os.environ["MPLBACKEND"] = "Agg"
     parser = argparse.ArgumentParser()
     parser.add_argument("--results", type=Path, required=True)
     parser.add_argument("--tables-dir", type=Path, required=True)

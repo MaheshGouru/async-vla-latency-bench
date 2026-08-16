@@ -126,6 +126,9 @@ def _merge(path: Path, rows: list[dict]) -> None:
 
 
 def main() -> int:
+    # Never inherit Jupyter's module://matplotlib_inline backend into the
+    # isolated ID/OOD execution environments.
+    os.environ["MPLBACKEND"] = "Agg"
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=Path, required=True)
     parser.add_argument("--manifest", type=Path, required=True)

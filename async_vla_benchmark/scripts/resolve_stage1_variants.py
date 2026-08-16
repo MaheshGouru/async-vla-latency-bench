@@ -3,6 +3,7 @@
 
 import argparse
 import json
+import os
 from pathlib import Path
 
 from async_vla_benchmark.benchmark.ood_tasks import find_task_classification_path
@@ -11,6 +12,9 @@ from async_vla_benchmark.benchmark.stage1 import resolve_variants, write_datacla
 
 
 def main() -> int:
+    # Jupyter exports its kernel-only inline backend to subprocesses. The
+    # isolated benchmark venv intentionally has no matplotlib-inline package.
+    os.environ["MPLBACKEND"] = "Agg"
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--overwrite", action="store_true")
