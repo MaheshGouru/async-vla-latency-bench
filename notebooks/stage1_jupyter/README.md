@@ -4,6 +4,8 @@ Run these notebooks in order. Do not use **Run All** across notebooks.
 
 1. `01_setup_and_preflight.ipynb`
 2. `01a_install_system_dependencies.ipynb`
+   - If sudo is blocked by `no new privileges`, run
+     `01c_install_user_native_dependencies.ipynb` instead.
 3. `01b_install_libero_plus_assets.ipynb`
 4. `02_freeze_design_and_import.ipynb`
 5. `03_smoke_test.ipynb`

@@ -15,6 +15,11 @@ def main() -> int:
     # Jupyter exports its kernel-only inline backend to subprocesses. The
     # isolated benchmark venv intentionally has no matplotlib-inline package.
     os.environ["MPLBACKEND"] = "Agg"
+    native = Path.home() / "stage1-native"
+    if native.exists():
+        os.environ["MAGICK_HOME"] = str(native)
+        os.environ["PATH"] = str(native / "bin") + os.pathsep + os.environ.get("PATH", "")
+        os.environ["LD_LIBRARY_PATH"] = str(native / "lib") + os.pathsep + os.environ.get("LD_LIBRARY_PATH", "")
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--overwrite", action="store_true")

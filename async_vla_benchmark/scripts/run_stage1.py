@@ -129,6 +129,11 @@ def main() -> int:
     # Never inherit Jupyter's module://matplotlib_inline backend into the
     # isolated ID/OOD execution environments.
     os.environ["MPLBACKEND"] = "Agg"
+    native = Path.home() / "stage1-native"
+    if native.exists():
+        os.environ["MAGICK_HOME"] = str(native)
+        os.environ["PATH"] = str(native / "bin") + os.pathsep + os.environ.get("PATH", "")
+        os.environ["LD_LIBRARY_PATH"] = str(native / "lib") + os.pathsep + os.environ.get("LD_LIBRARY_PATH", "")
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=Path, required=True)
     parser.add_argument("--manifest", type=Path, required=True)
