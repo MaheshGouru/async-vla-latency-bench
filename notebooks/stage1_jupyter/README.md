@@ -8,9 +8,10 @@ Run these notebooks in order. Do not use **Run All** across notebooks.
      `01c_install_user_native_dependencies.ipynb` instead.
 3. `01b_install_libero_plus_assets.ipynb`
 4. `02_freeze_design_and_import.ipynb`
-5. `03_smoke_test.ipynb`
-6. `04_full_serial_run.ipynb`
-7. `05_validate_analyze_export.ipynb`
+5. `02b_audit_frozen_manifest.ipynb`
+6. `03_smoke_test.ipynb`
+7. `04_full_serial_run.ipynb`
+8. `05_validate_analyze_export.ipynb`
 
 The default is one A100 and one serial benchmark process. This matches the
 Stage 0 latency-measurement practice and avoids cross-GPU latency confounding.
