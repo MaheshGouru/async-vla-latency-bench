@@ -62,6 +62,26 @@ def _environment_fingerprint() -> str:
     return json.dumps({"python": platform.python_version(), "platform": platform.platform(), "cuda": cuda, "packages": packages}, sort_keys=True)
 
 
+def _configure_libero_home(scene: str) -> None:
+    """Prevent LIBERO's interactive first-run prompt and select the right fork."""
+    if scene == "ood":
+        roots = [Path(item) / "libero" / "libero" for item in os.environ.get("PYTHONPATH", "").split(os.pathsep) if item]
+        root = next((item for item in roots if (item / "benchmark" / "task_classification.json").exists()), None)
+        if root is None:
+            raise FileNotFoundError("LIBERO-Plus root not found on PYTHONPATH")
+    else:
+        import libero
+        root = Path(libero.__file__).parent / "libero"
+    config = Path.home() / ".libero" / "config.yaml"
+    config.parent.mkdir(parents=True, exist_ok=True)
+    prefix = f"benchmark_root: {root}\n" if scene == "id" else ""
+    config.write_text(prefix +
+        f"assets: {root / 'assets'}\n"
+        f"bddl_files: {root / 'bddl_files'}\n"
+        f"datasets: {root / '../datasets'}\n"
+        f"init_states: {root / 'init_files'}\n")
+
+
 def _episode_row(plan: dict[str, str], summary: dict, output: Path) -> dict:
     requests = output / "requests" / f"{plan['run_id']}.parquet"
     actions = output / "actions" / f"{plan['run_id']}.parquet"
@@ -124,6 +144,7 @@ def main() -> int:
     cfg = load_config(args.config)
     if cfg.policy_n_action_steps != 25:
         raise ValueError("Stage 1 requires policy_n_action_steps=25")
+    _configure_libero_home(args.scene)
     plans = [row for row in read_csv(args.manifest) if row["scene_condition"] == args.scene and not _bool(row["reuse_stage0"])]
     for field, selected in (("seed", args.seed), ("task_key", args.task), ("execution_method", args.method), ("delay_condition", args.delay), ("perturbation_key", args.perturbation)):
         if selected:
