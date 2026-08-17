@@ -7,6 +7,8 @@ Last updated: 2026-08-16
 ```text
 Stage 0 — COMPLETE WITH KNOWN PROVENANCE LIMITATIONS (K015–K018)
 Stage 1 — COMPLETE
+Stage 2 — COMPLETE
+Stage 3 — COMPLETE
 ```
 
 The completed Stage 0 and Stage 1 specifications/results are frozen and must not be
@@ -48,7 +50,7 @@ Frozen seeds:
 Verified archive: `stage2_results.tar.gz`, SHA-256
 `8e2d6a572a210913f02302907380c8e1af5c98dfb41edd8ac5e1d52d06b88d44`.
 
-## Stage 3 — required after Stage 2
+## Stage 3 — complete
 
 Frozen held-out seeds:
 
@@ -74,7 +76,31 @@ Frozen held-out seeds:
 - [x] primary accounting deduplicates the 96 shared ID episodes by `run_id`
 - [x] paired bootstrap resamples the eight complete seed clusters
 - [x] post-hoc sensor noise excluded from the prespecified aggregate figure/table
-- [ ] 240 episodes primary, 288 including sensor noise
+- [x] 240 episodes primary, 288 including sensor noise
+
+
+## Stage 3B — targeted cross-task object-layout replication
+
+Frozen seeds:
+
+```text
+[14,15,16,17,18,19,20,21]
+```
+
+- [ ] exact `spatial_transport` object-layout variant asserted: `1773/1772`, difficulty 3, `..._add_15`
+- [ ] exact `goal_drawer` object-layout variant asserted: `1891/1890`, difficulty 2, `..._add_13`
+- [ ] RTC only; horizons `20,25,30`; Native/+200 ms
+- [ ] every new run uses `libero_episode_index:0`
+- [ ] six-cell reset-fingerprint pairing passes for every new task/scene/seed
+- [ ] reuse 48 completed Stage 3 goal-ID rows without new run IDs
+- [ ] run 48 new spatial-ID rows
+- [ ] run 96 new object-layout OOD rows
+- [ ] exactly 144 new episodes
+- [ ] two-task analysis = 192 unique rows after Stage 3 goal-ID reuse
+- [ ] three-task object-layout synthesis = 288 unique rows after Stage 3 reuse
+- [ ] report task-specific interactions before any pooled summary
+
+Stage 3B is post-Stage-3 targeted replication; do not label it preregistered.
 
 ## Stage 4 — conditional
 
@@ -85,8 +111,12 @@ Frozen seeds if run:
 ```
 
 - [ ] only after Stage 2/3
-- [ ] official VLASH compatibility gate
-- [ ] at most 2 replicated prespecified OOD candidates
+- [x] fail-closed official VLASH compatibility audit scaffold
+- [x] reviewed pre-outcome candidate freeze and shared-ID manifest accounting
+- [x] Stage 4 notebooks 01–03 stop on incomplete Stage 3 or failed compatibility
+- [ ] official VLASH-trained π0.5/LIBERO checkpoint and semantic adapter validated
+- [ ] at most 2 replicated prespecified OOD candidates selected after Stage 3
+- [ ] matched smoke, rollout, validation, and analysis notebooks (blocked on gate)
 - [ ] match 25 actions and Native/+200 if semantically fair
 - [ ] maximum ~80 analysis episodes
 - [ ] skip rather than approximate
@@ -94,6 +124,7 @@ Frozen seeds if run:
 ## Exact next action
 
 ```text
-Run the Stage 3 Jupyter notebooks in order, freeze and audit the 288-row manifest,
-then execute ID and OOD serially on one A100.
+Implement and freeze `STAGE_3B_OBJECT_LAYOUT_CROSS_TASK_REPLICATION.md`, audit the
+144-new-episode manifest and Stage 3 control-reuse table, then execute Stage 3B
+serially on one A100. Do not consume Stage 4 seeds `[22..26]`.
 ```

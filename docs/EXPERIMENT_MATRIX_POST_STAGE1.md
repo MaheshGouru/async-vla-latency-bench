@@ -7,10 +7,11 @@ Stage 1 completed exploratory:  [0,1,2,3,4]
 Stage 2 local sensitivity:      [5,6,7,8,9]
 Stage 0 additional ID seeds:    [10,11,12,13]  (already completed)
 Stage 3 held-out confirmation:  [14,15,16,17,18,19,20,21]
+Stage 3B cross-task replication: [14,15,16,17,18,19,20,21]  (same Stage 3 seed block)
 Stage 4 conditional VLASH:      [22,23,24,25,26]
 ```
 
-Seed sets are fixed and disjoint across new stages.
+Seed allocation is frozen. Stage 3B intentionally reuses the Stage 3 seed block `[14..21]`; Stage 2 and Stage 4 remain disjoint.
 
 ## Stage 2 — required
 
@@ -63,6 +64,40 @@ Including the Stage 3 post-hoc sensor-noise replication:
 360 + 288 = 648 episodes
 ```
 
+
+## Stage 3B — targeted object-layout cross-task replication
+
+Stage 3B is selected after Stage 3 and is therefore labeled targeted/post-Stage-3,
+not preregistered confirmation.
+
+```text
+RTC
+tasks newly tested under object_layout = spatial_transport, goal_drawer
+horizons = 20,25,30
+delay = Native,+200 ms
+seeds = 14..21
+initialization_index_or_id = libero_episode_index:0
+```
+
+Exact new OOD variants:
+
+| Task | `classification_id` | `api_task_index` | difficulty | Exact Stage 1 `variant_name` |
+|---|---:|---:|---:|---|
+| `spatial_transport` | `1773` | `1772` | `3` | `pick_up_the_black_bowl_from_table_center_and_place_it_on_the_plate_add_15` |
+| `goal_drawer` | `1891` | `1890` | `2` | `open_the_middle_drawer_of_the_cabinet_add_13` |
+
+Accounting:
+
+```text
+new OOD: 2 × 3 × 2 × 8 = 96
+new spatial ID: 1 × 3 × 2 × 8 = 48
+reused Stage 3 goal ID: 48 existing rows
+new execution total = 144 episodes
+```
+
+No new `long_stove_moka` episodes are run. The final three-task object-layout
+analysis reuses its completed Stage 3 ID/OOD rows.
+
 ## Stage 4 — conditional
 
 ```text
@@ -99,6 +134,19 @@ Use new seeds `[14..21]`, but freeze the exact Stage 1 OOD variants:
 For every fixed task/variant/seed/scene, pair `{20,25,30}` ×
 `{Native,+200}` on the same initialization identity wherever benchmark semantics
 permit.
+
+
+### Stage 3B
+
+Use the same Stage 3 seeds `[14..21]`. For every newly executed
+`(task, scene, exact variant, seed)`, all `{20,25,30} × {Native,+200}` cells must
+use `libero_episode_index:0` and have one identical reset-state fingerprint.
+Fingerprints need not differ across seeds.
+
+For `goal_drawer`, reuse the exact 48 Stage 3 ID rows; do not rerun them. For
+`spatial_transport`, run 48 new ID controls because Stage 3 has no spatial ID
+rows. ID and object-layout OOD fingerprints are not required to match because
+layout geometry is the treatment; match every non-perturbed factor.
 
 ### Stage 4
 

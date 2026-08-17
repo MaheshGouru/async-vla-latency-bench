@@ -462,3 +462,47 @@ reset-state fingerprint.
 itself prove that two runs began from the same simulator state.
 
 **Consequence:** Validate episode pairing before using paired statistical analyses.
+
+## D033 — Add targeted Stage 3B object-layout cross-task replication
+
+**Date:** 2026-08-16
+
+**Decision:** After the completed Stage 3 held-out analysis, add a narrow Stage
+3B testing the already-frozen Stage 1 object-layout variants on the two remaining
+pre-existing benchmark tasks: `spatial_transport` and `goal_drawer`.
+
+**Rationale:** The completed Stage 3 object-layout result on `long_stove_moka` had
+a negative OOD × delay interaction with the same direction at horizons 20, 25,
+and 30, while the other Stage 3 perturbations did not provide a comparable
+negative replication. A family-level object-layout claim therefore requires
+cross-task evidence rather than extrapolation from one task.
+
+**Frozen Stage 3B configuration:**
+
+```text
+method = RTC
+tasks = spatial_transport, goal_drawer
+perturbation = object_layout
+n_action_steps = 20,25,30
+delay = Native,+200 ms
+seeds = 14..21
+initialization_index_or_id = libero_episode_index:0
+```
+
+Exact OOD identities:
+
+```text
+spatial_transport: classification_id=1773, api_task_index=1772, difficulty=3,
+  variant=pick_up_the_black_bowl_from_table_center_and_place_it_on_the_plate_add_15
+goal_drawer: classification_id=1891, api_task_index=1890, difficulty=2,
+  variant=open_the_middle_drawer_of_the_cabinet_add_13
+```
+
+**Control reuse:** Reuse the 48 valid Stage 3 `goal_drawer` ID rows exactly. Run
+48 new `spatial_transport` ID rows because Stage 3 contains no spatial ID control.
+Run 96 new OOD rows. Total new Stage 3B execution is **144 episodes**. No new
+`long_stove_moka` episodes are run.
+
+**Interpretation:** Stage 3B is explicitly a post-Stage-3 targeted cross-task
+replication, not preregistered confirmation and not an independent new-seed
+replication. Stage 4 seeds `[22..26]` remain untouched.

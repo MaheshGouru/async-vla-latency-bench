@@ -103,6 +103,31 @@ Main plot:
 I_h versus n_action_steps
 ```
 
+
+## 7B. Targeted Cross-Task Object-Layout Replication
+
+This section is explicitly post-Stage-3 follow-up evidence.
+
+Test the exact frozen Stage 1 object-layout variants on:
+
+```text
+spatial_transport
+goal_drawer
+```
+
+with the same Stage 3 seed block `[14..21]`, horizons `{20,25,30}`, and
+Native/+200 ms RTC conditions. Combine those results with the completed
+`long_stove_moka × object_layout` Stage 3 result.
+
+Primary question:
+
+> Is the Stage 3 object-layout interaction reproducible across the other two
+> pre-existing task-demand categories, or is it localized to multi-stage
+> manipulation?
+
+Do not describe this as preregistered confirmation. Report task-specific
+interactions and raw successes/8 before any three-task aggregate.
+
 ## 8. Temporal Mechanism Analysis
 
 Analyze:
@@ -141,6 +166,7 @@ Include:
 - floor/ceiling cells;
 - Stage 0 reused-control provenance;
 - selective Stage 3 follow-up;
+- Stage 3B was selected after observing the Stage 3 object-layout result and reuses the same seed block;
 - sensor noise is post-hoc;
 - no safety/hardware claim.
 

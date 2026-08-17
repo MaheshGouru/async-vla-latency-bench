@@ -33,6 +33,10 @@
 
 | K027 | Episode identity | seed equality may not guarantee identical simulator reset | paired comparisons can be invalid | record initialization ID or reset-state fingerprint and assert matching |
 | K028 | OOD variant drift | future follow-up could accidentally choose another variant from same family | changes the tested condition | freeze Stage 1 classification ID, API index, exact variant name, and difficulty |
+| K029 | Stage 3B selection | cross-task object-layout follow-up is motivated by the observed Stage 3 long-task result | cannot be presented as preregistered family-level confirmation | label Stage 3B targeted/post-Stage-3; freeze its matrix before execution; report all two-task outcomes |
+| K030 | Stage 3B seed reuse | Stage 3B reuses seeds 14..21 rather than an independent seed block | cross-task replication is not independent new-seed replication | state this explicitly; use same seed block for comparability and preserve Stage 4 seeds |
+| K031 | Fixed simulator initialization | `libero_episode_index:0` can yield identical reset fingerprints across rollout seeds | uncertainty reflects seeded rollout/policy stochasticity at one benchmark initialization, not initialization diversity | keep fixed initialization for matched design; do not claim eight independent environment initializations |
+| K032 | Spatial control reuse unavailable | Stage 3 has no `spatial_transport` ID controls | borrowing Stage 1/2 controls would break same-seed Stage 3B matching | run 48 new spatial ID controls on seeds 14..21 |
 
 ## Issue template
 

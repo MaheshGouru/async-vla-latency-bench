@@ -214,7 +214,42 @@ for every task/variant/seed/scene:
 Also verify that shared ID controls are reused logically across perturbations on
 the same base task rather than rerun and counted as independent controls.
 
-## 7. Stage 4 / VLASH matching rule
+
+## 7. Stage 3B object-layout cross-task matching rule
+
+Stage 3B is a targeted post-Stage-3 follow-up and reuses the Stage 3 seed block:
+
+```text
+SEEDS = [14,15,16,17,18,19,20,21]
+initialization_index_or_id = libero_episode_index:0
+```
+
+New OOD variants are exact frozen Stage 1 identities:
+
+| Task | `classification_id` | `api_task_index` | difficulty | Exact `variant_name` |
+|---|---:|---:|---:|---|
+| `spatial_transport` | `1773` | `1772` | `3` | `pick_up_the_black_bowl_from_table_center_and_place_it_on_the_plate_add_15` |
+| `goal_drawer` | `1891` | `1890` | `2` | `open_the_middle_drawer_of_the_cabinet_add_13` |
+
+Within each fixed `(task, scene, exact variant, seed)`, all six
+`{20,25,30} × {Native,+200}` cells must have the same initialization ID and
+reset-state fingerprint. Do not require fingerprints to differ across seeds.
+
+Object layout changes geometry, so ID and OOD fingerprints are not expected to
+match. Pair them on seed, episode index 0, horizon, delay, checkpoint, RTC/timing
+semantics, preprocessing, and all other non-perturbed factors.
+
+Control reuse is asymmetric:
+
+```text
+goal_drawer ID: reuse 48 completed Stage 3 rows exactly; do not rerun
+spatial_transport ID: run 48 new Stage 3B rows on seeds 14..21
+long_stove_moka: run nothing new; reuse completed Stage 3 ID/OOD for synthesis
+```
+
+Stage 3B therefore executes 144 new episodes: 96 OOD + 48 spatial ID.
+
+## 8. Stage 4 / VLASH matching rule
 
 If VLASH is run:
 
@@ -240,7 +275,7 @@ Only the execution method may differ.
 If the official VLASH integration cannot preserve these semantics, fail the
 compatibility gate rather than comparing unmatched episodes.
 
-## 8. Cross-stage summary
+## 9. Cross-stage summary
 
 | Stage | Seeds | Match old episodes by seed? | What must be preserved |
 |---|---|---|---|
@@ -248,13 +283,16 @@ compatibility gate rather than comparing unmatched episodes.
 | Stage 1 | `0,1,2,3,4` | completed | frozen OOD variants |
 | Stage 2 | `5,6,7,8,9` | **No** | same base tasks; strict within-stage task+seed pairing |
 | Stage 3 | `14..21` | **No** | exact Stage 1 OOD variant identity; strict within-stage pairing |
+| Stage 3B | `14..21` | reuses Stage 3 seed block | exact Stage 1 object-layout variants; Stage 3 goal ID reuse; new spatial ID |
 | Stage 4 | `22..26` | **No** | exact Stage 3/Stage 1 variant identity and matched RTC/VLASH episodes |
 
-## 9. Core principle
+## 10. Core principle
 
 Future experiments should replicate **conditions**, not recycle exploratory
 episodes.
 
-New stages use new seeds for independence, while task identities and selected OOD
-variant identities remain frozen so that differences can be attributed to the
-new experimental variable rather than a changed benchmark instance.
+Stages 2, 3, and 4 use disjoint seed blocks for independent replication. Stage 3B
+is the explicit exception: it reuses Stage 3 seeds `[14..21]` because its purpose
+is cross-task generalization under the same held-out rollout block and because it
+reuses completed Stage 3 controls. Task identities and frozen OOD variant
+identities remain fixed throughout.

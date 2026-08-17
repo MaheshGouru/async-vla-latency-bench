@@ -5,7 +5,9 @@
 ```text
 Revised Stage 0: complete
 Stage 1 broad OOD screen: complete
-Next: Stage 2 local operating-point sensitivity
+Stage 2 local operating-point sensitivity: complete
+Stage 3 held-out OOD confirmation: complete
+Next: Stage 3B targeted cross-task object-layout replication
 ```
 
 ## Current paper question
@@ -56,7 +58,7 @@ pooled I ≈ +1.4 percentage points
 Therefore: **no broad evidence that OOD amplifies +200 ms delay at
 `n_action_steps=25`.**
 
-## Next — Stage 2
+## Completed — Stage 2
 
 `STAGE_2_LOCAL_OPERATING_POINT_SENSITIVITY.md`
 
@@ -75,7 +77,7 @@ Total Stage 2: **360 new episodes**.
 Combined required Stage 2 + primary Stage 3: **600 episodes**. Including the
 Stage 3 post-hoc sensor-noise replication gives **648 episodes**.
 
-## Then — Stage 3
+## Completed — Stage 3
 
 `STAGE_3_OOD_HORIZON_CONFIRMATION.md`
 
@@ -102,6 +104,34 @@ actions. They must not be changed after viewing Stage 2 outcomes.
 
 With shared ID controls: **288 new episodes**.
 
+
+## Next — Stage 3B
+
+`STAGE_3B_OBJECT_LAYOUT_CROSS_TASK_REPLICATION.md`
+
+Stage 3B is a post-Stage-3 targeted cross-task replication. It tests the exact
+frozen Stage 1 object-layout variants on the two remaining task-demand categories:
+
+```text
+spatial_transport × object_layout
+goal_drawer × object_layout
+RTC
+n_action_steps = 20,25,30
+delay = Native,+200 ms
+seeds = 14..21
+initialization_index_or_id = libero_episode_index:0
+```
+
+Reuse the 48 existing Stage 3 `goal_drawer` ID controls. Run new matching ID
+controls for `spatial_transport`; Stage 3 did not contain spatial ID controls.
+
+```text
+96 new OOD + 48 new spatial ID = 144 new episodes
+```
+
+No new `long_stove_moka` episodes are run; its completed Stage 3 ID/object-layout
+rows form the third task in the final cross-task analysis.
+
 ## Optional — Stage 4
 
 `STAGE_4_VLASH_SUBSET.md`
@@ -122,6 +152,7 @@ VLASH is **not required** for the core paper.
 | `STAGE_2_LOCAL_OPERATING_POINT_SENSITIVITY.md` | highest-priority next experiment |
 | `STAGE_2_HORIZON_LATENCY_PHASE_DIAGRAM.md` | superseded full-grid pointer retained for provenance |
 | `STAGE_3_OOD_HORIZON_CONFIRMATION.md` | held-out OOD × horizon follow-up |
+| `STAGE_3B_OBJECT_LAYOUT_CROSS_TASK_REPLICATION.md` | targeted cross-task object-layout replication |
 | `STAGE_4_VLASH_SUBSET.md` | conditional external validation |
 | `STAGE_2_CONFIRMATORY_FOLLOWUP.md` | deprecated pointer retained for provenance |
 | `EXPERIMENT_MATRIX_POST_STAGE1.md` | concise new-run matrix |

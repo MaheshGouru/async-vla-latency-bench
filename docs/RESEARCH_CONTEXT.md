@@ -117,9 +117,10 @@ modern asynchronous alignment strategies.
 
 ## Required next experiments
 
-1. Stage 2 — RTC local operating-point sensitivity
-2. Stage 3 — OOD × horizon confirmation
-3. Stage 4 — conditional VLASH subset
+1. Stage 2 — RTC local operating-point sensitivity (complete)
+2. Stage 3 — OOD × horizon confirmation (complete)
+3. Stage 3B — targeted cross-task object-layout replication
+4. Stage 4 — conditional VLASH subset
 
 ## Explicit non-claims
 
@@ -156,3 +157,21 @@ seeds = 14..21
 
 The Stage 3 horizon set is frozen before Stage 2 and is not selected after
 inspecting Stage 2.
+
+
+Stage 3B:
+
+```text
+RTC
+new OOD tasks = spatial_transport, goal_drawer
+perturbation = object_layout
+n_action_steps = 20,25,30
+delay = Native,+200 ms
+seeds = 14..21
+initialization_index_or_id = libero_episode_index:0
+new episodes = 144 (96 OOD + 48 spatial ID)
+```
+
+This is a post-Stage-3 targeted cross-task replication. It determines whether
+the object-layout interaction is a family-level tendency across task demands or
+a localized long-task result.

@@ -57,7 +57,7 @@ def _artifact_state(output, run_id):
     return "valid"
 
 
-def _stage3_row(plan, summary, output, manifest_sha256, spec_sha256):
+def _stage3_row(plan, summary, output, manifest_sha256, spec_sha256, stage_label="stage3"):
     row = _episode_row({**plan, "n_action_steps": plan["configured_n_action_steps"]}, summary, output)
     import pandas as pd
     frame = pd.read_parquet(output / "requests" / f"{plan['run_id']}.parquet")
@@ -67,8 +67,8 @@ def _stage3_row(plan, summary, output, manifest_sha256, spec_sha256):
     errors = measured["rtc_inference_delay_error_steps"]
     absolute_errors = errors.abs()
     row.update({
-        "stage": "stage3", "analysis_status": plan["analysis_status"],
-        "manifest_sha256": manifest_sha256, "stage3_spec_sha256": spec_sha256,
+        "stage": stage_label, "analysis_status": plan["analysis_status"],
+        "manifest_sha256": manifest_sha256, f"{stage_label}_spec_sha256": spec_sha256,
         "checkpoint_id": plan["checkpoint_id"], "runner_commit": plan["runner_commit"],
         "environment_version": plan["environment_version"], "base_task_id": plan["base_task_id"],
         "base_task_name": plan["base_task_name"], "task_id": plan["task_id"], "task_name": plan["task_name"],
@@ -96,7 +96,7 @@ def _stage3_row(plan, summary, output, manifest_sha256, spec_sha256):
         "initialization_index_or_id": summary["initialization_index_or_id"],
         "initial_state_fingerprint": summary["initial_state_fingerprint"],
         "initial_state_fingerprint_method": summary["initial_state_fingerprint_method"],
-        "source": "stage3_new", "environment_fingerprint": _environment_fingerprint(),
+        "source": f"{stage_label}_new", "environment_fingerprint": _environment_fingerprint(),
     })
     return row
 
@@ -109,6 +109,7 @@ def main():
     p.add_argument("--delay", type=int, action="append"); p.add_argument("--seed", type=int, action="append")
     p.add_argument("--task", action="append"); p.add_argument("--perturbation", action="append")
     p.add_argument("--exclude-posthoc", action="store_true"); p.add_argument("--resume", action="store_true")
+    p.add_argument("--stage-label", choices=("stage3","stage3b"), default="stage3")
     p.add_argument("--dry-run", action="store_true"); p.add_argument("--verbose", action="store_true"); args = p.parse_args()
     _ensure_ood_native_prefix(args.scene)
     if args.scene == "ood":
@@ -122,12 +123,13 @@ def main():
     plans.sort(key=lambda r: (int(r["configured_n_action_steps"]), r["task_key"], r["perturbation_key"], int(r["added_delay_ms"]), int(r["seed"])))
     if args.dry_run:
         print(*(r["run_id"] for r in plans), sep="\n"); print(f"planned_episodes={len(plans)}"); return 0
-    args.output_dir.mkdir(parents=True, exist_ok=True); results_path = args.output_dir / "stage3_episode_results.csv"
+    args.output_dir.mkdir(parents=True, exist_ok=True); results_path = args.output_dir / f"{args.stage_label}_episode_results.csv"
     manifest_sha256 = _sha256(args.manifest)
-    spec_path = Path(__file__).resolve().parents[2] / "docs" / "STAGE_3_OOD_HORIZON_CONFIRMATION.md"
+    spec_name = "STAGE_3_OOD_HORIZON_CONFIRMATION.md" if args.stage_label=="stage3" else "STAGE_3B_OBJECT_LAYOUT_CROSS_TASK_REPLICATION.md"
+    spec_path = Path(__file__).resolve().parents[2] / "docs" / spec_name
     spec_sha256 = _sha256(spec_path)
     existing = {r["run_id"] for r in read_csv(results_path)} if results_path.exists() else set()
-    invalid_path = args.output_dir / "stage3_invalid_episodes.csv"
+    invalid_path = args.output_dir / f"{args.stage_label}_invalid_episodes.csv"
     failures = completed = 0
     for horizon in [h for h in HORIZONS if any(int(r["configured_n_action_steps"]) == h for r in plans)]:
         pending = [r for r in plans if int(r["configured_n_action_steps"]) == horizon]
@@ -151,7 +153,7 @@ def main():
                 summary["prediction_horizon_actions"] = int(policy.config.chunk_size)
                 for field in ("initialization_index_or_id", "initial_state_fingerprint", "initial_state_fingerprint_method"):
                     if summary.get(field) != plan.get(field): raise RuntimeError(f"reset identity mismatch {field}: {summary.get(field)!r} != {plan.get(field)!r}")
-                _merge(results_path, [_stage3_row(plan, summary, args.output_dir, manifest_sha256, spec_sha256)]); existing.add(plan["run_id"])
+                _merge(results_path, [_stage3_row(plan, summary, args.output_dir, manifest_sha256, spec_sha256,args.stage_label)]); existing.add(plan["run_id"])
                 print(f"[{completed}/{len(plans)}] {plan['run_id']}: success={summary['success']}", flush=True)
             except Exception as exc:
                 failures += 1

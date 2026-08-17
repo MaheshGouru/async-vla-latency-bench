@@ -20,6 +20,7 @@ def main():
     parser.add_argument("--manifest", type=Path, required=True)
     parser.add_argument("--scene", choices=("id", "ood"), required=True)
     parser.add_argument("--expected-rows", type=int, default=288)
+    parser.add_argument("--expected-cells-per-key", type=int, default=6)
     parser.add_argument("--audit-output", type=Path)
     args = parser.parse_args()
     if args.scene == "ood":
@@ -82,14 +83,14 @@ def main():
         key = (row["task_key"], row["variant_name"], row["seed"], row["scene"])
         groups[key].add((row["initialization_index_or_id"], row["initial_state_fingerprint_method"], row["initial_state_fingerprint"]))
         counts[key] += 1
-    if set(counts.values()) != {6} or any(len(v) != 1 for v in groups.values()):
+    if set(counts.values()) != {args.expected_cells_per_key} or any(len(v) != 1 for v in groups.values()):
         raise ValueError(f"Stage 3 {args.scene} pairing invariant failed")
     write_csv(args.manifest, rows)
     if args.audit_output:
         previous = read_csv(args.audit_output) if args.audit_output.exists() else []
         retained = [r for r in previous if r.get("scene") != args.scene]
         write_csv(args.audit_output, retained + audit_rows)
-    print(f"PASS: resolved {len(identities)} {args.scene} identities; six horizon×delay cells paired per key")
+    print(f"PASS: resolved {len(identities)} {args.scene} identities; {args.expected_cells_per_key} treatment cells paired per key")
     return 0
 
 
