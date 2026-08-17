@@ -167,6 +167,7 @@ def make_libero_env(
     init_states: bool = True,
     episode_length: int | None = None,
     num_steps_wait: int = 10,
+    episode_index: int = 0,
 ) -> Any:
     """Build a single LIBERO environment with deterministic initial-state selection."""
     seed_environment_rng(seed)
@@ -185,7 +186,7 @@ def make_libero_env(
         observation_width=observation_width,
         observation_height=observation_height,
         init_states=init_states,
-        episode_index=0,
+        episode_index=episode_index,
         n_envs=1,
         num_steps_wait=num_steps_wait,
         control_mode=control_mode,
@@ -207,6 +208,7 @@ def make_libero_plus_env(
     init_states: bool = True,
     episode_length: int | None = None,
     num_steps_wait: int = 10,
+    episode_index: int = 0,
 ) -> Any:
     """Build a single LIBERO-plus environment (OOD perturbation variant).
 
@@ -239,7 +241,7 @@ def make_libero_plus_env(
         observation_width=observation_width,
         observation_height=observation_height,
         init_states=init_states,
-        episode_index=0,
+        episode_index=episode_index,
         n_envs=1,
         num_steps_wait=num_steps_wait,
         control_mode=control_mode,
@@ -247,6 +249,64 @@ def make_libero_plus_env(
     )
     env.reset(seed=seed)
     return env
+
+
+def available_initialization_count(environment: Any) -> int:
+    """Return the number of init states exposed by the pinned LIBERO wrapper."""
+    visited: set[int] = set()
+    pending = [environment]
+    while pending:
+        obj = pending.pop()
+        if obj is None or id(obj) in visited:
+            continue
+        visited.add(id(obj))
+        init_states = getattr(obj, "_init_states", None)
+        if init_states is not None:
+            try:
+                count = len(init_states)
+            except TypeError:
+                count = 0
+            if count <= 0:
+                raise EnvironmentUnavailable("LIBERO exposed an empty initialization array")
+            return count
+        for name in ("env", "_env", "unwrapped"):
+            child = getattr(obj, name, None)
+            if child is not None and child is not obj:
+                pending.append(child)
+    raise EnvironmentUnavailable("LIBERO did not expose its initialization array")
+
+
+def resolve_episode_index(environment: Any) -> int:
+    """Read the init-state array index actually selected by LIBERO.
+
+    Stage 3C must verify resolution rather than assume that passing an index to
+    a constructor prevents clamping, wrapping, or fallback. The pinned wrapper
+    selects ``_init_states[episode_index % len(_init_states)]``; reproduce that
+    resolution explicitly so an out-of-range request cannot masquerade as the
+    requested state merely because ``episode_index`` retains its input value.
+    """
+    from numbers import Integral
+
+    visited: set[int] = set()
+    pending = [environment]
+    while pending:
+        obj = pending.pop()
+        if obj is None or id(obj) in visited:
+            continue
+        visited.add(id(obj))
+        for name in ("episode_index", "_episode_index"):
+            value = getattr(obj, name, None)
+            if isinstance(value, Integral) and not isinstance(value, bool):
+                requested = int(value)
+                return requested % available_initialization_count(environment)
+        for name in ("env", "_env", "unwrapped"):
+            child = getattr(obj, name, None)
+            if child is not None and child is not obj:
+                pending.append(child)
+    raise EnvironmentUnavailable(
+        "LIBERO did not expose the resolved episode_index; Stage 3C cannot "
+        "verify requested-index dispatch and therefore fails closed."
+    )
 
 
 def get_task_info(env: Any, suite_name: str, task_id: int) -> TaskInfo:

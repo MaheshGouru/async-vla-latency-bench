@@ -463,6 +463,7 @@ itself prove that two runs began from the same simulator state.
 
 **Consequence:** Validate episode pairing before using paired statistical analyses.
 
+
 ## D033 — Add targeted Stage 3B object-layout cross-task replication
 
 **Date:** 2026-08-16
@@ -506,3 +507,72 @@ Run 96 new OOD rows. Total new Stage 3B execution is **144 episodes**. No new
 **Interpretation:** Stage 3B is explicitly a post-Stage-3 targeted cross-task
 replication, not preregistered confirmation and not an independent new-seed
 replication. Stage 4 seeds `[22..26]` remain untouched.
+
+
+## D3C01 — Stage 3B is completed; do not reuse its label
+
+**Date:** 2026-08-16
+
+**Decision:** Stage 3B is treated as completed targeted cross-task object-layout
+replication. All newly added work begins at Stage 3C. Stage 3B's frozen conduct
+record is retained and is not retroactively changed.
+
+## D3C02 — Stage 3C is a reset-only initialization audit
+
+**Date:** 2026-08-16
+
+**Decision:** Stage 3C audits initialization indices `[0,1,2,3,4,5,6,7]` for all
+three object-layout task pairs, in both ID and exact frozen OOD scenes. Perform
+three clean reset/fingerprint repetitions per task × scene × index: 144 reset-only
+operations total. No policy rollout or success analysis occurs in Stage 3C.
+
+**Gate:** requested index must equal resolved index; fingerprints must agree 3/3
+within each index and be 8/8 distinct across indices within each task/scene. Fail
+closed rather than substitute other indices.
+
+## D3D01 — Stage 3D tests initialization-generalization
+
+**Date:** 2026-08-16
+
+**Decision:** Stage 3D consumes only the frozen Stage 3C validated-initialization
+artifact and evaluates object-layout effects selected from completed Stage 3/3B by
+the documented directional persistence rule. This selection is post-Stage-3B and
+must not be called preregistered confirmation.
+
+**Execution:**
+
+```text
+RTC
+n_action_steps = 25
+delay = Native,+200 ms
+initialization indices = 0..7, exactly as validated by Stage 3C
+rollout seeds = 22,23
+ID + exact frozen object-layout OOD
+64 rollout episodes per surviving task
+```
+
+The two rollout seeds are within-initialization replicates; statistical uncertainty
+clusters on initialization index.
+
+## D3D02 — VLASH remains outside the active plan
+
+**Date:** 2026-08-16
+
+**Decision:** The historical Stage 4/VLASH file is retained only for provenance.
+Seeds `22,23` are used by Stage 3D as within-initialization rollout replicates.
+
+
+## D3D03 — Tighten Stage 3C/3D dispatch invariants
+
+**Date:** 2026-08-16
+
+**Decision:** Stage 3C uses no policy seed, fixed environment-construction seed `0`,
+initialization indices `[0..7]`, and exactly three clean resets per task × scene ×
+index. Stage 3D uses exactly rollout seeds `[22,23]`, RTC, `n_action_steps=25`,
+Native/+200 ms, and exactly 64 rows per admitted task.
+
+Stage 3D task inclusion is evaluated once from frozen completed Stage 3/3B results
+using the documented directional rule and written to hashed
+`stage3d_surviving_tasks.json`; the rollout manifest must consume this file and
+must not recompute or alter selection. No task, initialization index, seed, horizon,
+or delay substitution is permitted after dispatch.

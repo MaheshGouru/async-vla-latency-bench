@@ -9,6 +9,7 @@ Stage 0 — COMPLETE WITH KNOWN PROVENANCE LIMITATIONS (K015–K018)
 Stage 1 — COMPLETE
 Stage 2 — COMPLETE
 Stage 3 — COMPLETE
+Stage 3B — COMPLETE
 ```
 
 The completed Stage 0 and Stage 1 specifications/results are frozen and must not be
@@ -87,20 +88,20 @@ Frozen seeds:
 [14,15,16,17,18,19,20,21]
 ```
 
-- [ ] exact `spatial_transport` object-layout variant asserted: `1773/1772`, difficulty 3, `..._add_15`
-- [ ] exact `goal_drawer` object-layout variant asserted: `1891/1890`, difficulty 2, `..._add_13`
-- [ ] RTC only; horizons `20,25,30`; Native/+200 ms
-- [ ] every new run uses `libero_episode_index:0`
-- [ ] six-cell reset-fingerprint pairing passes for every new task/scene/seed
-- [ ] reuse 48 completed Stage 3 goal-ID rows without new run IDs
-- [ ] run 48 new spatial-ID rows
-- [ ] run 96 new object-layout OOD rows
-- [ ] exactly 144 new episodes
-- [ ] two-task analysis = 192 unique rows after Stage 3 goal-ID reuse
-- [ ] three-task object-layout synthesis = 288 unique rows after Stage 3 reuse
-- [ ] report task-specific interactions before any pooled summary
+- [x] exact `spatial_transport` object-layout variant asserted: `1773/1772`, difficulty 3, `..._add_15`
+- [x] exact `goal_drawer` object-layout variant asserted: `1891/1890`, difficulty 2, `..._add_13`
+- [x] RTC only; horizons `20,25,30`; Native/+200 ms
+- [x] every new run uses `libero_episode_index:0`
+- [x] six-cell reset-fingerprint pairing passes for every new task/scene/seed
+- [x] reuse 48 completed Stage 3 goal-ID rows without new run IDs
+- [x] run 48 new spatial-ID rows
+- [x] run 96 new object-layout OOD rows
+- [x] exactly 144 new episodes
+- [x] two-task analysis = 192 unique rows after Stage 3 goal-ID reuse
+- [x] three-task object-layout synthesis = 288 unique rows after Stage 3 reuse
+- [x] report task-specific interactions before any pooled summary
 
-Stage 3B is post-Stage-3 targeted replication; do not label it preregistered.
+Stage 3B is COMPLETE. It remains post-Stage-3 targeted replication; do not relabel it preregistered.
 
 ## Stage 4 — conditional
 
@@ -124,7 +125,56 @@ Frozen seeds if run:
 ## Exact next action
 
 ```text
-Implement and freeze `STAGE_3B_OBJECT_LAYOUT_CROSS_TASK_REPLICATION.md`, audit the
-144-new-episode manifest and Stage 3 control-reuse table, then execute Stage 3B
-serially on one A100. Do not consume Stage 4 seeds `[22..26]`.
+Execute the implemented `STAGE_3C_INITIALIZATION_AUDIT.md` reset-only gate with
+the run-ready `notebooks/stage3c_jupyter/` workflow.
+Do not run policy rollouts in Stage 3C. If and only if all initialization indices
+0..7 are deterministic and distinct for every required ID/OOD scene, freeze the
+validated initialization artifact and proceed to Stage 3D.
 ```
+
+## Stage 3C — initialization diversity/determinism audit [IMPLEMENTED; NOT YET EXECUTED]
+
+```text
+[x] implementation asserts exact three task pairs and frozen object-layout variants
+[x] implementation requests indices 0..7 literally and verifies resolved equality
+[x] implementation contains no policy inference or rollout path
+[x] implementation fixes environment-construction seed at exactly 0
+[x] implementation schedules 3 clean reset repeats per task × scene × index
+[x] implementation requires exactly 144 reset/fingerprint operations
+[x] validator requires 3/3 fingerprints identical within every index
+[x] validator requires 8/8 fingerprints distinct within every task/scene
+[x] validated artifact is written and hashed only after every gate passes
+[ ] execute the audit and obtain a passing 48-row validated artifact
+```
+
+No policy inference or success analysis is allowed in Stage 3C.
+
+## Stage 3D — initialization-generalization [NOT YET IMPLEMENTED]
+
+Implement only after Stage 3C passes.
+
+```text
+[ ] mechanically compute Stage 3/3B surviving-task list using the documented directional rule
+[ ] freeze + hash `stage3d_surviving_tasks.json`; manifest consumes it directly
+[ ] consume only Stage 3C-validated indices 0..7
+[ ] rollout seeds = 22,23 (within-initialization replicates)
+[ ] RTC; n_action_steps=25; Native/+200 only
+[ ] ID and exact frozen object-layout OOD
+[ ] 64 rows per surviving task
+[ ] Native/+200 same-reset pairing per task/scene/index/seed
+[ ] initialization-clustered bootstrap
+[ ] raw per-initialization four-cell counts retained
+```
+
+Do not dispatch Stage 3D if Stage 3C cannot establish eight genuinely distinct
+initializations for a required task/scene.
+
+
+### Stage 3D pre-dispatch hardening
+
+Before dispatch, mechanically compute and freeze `stage3d_surviving_tasks.json`
+from completed Stage 3/3B artifacts. Record input hashes and the survivor-file hash.
+The Stage 3D manifest must consume that file directly. Assert exactly 64 manifest
+rows per admitted task, initialization indices `[0..7]`, rollout seeds `[22,23]`,
+RTC only, `n_action_steps=25`, delays `{0,200}`, and uniqueness of the full episode
+identity tuple.

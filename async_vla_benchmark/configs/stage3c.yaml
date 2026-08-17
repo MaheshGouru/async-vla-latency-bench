@@ -1,0 +1,8 @@
+control_mode: relative
+obs_type: pixels_agent_pos
+camera_name: agentview_image,robot0_eye_in_hand_image
+observation_width: 224
+observation_height: 224
+init_states: true
+episode_length: 520
+num_steps_wait: 10

@@ -2,6 +2,15 @@
 
 ## 0. Status and purpose
 
+## Completion note
+
+**Stage 3B is COMPLETE.** This file is retained as the frozen conduct/specification
+record. Do not modify its experiment matrix or rerun it merely because Stage 3C/3D
+were added later.
+
+Stage 3C is now a reset-only initialization audit; Stage 3D is the subsequent
+initialization-generalization rollout stage.
+
 Run **after Stage 3** and before deciding whether Stage 4/VLASH is worth the
 remaining compute.
 
@@ -22,6 +31,19 @@ original Stage 3 confirmation. It is a targeted follow-up selected after viewing
 Stage 3 outcomes.
 
 Stage 0 and Stage 1 files remain unchanged.
+
+
+## 0A. Historical handoff rule for post-Stage-3B follow-up
+
+The follow-up uses this directional survival rule to define which object-layout task effects are carried into Stage 3D:
+
+```text
+a task enters Stage 3D iff:
+    I_25 < 0
+    AND I_h < 0 at at least 2 of {20,25,30}
+```
+
+`long_stove_moka` already satisfies this rule from completed Stage 3. Apply the identical mechanical rule to `spatial_transport` and `goal_drawer` when constructing the Stage 3D follow-up list. Because Stage 3B is already complete, Stage 3D selection is outcome-conditioned and must be labeled post-Stage-3B rather than preregistered. Stage 3C audits initialization feasibility for all three task/scene pairs; Stage 3D applies the survival rule. See `STAGE_3C_INITIALIZATION_AUDIT.md` and `STAGE_3D_INITIALIZATION_GENERALIZATION.md`.
 
 ## 1. Tasks
 

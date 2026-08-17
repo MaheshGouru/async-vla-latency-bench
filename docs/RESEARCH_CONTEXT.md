@@ -32,7 +32,7 @@ Secondary questions:
 2. Does delay normalized by configured action coverage organize success better
    than milliseconds alone?
 3. Do selected OOD perturbations shrink/shift that envelope?
-4. Does VLASH show the same phenomenon if a fair official integration is feasible?
+4. Do surviving object-layout effects persist across distinct environment initializations?
 
 ## Primary model
 
@@ -47,10 +47,6 @@ RTC
 Naive async
 ```
 
-Conditional:
-```text
-VLASH
-```
 
 ## Task-demand taxonomy
 
@@ -111,16 +107,18 @@ aggregate Stage 1 interaction at 25 actions is near zero.
 ### H4 — Method dependence
 The horizon/latency relationship differs between RTC and a naive asynchronous queue.
 
-### H5 — Optional cross-method validation
-If official VLASH integration is feasible, localized effects may differ across
-modern asynchronous alignment strategies.
+### H5 — Initialization generalization
+Object-layout × delay effects that survive cross-task replication should persist
+across multiple distinct benchmark initialization states if they reflect more than
+a fixed-reset peculiarity.
 
 ## Required next experiments
 
 1. Stage 2 — RTC local operating-point sensitivity (complete)
 2. Stage 3 — OOD × horizon confirmation (complete)
-3. Stage 3B — targeted cross-task object-layout replication
-4. Stage 4 — conditional VLASH subset
+3. Stage 3B — targeted cross-task object-layout replication (complete)
+4. Stage 3C — reset-only initialization diversity/determinism audit
+5. Stage 3D — initialization-generalization on surviving object-layout effects
 
 ## Explicit non-claims
 
@@ -130,7 +128,7 @@ Do not claim:
 - that `n_action_steps` equals RTC formal execution horizon `s` unless audited;
 - a new async algorithm;
 - safety or hardware validity;
-- universal superiority of RTC/VLASH.
+- universal superiority of any execution method.
 
 
 ## Frozen post-Stage-1 sensitivity design
@@ -175,3 +173,25 @@ new episodes = 144 (96 OOD + 48 spatial ID)
 This is a post-Stage-3 targeted cross-task replication. It determines whether
 the object-layout interaction is a family-level tendency across task demands or
 a localized long-task result.
+
+
+Stage 3D:
+
+```text
+conditional surviving object-layout tasks
+RTC, n_action_steps=25
+Native/+200 ms
+initialization indices = 0..7
+rollout seeds = 22,23
+64 episodes per surviving task
+```
+
+
+Stage 3C — reset-only initialization audit:
+
+```text
+3 tasks × ID/OOD × initialization indices 0..7 × 3 clean resets
+= 144 reset/fingerprint operations; no policy rollouts
+```
+
+Stage 3D consumes only the frozen validated initialization artifact.

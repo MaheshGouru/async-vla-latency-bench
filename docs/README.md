@@ -7,7 +7,9 @@ Revised Stage 0: complete
 Stage 1 broad OOD screen: complete
 Stage 2 local operating-point sensitivity: complete
 Stage 3 held-out OOD confirmation: complete
-Next: Stage 3B targeted cross-task object-layout replication
+Stage 3B targeted cross-task object-layout replication: complete
+Next: Stage 3C initialization diversity/determinism audit
+Then: Stage 3D initialization-generalization on surviving object-layout effects
 ```
 
 ## Current paper question
@@ -105,11 +107,11 @@ actions. They must not be changed after viewing Stage 2 outcomes.
 With shared ID controls: **288 new episodes**.
 
 
-## Next — Stage 3B
+## Completed — Stage 3B
 
 `STAGE_3B_OBJECT_LAYOUT_CROSS_TASK_REPLICATION.md`
 
-Stage 3B is a post-Stage-3 targeted cross-task replication. It tests the exact
+Stage 3B is a completed post-Stage-3 targeted cross-task replication. It tests the exact
 frozen Stage 1 object-layout variants on the two remaining task-demand categories:
 
 ```text
@@ -132,14 +134,38 @@ controls for `spatial_transport`; Stage 3 did not contain spatial ID controls.
 No new `long_stove_moka` episodes are run; its completed Stage 3 ID/object-layout
 rows form the third task in the final cross-task analysis.
 
-## Optional — Stage 4
+## Next — Stage 3C initialization audit
 
-`STAGE_4_VLASH_SUBSET.md`
+`STAGE_3C_INITIALIZATION_AUDIT.md`
 
-Run a compact VLASH subset only if official code passes the π0.5/LIBERO
-compatibility gate after Stages 2 and 3.
+Stage 3C performs no policy rollouts. It validates indices `{0..7}` by three repeated clean resets for every ID/object-layout task scene and requires deterministic within-index fingerprints and eight distinct fingerprints across indices.
 
-VLASH is **not required** for the core paper.
+```text
+3 tasks × 2 scenes × 8 indices × 3 repeated resets = 144 reset-only operations
+```
+
+Only a fully passing, hashed `stage3c_validated_initializations.csv` may be consumed by Stage 3D.
+
+## Then — Stage 3D
+
+`STAGE_3D_INITIALIZATION_GENERALIZATION.md`
+
+Stage 3D tests only object-layout task effects that satisfy the frozen directional
+survival rule. It replaces fixed `libero_episode_index:0` evaluation with eight
+explicit initialization indices `{0..7}` and two within-initialization rollout
+seeds `{22,23}` at the central `n_action_steps=25`, Native/+200-ms RTC setting.
+
+```text
+64 new episodes per surviving task
+maximum 192 if all three object-layout tasks survive
+```
+
+Stage 3D consumes only the frozen, hashed Stage 3C validation artifact; it does not rerun or redefine the initialization audit.
+
+## Out of active scope
+
+VLASH/Stage 4 is not part of the current paper execution plan. The historical
+`STAGE_4_VLASH_SUBSET.md` file is retained only for provenance.
 
 ## Active files
 
@@ -152,8 +178,10 @@ VLASH is **not required** for the core paper.
 | `STAGE_2_LOCAL_OPERATING_POINT_SENSITIVITY.md` | highest-priority next experiment |
 | `STAGE_2_HORIZON_LATENCY_PHASE_DIAGRAM.md` | superseded full-grid pointer retained for provenance |
 | `STAGE_3_OOD_HORIZON_CONFIRMATION.md` | held-out OOD × horizon follow-up |
-| `STAGE_3B_OBJECT_LAYOUT_CROSS_TASK_REPLICATION.md` | targeted cross-task object-layout replication |
-| `STAGE_4_VLASH_SUBSET.md` | conditional external validation |
+| `STAGE_3B_OBJECT_LAYOUT_CROSS_TASK_REPLICATION.md` | completed targeted cross-task object-layout replication |
+| `STAGE_3C_INITIALIZATION_AUDIT.md` | reset-only determinism/distinctness audit over indices 0..7 |
+| `STAGE_3D_INITIALIZATION_GENERALIZATION.md` | initialization-generalization of surviving object-layout effects |
+| `STAGE_4_VLASH_SUBSET.md` | archived/out-of-scope external-validation plan |
 | `STAGE_2_CONFIRMATORY_FOLLOWUP.md` | deprecated pointer retained for provenance |
 | `EXPERIMENT_MATRIX_POST_STAGE1.md` | concise new-run matrix |
 | `METRICS_AND_LOGGING.md` | canonical metrics/logging |
@@ -204,5 +232,4 @@ Future stages use new seed blocks rather than recycling Stage 0/1 episodes.
 
 - Stage 2: pair horizon/delay cells internally on task + seed + initialization.
 - Stage 3: reuse the **exact Stage 1 OOD variant identities** with held-out seeds.
-- Stage 4: if run, pair RTC/VLASH on the exact same task/variant/seed/scene/delay
-  episode definition.
+- Stage 3D: pair Native/+200 within each explicit initialization index and bootstrap by initialization cluster.

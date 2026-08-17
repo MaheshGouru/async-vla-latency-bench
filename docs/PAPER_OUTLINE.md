@@ -139,13 +139,19 @@ Analyze:
 
 Do not treat action age as a monotonic quality score.
 
-## 9. Conditional VLASH Validation
+## 9. Initialization-Generalization of Surviving Object-Layout Effects
 
-Only if compatibility gate passes.
+For tasks satisfying the frozen Stage 3/3B directional survival rule, evaluate
+`n_action_steps=25`, Native/+200 ms over eight explicit initialization indices
+`0..7` with rollout seeds `22,23`.
 
-Question:
-> Does a different asynchronous alignment strategy show the same selected
-> OOD-under-delay behavior?
+Primary question:
+> Does the localized object-layout × delay interaction persist across distinct
+> benchmark reset states, or is it concentrated in the fixed initialization used
+> by Stage 3/3B?
+
+Treat initialization as the inference/generalization cluster and show
+per-initialization interactions before aggregate summaries.
 
 ## 10. Discussion
 
@@ -167,6 +173,8 @@ Include:
 - Stage 0 reused-control provenance;
 - selective Stage 3 follow-up;
 - Stage 3B was selected after observing the Stage 3 object-layout result and reuses the same seed block;
+- Stages 3/3B use one fixed simulator initialization; Stage 3C is a reset-only initialization audit, and Stage 3D is the conditional rollout follow-up over eight validated initializations;
+- Stage 3D task inclusion is outcome-conditioned on completed Stage 3/3B via a documented directional rule and must be labeled post-Stage-3B;
 - sensor noise is post-hoc;
 - no safety/hardware claim.
 

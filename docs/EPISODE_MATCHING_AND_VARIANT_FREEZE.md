@@ -249,50 +249,62 @@ long_stove_moka: run nothing new; reuse completed Stage 3 ID/OOD for synthesis
 
 Stage 3B therefore executes 144 new episodes: 96 OOD + 48 spatial ID.
 
-## 8. Stage 4 / VLASH matching rule
+## 8. Stage 3C initialization-audit rule
 
-If VLASH is run:
+Stage 3C is reset-only. For each of the three object-layout task pairs, audit
+`initialization_index ∈ {0..7}` in both ID and exact frozen OOD scenes. Perform
+three clean reset/fingerprint repetitions per task × scene × index.
 
-```text
-SEEDS = [22,23,24,25,26]
-```
-
-Use the **same exact OOD variant IDs carried into Stage 3**.
-
-RTC and VLASH must be paired on:
+Required gates:
 
 ```text
-task
-variant
-seed
-scene
-delay
-initialization identity
+3/3 repeated fingerprints identical within each task/scene/index
+8/8 fingerprints distinct across indices within each task/scene
+requested index == resolved index; no fallback/wrap/clamp
 ```
 
-Only the execution method may differ.
+ID and object-layout OOD fingerprints at the same index are not required to match
+because object layout is the treatment. Stage 3C outputs the frozen
+`stage3c_validated_initializations.csv`; it contains no rollout seeds and no policy
+outcomes.
 
-If the official VLASH integration cannot preserve these semantics, fail the
-compatibility gate rather than comparing unmatched episodes.
+## 9. Stage 3D initialization-generalization matching rule
 
-## 9. Cross-stage summary
+Stage 3D uses initialization identity as the generalization axis:
 
-| Stage | Seeds | Match old episodes by seed? | What must be preserved |
-|---|---|---|---|
-| Stage 0 | `0,1,10,11,12,13` | completed | calibration provenance |
-| Stage 1 | `0,1,2,3,4` | completed | frozen OOD variants |
-| Stage 2 | `5,6,7,8,9` | **No** | same base tasks; strict within-stage task+seed pairing |
-| Stage 3 | `14..21` | **No** | exact Stage 1 OOD variant identity; strict within-stage pairing |
-| Stage 3B | `14..21` | reuses Stage 3 seed block | exact Stage 1 object-layout variants; Stage 3 goal ID reuse; new spatial ID |
-| Stage 4 | `22..26` | **No** | exact Stage 3/Stage 1 variant identity and matched RTC/VLASH episodes |
+```text
+INITIALIZATION_INDICES = [0,1,2,3,4,5,6,7]
+ROLLOUT_SEEDS = [22,23]
+n_action_steps = 25
+delay = Native,+200 ms
+```
 
-## 10. Core principle
+Before policy rollouts, a reset-only audit must prove that indices `0..7` are
+valid, deterministic, and produce eight distinct reset fingerprints within each
+surviving task/scene. If not, Stage 3D is blocked; do not silently substitute
+indices.
 
-Future experiments should replicate **conditions**, not recycle exploratory
-episodes.
+Within fixed `(task, scene, exact variant, initialization_index, rollout_seed)`,
+Native and +200 must use the same reset fingerprint. ID and object-layout OOD are
+paired by the same initialization index but are not required to have equal
+fingerprints because layout geometry is the treatment.
 
-Stages 2, 3, and 4 use disjoint seed blocks for independent replication. Stage 3B
-is the explicit exception: it reuses Stage 3 seeds `[14..21]` because its purpose
-is cross-task generalization under the same held-out rollout block and because it
-reuses completed Stage 3 controls. Task identities and frozen OOD variant
-identities remain fixed throughout.
+Stage 3D task inclusion follows the frozen directional survival rule in
+`STAGE_3D_INITIALIZATION_GENERALIZATION.md`. The initialization-cluster, not the
+rollout seed, is the primary generalization unit.
+
+
+## Stage 3C/3D exact seed and initialization invariants
+
+Stage 3C is reset-only: it uses no policy/rollout seed. If environment construction
+requires an RNG seed, use exactly `0` for all 144 audit resets. Audit exactly
+initialization indices `[0,1,2,3,4,5,6,7]` with three clean resets per
+task × scene × index. No index substitution is allowed.
+
+Stage 3D uses exactly rollout seeds `[22,23]` for every admitted task, scene,
+initialization index, and delay. For a fixed `(task, scene, exact variant,
+initialization_index, rollout_seed)`, Native and +200 ms must share an identical
+reset fingerprint. ID and object-layout OOD are paired by initialization index but
+are not required to share a fingerprint because object layout is the treatment.
+The full Stage 3D episode identity is `(task, scene, exact variant, init index,
+rollout seed, RTC, n_action_steps=25, added_delay_ms)`.
