@@ -6,6 +6,15 @@ from async_vla_benchmark.benchmark.stage3b import HORIZONS,SEEDS
 from async_vla_benchmark.scripts.analyze_stage3 import paired_cluster_bootstrap,paired_interaction_values,wilson
 
 TASKS=(("spatial_transport","object_layout","stage3b"),("goal_drawer","object_layout","stage3b"),("long_stove_moka","object_layout","stage3"))
+
+def harmonize_columns(rows):
+ """Return heterogeneous reused/new result rows with one stable union schema."""
+ fields=[]
+ for row in rows:
+  for field in row:
+   if field not in fields: fields.append(field)
+ return [{field:row.get(field,"") for field in fields} for row in rows]
+
 def main():
  p=argparse.ArgumentParser(); p.add_argument("--stage3b-results",type=Path,required=True); p.add_argument("--stage3-results",type=Path,required=True); p.add_argument("--output-dir",type=Path,required=True); a=p.parse_args()
  new=read_csv(a.stage3b_results); old=read_csv(a.stage3_results)
@@ -15,7 +24,7 @@ def main():
  two=new+goal_id; three=two+long
  if len(two)!=192 or len({r["run_id"] for r in two})!=192: raise ValueError("two-task analysis must contain 192 unique rows")
  if len(three)!=288 or len({r["run_id"] for r in three})!=288: raise ValueError("three-task synthesis must contain 288 unique rows")
- a.output_dir.mkdir(parents=True,exist_ok=True); write_csv(a.output_dir/"stage3b_object_layout_three_task_analysis.csv",three)
+ a.output_dir.mkdir(parents=True,exist_ok=True); write_csv(a.output_dir/"stage3b_object_layout_three_task_analysis.csv",harmonize_columns(three))
  four=[]; interactions=[]
  for task,perturbation,source in TASKS:
   for h in HORIZONS:

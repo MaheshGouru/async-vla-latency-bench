@@ -1,6 +1,7 @@
 from collections import Counter
 import pytest
 from async_vla_benchmark.benchmark.stage3b import ADDED_DELAYS_MS,HORIZONS,SEEDS,VARIANTS,stage3b_manifest
+from async_vla_benchmark.scripts.analyze_stage3b import harmonize_columns
 
 @pytest.fixture
 def rows(): return stage3b_manifest({"git_sha":"a"*40,"lerobot_git_sha":"b"*40,"libero_plus_git_sha":"c"*40,"model_revision":"d"*40})
@@ -27,3 +28,9 @@ def test_six_cell_pairing_blocks(rows):
  for r in rows: groups.setdefault((r.task_key,r.scene,r.variant_name,r.seed),set()).add((r.configured_n_action_steps,r.added_delay_ms))
  assert len(groups)==24
  assert all(cells=={(h,d) for h in HORIZONS for d in ADDED_DELAYS_MS} for cells in groups.values())
+
+def test_reused_and_new_provenance_columns_are_harmonized():
+ rows=harmonize_columns([{"run_id":"new","stage3b_spec_sha256":"b"},{"run_id":"old","stage3_spec_sha256":"a"}])
+ assert list(rows[0])==list(rows[1])
+ assert rows[0]["stage3_spec_sha256"]==""
+ assert rows[1]["stage3b_spec_sha256"]==""
