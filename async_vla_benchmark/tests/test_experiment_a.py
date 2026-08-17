@@ -39,4 +39,4 @@ def test_runner_has_explicit_experiment_label_and_zero_index_dispatch():
     source=(Path(__file__).parents[1]/"scripts/run_stage3.py").read_text()
     assert '"experiment_a"' in source
     assert "episode_index=0" in source
-    assert 'reset_on_create=args.stage_label!="experiment_a"' in source
+    assert 'reset_on_create=args.stage_label not in ("experiment_a","experiment_b")' in source

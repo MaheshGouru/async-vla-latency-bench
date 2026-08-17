@@ -50,12 +50,13 @@ def main():
             # seeded reset used by EpisodeRunner.run and fingerprint immediately.
             seed_environment_rng(seed)
             requested_index = int(row.get("requested_initialization_index", "0"))
-            is_experiment_a = row.get("stage", row.get("stage_or_experiment_label", "")) == "experiment_a"
+            experiment_label = row.get("stage", row.get("stage_or_experiment_label", ""))
+            is_zero_reset_experiment = experiment_label in ("experiment_a", "experiment_b")
             env = maker(row["suite"], task_index, seed=seed, control_mode=cfg.control_mode,
                 obs_type=cfg.obs_type, camera_name=cfg.camera_name, observation_width=cfg.observation_width,
                 observation_height=cfg.observation_height, init_states=cfg.init_states,
                 episode_length=cfg.episode_length, num_steps_wait=cfg.num_steps_wait,
-                episode_index=requested_index, reset_on_create=not is_experiment_a)
+                episode_index=requested_index, reset_on_create=not is_zero_reset_experiment)
             try:
                 actual = get_task_info(env, row["suite"], task_index).task_name
                 if actual != variant_name: raise RuntimeError(f"task mismatch: {actual!r} != {variant_name!r}")

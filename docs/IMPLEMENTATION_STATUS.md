@@ -158,4 +158,21 @@ Do not reinterpret rollout seeds as environment-initialization diversity.
 
 Experiment B remains blocked until completed Experiment-A results satisfy that frozen gate.
 
+## Experiment B implementation status (2026-08-17)
+
+**Experiment B is implemented and conditionally run-ready, but has not been executed.** Its code does not authorize dispatch by itself. Variant resolution, manifest creation, seed-999 smoke creation, rollout dispatch, validation, and analysis all require the hashed passing `experiment_a_to_b_v1` gate.
+
+Implemented safeguards and workflow:
+
+- exact frozen `libero_10` task 0 name assertion;
+- deterministic three-variant object-layout resolver and immutable hashed CSV;
+- exact 64-row matrix with 16 physically unique shared ID controls and 48 OOD episodes;
+- RTC horizon 25, Native/+200 ms, seeds 30–37, and explicit requested/resolved initialization index 0;
+- 8-episode seed-999 smoke outside the analysis seed set;
+- detached, resumable, serial ID-then-OOD single-A100 notebooks under `notebooks/experiment_b_jupyter/`;
+- fail-closed artifact/provenance validation and paired-seed per-variant interaction analysis;
+- unique 64-row episode-accounting output so shared ID controls cannot be pooled three times.
+
+Do not run Experiment B unless Experiment A notebook 05 produces a passing gate with `experiment_b_dispatch=true`.
+
 No superseded follow-up work is part of the active experiment plan.

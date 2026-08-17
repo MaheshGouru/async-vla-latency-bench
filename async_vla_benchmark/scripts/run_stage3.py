@@ -72,6 +72,7 @@ def _stage3_row(plan, summary, output, manifest_sha256, spec_sha256, stage_label
         "manifest_sha256": manifest_sha256, f"{stage_label}_spec_sha256": spec_sha256,
         "spec_sha256": spec_sha256,
         "frozen_variant_csv_sha256": plan.get("frozen_variant_csv_sha256", ""),
+        "experiment_a_dispatch_gate_sha256": plan.get("experiment_a_dispatch_gate_sha256", ""),
         "checkpoint_id": plan["checkpoint_id"], "runner_commit": plan["runner_commit"],
         "environment_version": plan["environment_version"], "base_task_id": plan["base_task_id"],
         "base_task_name": plan["base_task_name"], "task_id": plan["task_id"], "task_name": plan["task_name"],
@@ -114,13 +115,21 @@ def main():
     p.add_argument("--delay", type=int, action="append"); p.add_argument("--seed", type=int, action="append")
     p.add_argument("--task", action="append"); p.add_argument("--perturbation", action="append")
     p.add_argument("--exclude-posthoc", action="store_true"); p.add_argument("--resume", action="store_true")
-    p.add_argument("--stage-label", choices=("stage3","stage3b","experiment_a"), default="stage3")
+    p.add_argument("--stage-label", choices=("stage3","stage3b","experiment_a","experiment_b"), default="stage3")
+    p.add_argument("--dispatch-gate", type=Path)
     p.add_argument("--dry-run", action="store_true"); p.add_argument("--verbose", action="store_true"); args = p.parse_args()
     _ensure_ood_native_prefix(args.scene)
     if args.scene == "ood":
         from wand.api import library as _wand_library  # noqa: F401
     cfg = load_config(args.config); _configure_libero_home(args.scene)
+    dispatch_gate_sha256 = ""
+    if args.stage_label == "experiment_b":
+        if args.dispatch_gate is None: raise ValueError("Experiment B requires --dispatch-gate")
+        from async_vla_benchmark.benchmark.experiment_b import validate_experiment_a_gate
+        dispatch_gate_sha256 = validate_experiment_a_gate(args.dispatch_gate)
     plans = [r for r in read_csv(args.manifest) if r["scene"] == args.scene]
+    if args.stage_label == "experiment_b" and {r.get("experiment_a_dispatch_gate_sha256") for r in plans} != {dispatch_gate_sha256}:
+        raise ValueError("Experiment B manifest is not bound to the supplied passing dispatch gate")
     plans = _select(plans, "configured_n_action_steps", args.horizon); plans = _select(plans, "added_delay_ms", args.delay)
     plans = _select(plans, "seed", args.seed); plans = _select(plans, "task_key", args.task)
     plans = _select(plans, "perturbation_key", args.perturbation)
@@ -134,6 +143,7 @@ def main():
         "stage3":"STAGE_3_OOD_HORIZON_CONFIRMATION.md",
         "stage3b":"STAGE_3B_OBJECT_LAYOUT_CROSS_TASK_REPLICATION.md",
         "experiment_a":"EXPERIMENT_A_OBJECT_LAYOUT_VARIANT_GENERALIZATION.md",
+        "experiment_b":"EXPERIMENT_B_ADDITIONAL_MULTI_STAGE_TASK_GENERALIZATION.md",
     }[args.stage_label]
     spec_path = Path(__file__).resolve().parents[2] / "docs" / spec_name
     spec_sha256 = _sha256(spec_path)
@@ -156,7 +166,7 @@ def main():
                 if args.resume and _artifact_state(args.output_dir, plan["run_id"]) == "valid": summary = json.loads(episode_path.read_text())
                 else:
                     maker = make_libero_plus_env if args.scene == "ood" else make_libero_env
-                    env = maker(plan["suite"], int(plan["api_task_index"]), seed=int(plan["seed"]), control_mode=cfg.control_mode, obs_type=cfg.obs_type, camera_name=cfg.camera_name, observation_width=cfg.observation_width, observation_height=cfg.observation_height, init_states=cfg.init_states, episode_length=cfg.episode_length, num_steps_wait=cfg.num_steps_wait, episode_index=0, reset_on_create=args.stage_label!="experiment_a")
+                    env = maker(plan["suite"], int(plan["api_task_index"]), seed=int(plan["seed"]), control_mode=cfg.control_mode, obs_type=cfg.obs_type, camera_name=cfg.camera_name, observation_width=cfg.observation_width, observation_height=cfg.observation_height, init_states=cfg.init_states, episode_length=cfg.episode_length, num_steps_wait=cfg.num_steps_wait, episode_index=0, reset_on_create=args.stage_label not in ("experiment_a","experiment_b"))
                     resolved_index = resolve_episode_index(env)
                     if resolved_index != 0: raise RuntimeError(f"requested episode_index=0 resolved as {resolved_index}")
                     info = get_task_info(env, plan["suite"], int(plan["api_task_index"]))
