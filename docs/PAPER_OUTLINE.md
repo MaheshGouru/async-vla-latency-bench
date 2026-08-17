@@ -14,7 +14,6 @@
    while 25-action RTC is strong.
 5. We map the RTC horizon × latency operating envelope and test whether selected
    OOD shifts move it.
-6. Mention VLASH only if Stage 4 is actually completed.
 
 ## 1. Introduction
 
@@ -28,7 +27,6 @@ Contributions should be empirical, not algorithmic.
 ## 2. Related Work
 
 - action chunking and RTC;
-- asynchronous/future-state alignment including VLASH and FutureRTC;
 - LIBERO-Plus robustness;
 - delayed control / temporal freshness.
 
@@ -76,7 +74,7 @@ sensor-noise observation.
 
 ## 6. RTC Local Horizon × Latency Sensitivity
 
-Central section.
+Central result: at `+200 ms`, pooled success is `14/15` at `n_action_steps=20,25,30`, while the 10-action condition falls to `6/15`. Queue-underrun/hold totals at +200 ms are `1385` for h=10, `72` for h=15, and `0` for h=20/25/30. This supports retaining the frozen Stage-1 point `25/+200` as a locally stable operating point rather than an isolated optimum.
 
 Figures:
 - per-task local success heatmaps over `n_action_steps × added delay`;
@@ -103,6 +101,8 @@ Main plot:
 I_h versus n_action_steps
 ```
 
+Completed result: only `long_stove_moka × object_layout` retains a negative interaction across all three frozen horizons (`I_20=-0.125`, `I_25=-0.250`, `I_30=-0.125`). Robot-initial-state and lighting do not reproduce the Stage-1 negative direction; post-hoc sensor noise also does not. At h=25 and h=30, the prespecified OOD aggregate has no added-delay success drop.
+
 
 ## 7B. Targeted Cross-Task Object-Layout Replication
 
@@ -128,6 +128,26 @@ Primary question:
 Do not describe this as preregistered confirmation. Report task-specific
 interactions and raw successes/8 before any three-task aggregate.
 
+Stage 3B is complete. Cross-task object-layout results are task-dependent: `spatial_transport` has `I=0` at h=20/25/30; `goal_drawer` has `I={+0.125,+0.125,0}`; only `long_stove_moka` remains negative with `I={-0.125,-0.250,-0.125}`. Therefore do not claim object layout is a general perturbation-family effect across tasks.
+
+## 7C. Initialization Capability Audit
+
+Stage 3C requested initialization indices `0..7` for ID and frozen object-layout OOD scenes, with three clean reset repetitions per requested index. For all three OOD variants, indices `1..7` resolved to `0`, so each exposes only one distinct OOD initialization state. The audit therefore failed closed and no initialization-generalization rollout experiment is run.
+
+Paper consequence: explicitly restrict conclusions to repeated rollouts from the benchmark-provided OOD initialization and describe cross-initialization generalization as unsupported by these frozen variants.
+
+## 7D. Within-Task Object-Layout Variant Generalization — Active
+
+Experiment A tests exactly three new deterministically selected object-layout variants of `long_stove_moka` only, at RTC `n_action_steps=25`, Native/+200 ms, using fresh seeds `22..29` and `libero_episode_index=0`. Total new execution is 64 episodes (16 fresh ID + 48 OOD).
+
+This asks whether the surviving Stage-3/3B effect is stable across multiple layouts of the same multi-stage task rather than being specific to `_add_25`.
+
+## 7E. Additional Multi-Stage Task Generalization — Conditional
+
+Experiment B runs only if at least 2/3 new Experiment-A variants have negative interactions and their mean interaction is negative. If dispatched, it evaluates `LIVING_ROOM_SCENE2_put_both_the_alphabet_soup_and_the_tomato_sauce_in_the_basket` (`libero_10`, task 0) with three deterministically frozen object-layout variants, RTC `n_action_steps=25`, Native/+200 ms, fresh seeds `30..37`, and 64 total episodes.
+
+This tests whether a repeated within-task effect extends to another multi-stage task.
+
 ## 8. Temporal Mechanism Analysis
 
 Analyze:
@@ -138,20 +158,6 @@ Analyze:
 - RTC frozen/guided/fresh regions where available.
 
 Do not treat action age as a monotonic quality score.
-
-## 9. Initialization-Generalization of Surviving Object-Layout Effects
-
-For tasks satisfying the frozen Stage 3/3B directional survival rule, evaluate
-`n_action_steps=25`, Native/+200 ms over eight explicit initialization indices
-`0..7` with rollout seeds `22,23`.
-
-Primary question:
-> Does the localized object-layout × delay interaction persist across distinct
-> benchmark reset states, or is it concentrated in the fixed initialization used
-> by Stage 3/3B?
-
-Treat initialization as the inference/generalization cluster and show
-per-initialization interactions before aggregate summaries.
 
 ## 10. Discussion
 
@@ -173,10 +179,9 @@ Include:
 - Stage 0 reused-control provenance;
 - selective Stage 3 follow-up;
 - Stage 3B was selected after observing the Stage 3 object-layout result and reuses the same seed block;
-- Stages 3/3B use one fixed simulator initialization; Stage 3C is a reset-only initialization audit, and Stage 3D is the conditional rollout follow-up over eight validated initializations;
-- Stage 3D task inclusion is outcome-conditioned on completed Stage 3/3B via a documented directional rule and must be labeled post-Stage-3B;
 - sensor noise is post-hoc;
-- no safety/hardware claim.
+- no safety/hardware claim;
+- fixed OOD initialization: Stage 3C established that the frozen object-layout variants expose only one distinct OOD reset state;
 
 ## 12. Conclusion
 
@@ -204,3 +209,7 @@ added-delay sensitivity.
 Stage 3 horizons are frozen at `{20,25,30}` before Stage 2 execution. This is a
 symmetric ±5-action neighborhood around the completed Stage 1 reference at 25,
 not a horizon set selected after viewing Stage 2.
+
+## Post-Stage-3C active follow-up
+
+The next experiment is `long_stove_moka` **within-task layout-variant generalization**: three new object-layout variants, RTC, `n_action_steps=25`, Native/+200 ms, seeds `22..29`, 64 episodes. Only if its frozen gate passes should the additional `libero_10` multi-stage task be run with seeds `30..37`.

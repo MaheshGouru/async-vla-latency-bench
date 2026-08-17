@@ -5,7 +5,7 @@ import argparse, gc, hashlib, json, os, traceback
 from pathlib import Path
 
 from async_vla_benchmark.benchmark.config import load_config
-from async_vla_benchmark.benchmark.environment import get_task_info, make_libero_env, make_libero_plus_env
+from async_vla_benchmark.benchmark.environment import get_task_info, make_libero_env, make_libero_plus_env, resolve_episode_index
 from async_vla_benchmark.benchmark.execution import run_episode
 from async_vla_benchmark.benchmark.latency import LatencyProfile
 from async_vla_benchmark.benchmark.logging import read_csv
@@ -67,8 +67,11 @@ def _stage3_row(plan, summary, output, manifest_sha256, spec_sha256, stage_label
     errors = measured["rtc_inference_delay_error_steps"]
     absolute_errors = errors.abs()
     row.update({
-        "stage": stage_label, "analysis_status": plan["analysis_status"],
+        "stage": stage_label, "stage_or_experiment_label": stage_label,
+        "analysis_status": plan["analysis_status"],
         "manifest_sha256": manifest_sha256, f"{stage_label}_spec_sha256": spec_sha256,
+        "spec_sha256": spec_sha256,
+        "frozen_variant_csv_sha256": plan.get("frozen_variant_csv_sha256", ""),
         "checkpoint_id": plan["checkpoint_id"], "runner_commit": plan["runner_commit"],
         "environment_version": plan["environment_version"], "base_task_id": plan["base_task_id"],
         "base_task_name": plan["base_task_name"], "task_id": plan["task_id"], "task_name": plan["task_name"],
@@ -96,6 +99,8 @@ def _stage3_row(plan, summary, output, manifest_sha256, spec_sha256, stage_label
         "initialization_index_or_id": summary["initialization_index_or_id"],
         "initial_state_fingerprint": summary["initial_state_fingerprint"],
         "initial_state_fingerprint_method": summary["initial_state_fingerprint_method"],
+        "requested_initialization_index": plan.get("requested_initialization_index", 0),
+        "resolved_initialization_index_or_id": plan.get("resolved_initialization_index_or_id", 0),
         "source": f"{stage_label}_new", "environment_fingerprint": _environment_fingerprint(),
     })
     return row
@@ -109,7 +114,7 @@ def main():
     p.add_argument("--delay", type=int, action="append"); p.add_argument("--seed", type=int, action="append")
     p.add_argument("--task", action="append"); p.add_argument("--perturbation", action="append")
     p.add_argument("--exclude-posthoc", action="store_true"); p.add_argument("--resume", action="store_true")
-    p.add_argument("--stage-label", choices=("stage3","stage3b"), default="stage3")
+    p.add_argument("--stage-label", choices=("stage3","stage3b","experiment_a"), default="stage3")
     p.add_argument("--dry-run", action="store_true"); p.add_argument("--verbose", action="store_true"); args = p.parse_args()
     _ensure_ood_native_prefix(args.scene)
     if args.scene == "ood":
@@ -125,11 +130,17 @@ def main():
         print(*(r["run_id"] for r in plans), sep="\n"); print(f"planned_episodes={len(plans)}"); return 0
     args.output_dir.mkdir(parents=True, exist_ok=True); results_path = args.output_dir / f"{args.stage_label}_episode_results.csv"
     manifest_sha256 = _sha256(args.manifest)
-    spec_name = "STAGE_3_OOD_HORIZON_CONFIRMATION.md" if args.stage_label=="stage3" else "STAGE_3B_OBJECT_LAYOUT_CROSS_TASK_REPLICATION.md"
+    spec_name = {
+        "stage3":"STAGE_3_OOD_HORIZON_CONFIRMATION.md",
+        "stage3b":"STAGE_3B_OBJECT_LAYOUT_CROSS_TASK_REPLICATION.md",
+        "experiment_a":"EXPERIMENT_A_OBJECT_LAYOUT_VARIANT_GENERALIZATION.md",
+    }[args.stage_label]
     spec_path = Path(__file__).resolve().parents[2] / "docs" / spec_name
     spec_sha256 = _sha256(spec_path)
     existing = {r["run_id"] for r in read_csv(results_path)} if results_path.exists() else set()
     invalid_path = args.output_dir / f"{args.stage_label}_invalid_episodes.csv"
+    if not invalid_path.exists():
+        invalid_path.write_text("run_id,seed,failure_class,invalid_reason\n")
     failures = completed = 0
     for horizon in [h for h in HORIZONS if any(int(r["configured_n_action_steps"]) == h for r in plans)]:
         pending = [r for r in plans if int(r["configured_n_action_steps"]) == horizon]
@@ -145,7 +156,9 @@ def main():
                 if args.resume and _artifact_state(args.output_dir, plan["run_id"]) == "valid": summary = json.loads(episode_path.read_text())
                 else:
                     maker = make_libero_plus_env if args.scene == "ood" else make_libero_env
-                    env = maker(plan["suite"], int(plan["api_task_index"]), seed=int(plan["seed"]), control_mode=cfg.control_mode, obs_type=cfg.obs_type, camera_name=cfg.camera_name, observation_width=cfg.observation_width, observation_height=cfg.observation_height, init_states=cfg.init_states, episode_length=cfg.episode_length, num_steps_wait=cfg.num_steps_wait)
+                    env = maker(plan["suite"], int(plan["api_task_index"]), seed=int(plan["seed"]), control_mode=cfg.control_mode, obs_type=cfg.obs_type, camera_name=cfg.camera_name, observation_width=cfg.observation_width, observation_height=cfg.observation_height, init_states=cfg.init_states, episode_length=cfg.episode_length, num_steps_wait=cfg.num_steps_wait, episode_index=0, reset_on_create=args.stage_label!="experiment_a")
+                    resolved_index = resolve_episode_index(env)
+                    if resolved_index != 0: raise RuntimeError(f"requested episode_index=0 resolved as {resolved_index}")
                     info = get_task_info(env, plan["suite"], int(plan["api_task_index"]))
                     if info.task_name != plan["variant_name"]: raise RuntimeError(f"task mismatch: {info.task_name!r} != {plan['variant_name']!r}")
                     delay = int(plan["added_delay_ms"])

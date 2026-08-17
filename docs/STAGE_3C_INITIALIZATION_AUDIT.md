@@ -2,14 +2,11 @@
 
 ## 0. Status and purpose
 
-Run **after completed Stage 3B and before Stage 3D**. Stage 3C is a reset-only
 validation stage. It does **not** run the policy and does **not** produce success
 rates.
 
 Stages 3 and 3B used `libero_episode_index:0`, so their rollout seeds quantify
 policy/rollout stochasticity at one benchmark reset. Stage 3C establishes whether
-the benchmark exposes a usable, deterministic initialization axis before Stage 3D
-attempts initialization-generalization.
 
 Stage 3C asks:
 
@@ -23,7 +20,6 @@ not rerun or relabeled.
 ## 1. Task/scene scope
 
 Audit all three object-layout task pairs, regardless of which effects later survive
-into Stage 3D:
 
 ```text
 spatial_transport
@@ -176,27 +172,27 @@ required gate passes.
 
 Record SHA-256 hashes for the Stage 3C spec and both CSV artifacts.
 
-## 5. Fail-closed handoff to Stage 3D
-
-Stage 3D may start only if all are true:
-
-```text
-[ ] all 144 reset/fingerprint operations completed
-[ ] every requested index resolved exactly as requested
-[ ] no policy/rollout seed was used in Stage 3C
-[ ] environment-construction seed is exactly 0 for every audit row
-[ ] 3/3 repeats match within every task/scene/index
-[ ] 8/8 indices are distinct within every task/scene
-[ ] exact object-layout variant identities match the frozen Stage 1 artifacts
-[ ] stage3c_validated_initializations.csv is frozen and hashed
-```
-
-If any gate fails, **do not dispatch Stage 3D** and do not silently search for a
-replacement initialization set. Report the incompatibility as a benchmark
-limitation.
-
 ## 6. What Stage 3C does not establish
 
 Stage 3C establishes only that the initialization axis is usable and reproducible.
 It does not establish robustness, an OOD × delay interaction, or generalization.
-Those are Stage 3D outcome questions.
+
+## Executed outcome — 2026-08-16
+
+The audit completed and failed closed exactly as intended. For all three frozen OOD object-layout variants, requested initialization indices `1..7` resolved to initialization `0`. Each OOD variant therefore exposes only **one distinct initialization state**, not eight.
+
+```text
+audit operations = 144
+validated rows = 0
+validation errors = 27
+status = failed_closed
+```
+
+Archive provenance:
+
+```text
+stage3c_results.tar.gz
+SHA-256 f38bde65fe1d87ecb90a9dbe53ef42a6eef361938317308dc8b5803f65455413
+```
+
+Scientific interpretation: cross-initialization robustness cannot be evaluated for these frozen OOD variants through the benchmark's nominal initialization-index interface. Do not substitute indices and do not treat rollout seeds as initialization diversity.

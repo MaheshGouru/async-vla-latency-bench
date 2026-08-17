@@ -103,78 +103,59 @@ Frozen seeds:
 
 Stage 3B is COMPLETE. It remains post-Stage-3 targeted replication; do not relabel it preregistered.
 
-## Stage 4 — conditional
 
-Frozen seeds if run:
+## Stage 3C — initialization diversity/determinism audit — COMPLETE, FAILED CLOSED
 
-```text
-[22,23,24,25,26]
-```
+Stage 3C executed the frozen reset-only audit over initialization indices `0..7`.
 
-- [ ] only after Stage 2/3
-- [x] fail-closed official VLASH compatibility audit scaffold
-- [x] reviewed pre-outcome candidate freeze and shared-ID manifest accounting
-- [x] Stage 4 notebooks 01–03 stop on incomplete Stage 3 or failed compatibility
-- [ ] official VLASH-trained π0.5/LIBERO checkpoint and semantic adapter validated
-- [ ] at most 2 replicated prespecified OOD candidates selected after Stage 3
-- [ ] matched smoke, rollout, validation, and analysis notebooks (blocked on gate)
-- [ ] match 25 actions and Native/+200 if semantically fair
-- [ ] maximum ~80 analysis episodes
-- [ ] skip rather than approximate
-
-## Exact next action
+Observed OOD benchmark behavior:
 
 ```text
-Execute the implemented `STAGE_3C_INITIALIZATION_AUDIT.md` reset-only gate with
-the run-ready `notebooks/stage3c_jupyter/` workflow.
-Do not run policy rollouts in Stage 3C. If and only if all initialization indices
-0..7 are deterministic and distinct for every required ID/OOD scene, freeze the
-validated initialization artifact and proceed to Stage 3D.
+goal_drawer/object_layout:       indices 1..7 resolve to 0; 1 distinct OOD initialization
+long_stove_moka/object_layout:    indices 1..7 resolve to 0; 1 distinct OOD initialization
+spatial_transport/object_layout:  indices 1..7 resolve to 0; 1 distinct OOD initialization
 ```
 
-## Stage 3C — initialization diversity/determinism audit [IMPLEMENTED; NOT YET EXECUTED]
+The audit correctly failed the required eight-distinct-initialization gate. This is a benchmark capability limitation, not an implementation failure. No rollout-based initialization-diversity experiment should be dispatched for these frozen OOD variants.
+
+Preserved Stage 3C archive:
 
 ```text
-[x] implementation asserts exact three task pairs and frozen object-layout variants
-[x] implementation requests indices 0..7 literally and verifies resolved equality
-[x] implementation contains no policy inference or rollout path
-[x] implementation fixes environment-construction seed at exactly 0
-[x] implementation schedules 3 clean reset repeats per task × scene × index
-[x] implementation requires exactly 144 reset/fingerprint operations
-[x] validator requires 3/3 fingerprints identical within every index
-[x] validator requires 8/8 fingerprints distinct within every task/scene
-[x] validated artifact is written and hashed only after every gate passes
-[ ] execute the audit and obtain a passing 48-row validated artifact
+stage3c_results.tar.gz
+SHA-256 f38bde65fe1d87ecb90a9dbe53ef42a6eef361938317308dc8b5803f65455413
 ```
 
-No policy inference or success analysis is allowed in Stage 3C.
 
-## Stage 3D — initialization-generalization [NOT YET IMPLEMENTED]
+## Completed-results integration
 
-Implement only after Stage 3C passes.
+Authoritative concise numerical record: `COMPLETED_RESULTS_LEDGER.md`.
 
-```text
-[ ] mechanically compute Stage 3/3B surviving-task list using the documented directional rule
-[ ] freeze + hash `stage3d_surviving_tasks.json`; manifest consumes it directly
-[ ] consume only Stage 3C-validated indices 0..7
-[ ] rollout seeds = 22,23 (within-initialization replicates)
-[ ] RTC; n_action_steps=25; Native/+200 only
-[ ] ID and exact frozen object-layout OOD
-[ ] 64 rows per surviving task
-[ ] Native/+200 same-reset pairing per task/scene/index/seed
-[ ] initialization-clustered bootstrap
-[ ] raw per-initialization four-cell counts retained
-```
+- Stage 2: 360/360 valid; at +200 ms, h20/h25/h30 each achieve 14/15 pooled success while h10 is 6/15; severe queue underruns are confined to short coverage.
+- Stage 3: 288/288 valid; long-task × object-layout is the only prespecified candidate with a negative interaction at all three frozen horizons.
+- Stage 3B: complete. `spatial_transport` has I=0 at all three horizons; `goal_drawer` is non-negative; `long_stove_moka` remains negative at all three horizons.
+- Stage 3C: complete, failed closed because all three OOD variants expose one distinct initialization.
 
-Do not dispatch Stage 3D if Stage 3C cannot establish eight genuinely distinct
-initializations for a required task/scene.
+## Active next experiments
+
+See `POST_STAGE3C_NEXT_EXPERIMENTS.md`.
+
+1. **Experiment A — required next:** `long_stove_moka` only, 3 new deterministic object-layout variants, RTC, `n_action_steps=25`, Native/+200 ms, seeds `[22..29]`, `libero_episode_index=0`, **64 new episodes**.
+2. **Experiment B — conditional:** only if Experiment A passes its frozen gate; one additional `libero_10` multi-stage task, 3 object-layout variants, RTC, `n_action_steps=25`, Native/+200 ms, seeds `[30..37]`, `libero_episode_index=0`, **64 new episodes**.
+
+Do not reinterpret rollout seeds as environment-initialization diversity.
 
 
-### Stage 3D pre-dispatch hardening
+## Final pre-dispatch repository audit (2026-08-17)
 
-Before dispatch, mechanically compute and freeze `stage3d_surviving_tasks.json`
-from completed Stage 3/3B artifacts. Record input hashes and the survivor-file hash.
-The Stage 3D manifest must consume that file directly. Assert exactly 64 manifest
-rows per admitted task, initialization indices `[0..7]`, rollout seeds `[22,23]`,
-RTC only, `n_action_steps=25`, delays `{0,200}`, and uniqueness of the full episode
-identity tuple.
+**Experiment A is implemented and run-ready, but has not yet been executed.** The implementation includes:
+
+- a dedicated deterministic frozen-variant resolver and hashed CSV;
+- the exact 64-row physical manifest with 16 shared ID controls and 48 OOD episodes;
+- an explicit `experiment_a` provenance label and explicit requested/resolved initialization index 0;
+- initialization-pairing audit, seed-999 smoke manifest, resumable single-GPU runner, and fail-closed validation;
+- per-variant four-cell summaries and paired-seed bootstrap interactions;
+- a machine-enforced Experiment-B gate that requires both the frozen scientific criteria and a complete passing validation record.
+
+Experiment B remains blocked until completed Experiment-A results satisfy that frozen gate.
+
+No superseded follow-up work is part of the active experiment plan.

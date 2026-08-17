@@ -5,13 +5,10 @@
 ## Completion note
 
 **Stage 3B is COMPLETE.** This file is retained as the frozen conduct/specification
-record. Do not modify its experiment matrix or rerun it merely because Stage 3C/3D
+record. Do not modify its experiment matrix or rerun it merely because Stage 3C
 were added later.
 
-Stage 3C is now a reset-only initialization audit; Stage 3D is the subsequent
-initialization-generalization rollout stage.
 
-Run **after Stage 3** and before deciding whether Stage 4/VLASH is worth the
 remaining compute.
 
 Stage 3B is a **post-Stage-3 targeted cross-task replication** prompted by the
@@ -35,15 +32,12 @@ Stage 0 and Stage 1 files remain unchanged.
 
 ## 0A. Historical handoff rule for post-Stage-3B follow-up
 
-The follow-up uses this directional survival rule to define which object-layout task effects are carried into Stage 3D:
 
 ```text
-a task enters Stage 3D iff:
     I_25 < 0
     AND I_h < 0 at at least 2 of {20,25,30}
 ```
 
-`long_stove_moka` already satisfies this rule from completed Stage 3. Apply the identical mechanical rule to `spatial_transport` and `goal_drawer` when constructing the Stage 3D follow-up list. Because Stage 3B is already complete, Stage 3D selection is outcome-conditioned and must be labeled post-Stage-3B rather than preregistered. Stage 3C audits initialization feasibility for all three task/scene pairs; Stage 3D applies the survival rule. See `STAGE_3C_INITIALIZATION_AUDIT.md` and `STAGE_3D_INITIALIZATION_GENERALIZATION.md`.
 
 ## 1. Tasks
 
@@ -117,7 +111,6 @@ Rationale:
   seed block used for the original Stage 3 object-layout result;
 - reusing these seeds permits exact reuse of the completed `goal_drawer` ID
   controls from Stage 3;
-- it avoids consuming Stage 4's separately frozen seed block `[22..26]`;
 - the two new object-layout OOD task conditions were not evaluated in Stage 3.
 
 Important interpretation:
@@ -129,7 +122,6 @@ Do not:
 
 - replace seeds after failures;
 - use different seed sets for `spatial_transport` and `goal_drawer`;
-- use Stage 4 seeds `[22..26]`;
 - use Stage 2 seeds `[5..9]` to avoid running the required Stage 3B ID controls.
 
 Infrastructure-corrupted episodes may be rerun only with the same seed.
@@ -485,3 +477,49 @@ seeds after inspecting Stage 3B outcomes as part of this stage.
 Stage 3B ends after the frozen 144 new episodes and the predefined three-task
 analysis above. Any further expansion must be labeled as a separate exploratory
 stage.
+
+
+---
+
+## Completed Stage 3B results
+
+Stage 3B completed successfully under the frozen conduct above.
+
+Archive provenance:
+
+```text
+stage3b_results.tar.gz
+SHA-256 d4ab1b7ad75fec70ca7a6d48a6e3f11458bab84f0ee5c59daa96c19bb50a50c2
+```
+
+Three-task object-layout interaction results:
+
+| task | task-demand type | h=20 | h=25 | h=30 |
+|---|---|---:|---:|---:|
+| `spatial_transport` | single-stage transport | 0.000 | 0.000 | 0.000 |
+| `goal_drawer` | articulated/contact-rich | +0.125 | +0.125 | 0.000 |
+| `long_stove_moka` | multi-stage/sequential | -0.125 | -0.250 | -0.125 |
+
+Raw four-cell results:
+
+| task | h | ID Native | ID +200 | OOD Native | OOD +200 |
+|---|---:|---:|---:|---:|---:|
+| `spatial_transport` | 20 | 8/8 | 8/8 | 8/8 | 8/8 |
+| `spatial_transport` | 25 | 8/8 | 8/8 | 8/8 | 8/8 |
+| `spatial_transport` | 30 | 8/8 | 8/8 | 8/8 | 8/8 |
+| `goal_drawer` | 20 | 6/8 | 5/8 | 8/8 | 8/8 |
+| `goal_drawer` | 25 | 7/8 | 6/8 | 8/8 | 8/8 |
+| `goal_drawer` | 30 | 7/8 | 7/8 | 8/8 | 8/8 |
+| `long_stove_moka` | 20 | 8/8 | 8/8 | 3/8 | 2/8 |
+| `long_stove_moka` | 25 | 7/8 | 8/8 | 3/8 | 2/8 |
+| `long_stove_moka` | 30 | 8/8 | 8/8 | 4/8 | 3/8 |
+
+Paired-seed bootstrap 95% CIs for the interaction:
+
+```text
+spatial_transport: h20 [0,0], h25 [0,0], h30 [0,0]
+goal_drawer:       h20 [0,+0.375], h25 [0,+0.375], h30 [0,0]
+long_stove_moka:   h20 [-0.500,+0.250], h25 [-0.625,0], h30 [-0.375,0]
+```
+
+**Frozen interpretation:** object layout is not a task-general perturbation-family effect in this study. The negative interaction is localized to the multi-stage `long_stove_moka` task among the three evaluated task-demand categories. The next experiment therefore tests multiple object-layout variants of that same task before adding another multi-stage task.

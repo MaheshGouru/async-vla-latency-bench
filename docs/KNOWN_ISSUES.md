@@ -25,8 +25,6 @@
 | K020 | Stage 1 null | broad OOD×delay interaction is near zero | original headline hypothesis unsupported | report null; test horizon-dependent boundary |
 | K021 | Horizon selection | 25 actions was chosen after ID-only 10-action failure | can appear tuned | disclose the revision and characterize the 10–35 local sensitivity surface without re-optimizing Stage 1 |
 | K022 | Multiple follow-ups | localized cells follow a broad screen | selective-inference risk | preserve tied families; label sensor noise post-hoc |
-| K023 | Archived VLASH plan | historical Stage 4 integration is not part of the active paper plan | none for current core results | retain file for provenance only; do not dispatch |
-| K024 | Compute | Stage 3B is complete; Stage 3C adds only 144 reset operations, while Stage 3D adds 64 rollout episodes per surviving task | schedule risk | execute Stage 3C first, then only the frozen Stage 3D survivor set; no active VLASH run |
 
 | K025 | Missing same-seed Native baselines | Stage 2 originally omitted Native for horizons not present in completed Stage 0/1 | horizon main effects could be confused with added-delay sensitivity | include Native at every Stage 2 horizon using seeds 5..9 |
 | K026 | Adaptive Stage 3 horizon choice | choosing lower/transition horizons after seeing Stage 2 could add analyst discretion | OOD follow-up may look post-hoc optimized | freeze Stage 3 horizons at 20,25,30 before Stage 2 |
@@ -34,16 +32,15 @@
 | K027 | Episode identity | seed equality may not guarantee identical simulator reset | paired comparisons can be invalid | record initialization ID or reset-state fingerprint and assert matching |
 | K028 | OOD variant drift | future follow-up could accidentally choose another variant from same family | changes the tested condition | freeze Stage 1 classification ID, API index, exact variant name, and difficulty |
 | K029 | Stage 3B selection | cross-task object-layout follow-up is motivated by the observed Stage 3 long-task result | cannot be presented as preregistered family-level confirmation | label Stage 3B targeted/post-Stage-3; freeze its matrix before execution; report all two-task outcomes |
-| K030 | Stage 3B seed reuse | Stage 3B reuses seeds 14..21 rather than an independent seed block | cross-task replication is not independent new-seed replication | state this explicitly; use same seed block for comparability and preserve Stage 4 seeds |
-| K031 | Fixed simulator initialization | Stages 3/3B use `libero_episode_index:0`, yielding one reset state per task/scene across rollout seeds | those stages do not establish robustness across the initialization distribution | state fixed-init scope explicitly; Stage 3D tests surviving object-layout effects over eight distinct initialization indices |
 | K032 | Spatial control reuse unavailable | Stage 3 has no `spatial_transport` ID controls | borrowing Stage 1/2 controls would break same-seed Stage 3B matching | run 48 new spatial ID controls on seeds 14..21 |
-| K033 | Stage 3D conditional selection | Stage 3D tasks are chosen after completed Stage 3/3B based on a directional survival rule | cannot be presented as preregistered universal family validation | label Stage 3D explicitly post-Stage-3B; mechanically save and hash the survivor list before Stage 3D rollouts |
 | K034 | Initialization identity | benchmark episode indices may alias or fail to expose distinct reset states | nominally using indices 0..7 would not guarantee true initialization diversity | mandatory reset-only audit; require eight deterministic distinct fingerprints per task/scene and stop if it fails |
-| K035 | Stage 3D repeated rollouts | two rollout seeds per initialization are not independent initialization samples | naive episode-level CI would overstate sample size | treat initialization as cluster; average/retain seed replicates within cluster and bootstrap initialization indices |
-| K036 | Stage 3C initialization audit | nominal episode indices may be deterministic but not distinct, or may silently alias/fallback | Stage 3D would falsely claim initialization diversity | require exact requested==resolved index, 3/3 repeat determinism, and 8/8 distinct fingerprints; fail closed with no substitute indices |
 
 ## Issue template
 
 ```text
 KXXX | Area | Issue | Impact | Mitigation
 ```
+
+## Post-Stage-3C active follow-up
+
+See `POST_STAGE3C_NEXT_EXPERIMENTS.md`. The primary remaining experiment is three new object-layout variants of `long_stove_moka` at RTC, `n_action_steps=25`, Native/+200, seeds `22..29`, 64 episodes. A different multi-stage `libero_10` task is conditional on the frozen Experiment-A gate.

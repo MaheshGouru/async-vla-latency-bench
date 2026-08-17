@@ -9,10 +9,8 @@ Stage 0 additional ID seeds:    [10,11,12,13]  (already completed)
 Stage 3 held-out confirmation:  [14,15,16,17,18,19,20,21]
 Stage 3B cross-task replication: [14,15,16,17,18,19,20,21]  (COMPLETE; same Stage 3 seed block)
 Stage 3C initialization audit:  no rollout seeds; reset-only
-Stage 3D rollout replicates:    [22,23]  (within-initialization replicates)
 ```
 
-Seed allocation is frozen. Stage 3B intentionally reuses the Stage 3 seed block `[14..21]`; Stage 2 and Stage 4 remain disjoint.
 
 ## Stage 2 — required
 
@@ -116,29 +114,6 @@ total_reset_operations = 144
 
 Require 3/3 within-index fingerprint agreement and 8/8 distinct fingerprints
 across indices within each task/scene. Freeze and hash
-`stage3c_validated_initializations.csv` before Stage 3D.
-
-## Stage 3D — initialization-generalization of surviving object-layout effects
-
-Conditional task inclusion is computed exactly once from the completed Stage 3/3B outcomes using the documented post-Stage-3B directional rule. Freeze the result to `stage3d_surviving_tasks.json` with Stage 3/3B input hashes before manifest generation:
-
-```text
-include task iff I_25 < 0 and I_h < 0 at >=2 of {20,25,30}
-```
-
-Execution:
-
-```text
-RTC
-n_action_steps = 25
-delay = Native,+200 ms
-initialization indices = 0,1,2,3,4,5,6,7
-rollout seeds = 22,23
-ID + exact frozen object-layout OOD
-64 new episodes per surviving task
-```
-
-Stage 3D may consume only (1) the frozen `stage3d_surviving_tasks.json` and (2) the frozen Stage 3C validation artifact certifying eight valid, deterministic, distinct reset fingerprints per task/scene. The manifest must contain exactly 64 unique rows per admitted task and may not substitute tasks, initialization indices, seeds, horizons, or delays. The maximum is 192 new rollout episodes if all three object-layout tasks survive.
 
 ## Episode matching
 
@@ -182,6 +157,74 @@ layout geometry is the treatment; match every non-perturbed factor.
 
 Reset-only: use initialization indices `[0..7]` for all three task pairs, with three clean reset/fingerprint repetitions per task × scene × index. Require exact requested/resolved index equality, 3/3 repeat determinism, and 8/8 distinct fingerprints. No rollout seeds or policy outcomes.
 
-### Stage 3D
+## Post-Stage-3C active follow-up
 
-Use only Stage 3C-validated initialization indices `[0..7]` and rollout seeds `[22,23]`. Native and +200 for a fixed task/scene/index/seed must share the same reset fingerprint. ID/OOD are paired by initialization index, not by equal geometry. Bootstrap by initialization cluster.
+Stage 3B completed with:
+
+```text
+spatial_transport: I={0,0,0} at h={20,25,30}
+goal_drawer:       I={+0.125,+0.125,0}
+long_stove_moka:   I={-0.125,-0.250,-0.125}
+```
+
+Thus the active follow-up is not a three-task family-wide layout sweep.
+
+### Experiment A — required
+
+Authoritative spec: `EXPERIMENT_A_OBJECT_LAYOUT_VARIANT_GENERALIZATION.md`.
+
+```text
+task = long_stove_moka
+task type = multi_stage_sequential
+suite/task_id = libero_10 / 2
+perturbation = Objects Layout
+new variants = exactly 3; deterministic freeze; exclude 1941/_add_25
+method = RTC
+n_action_steps = 25
+delay = Native,+200 ms
+seeds = [22,23,24,25,26,27,28,29]
+initialization = libero_episode_index:0
+new ID = 16
+new OOD = 48
+total = 64
+```
+
+### Experiment B — conditional
+
+Authoritative spec: `EXPERIMENT_B_ADDITIONAL_MULTI_STAGE_TASK_GENERALIZATION.md`.
+
+Dispatch gate:
+
+```text
+>=2/3 Experiment-A variants have I<0
+AND mean I<0
+AND validation/provenance clean
+```
+
+If dispatched:
+
+```text
+task = LIVING_ROOM_SCENE2_put_both_the_alphabet_soup_and_the_tomato_sauce_in_the_basket
+task type = multi_stage_sequential
+suite/task_id = libero_10 / 0
+perturbation = Objects Layout
+variants = exactly 3, deterministically frozen
+method = RTC
+n_action_steps = 25
+delay = Native,+200 ms
+seeds = [30,31,32,33,34,35,36,37]
+initialization = libero_episode_index:0
+new ID = 16
+new OOD = 48
+total = 64
+```
+
+## Completed-result snapshot
+
+```text
+Stage 1: pooled I ≈ +1.4 pp -> no broad OOD amplification
+Stage 2: at +200 ms, h20=h25=h30=14/15 pooled; h10=6/15
+Stage 3: long_stove_moka × object_layout has I={-0.125,-0.250,-0.125}; other selected negative cells do not replicate
+Stage 3B: cross-task object-layout result is task-dependent: spatial 0; goal non-negative; stove/moka negative
+Stage 3C: failed closed; one distinct OOD initialization per frozen object-layout variant
+```

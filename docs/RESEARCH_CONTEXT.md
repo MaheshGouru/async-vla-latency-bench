@@ -32,7 +32,7 @@ Secondary questions:
 2. Does delay normalized by configured action coverage organize success better
    than milliseconds alone?
 3. Do selected OOD perturbations shrink/shift that envelope?
-4. Do surviving object-layout effects persist across distinct environment initializations?
+4. Can the surviving object-layout signal generalize across tasks and layout variants?
 
 ## Primary model
 
@@ -90,6 +90,24 @@ Secondary post-hoc signal:
 Goal drawer × Sensor noise × RTC
 ```
 
+## Completed post-Stage-1 findings
+
+### Stage 2
+
+At `+200 ms`, pooled ID success is `14/15` at each of `n_action_steps={20,25,30}`, versus `6/15` at 10 actions. The 10-action regime also exhibits 1385 queue-underrun/hold steps at +200 ms, while horizons 20, 25, and 30 have zero. Therefore the frozen `25/+200` Stage-1 operating point is locally stable rather than a knife-edge optimum.
+
+### Stage 3
+
+Most Stage-1 localized negative interactions do not replicate on held-out seeds. The surviving candidate is `long_stove_moka × object_layout`, whose interaction remains negative across the frozen horizon neighborhood: `I_20=-0.125`, `I_25=-0.250`, `I_30=-0.125`. The additional delay penalty is modest relative to the large OOD main effect.
+
+### Stage 3B
+
+Stage 3B completed the cross-task object-layout replication. `spatial_transport` has `I={0,0,0}` at horizons `{20,25,30}` and OOD success is 8/8 -> 8/8 at every horizon. `goal_drawer` has `I={+0.125,+0.125,0}` with OOD 8/8 -> 8/8 throughout. `long_stove_moka` remains the only negative task with `I={-0.125,-0.250,-0.125}`. Thus the object-layout × delay effect is task-dependent rather than family-wide in the evaluated set.
+
+### Stage 3C
+
+The reset-only audit failed closed: for every frozen OOD object-layout variant, requested initialization indices `1..7` resolved to `0`, yielding only one distinct OOD initialization state. Cross-initialization generalization is therefore not evaluable for these variants.
+
 ## New hypotheses
 
 ### H1 — Horizon × latency envelope
@@ -107,18 +125,14 @@ aggregate Stage 1 interaction at 25 actions is near zero.
 ### H4 — Method dependence
 The horizon/latency relationship differs between RTC and a naive asynchronous queue.
 
-### H5 — Initialization generalization
-Object-layout × delay effects that survive cross-task replication should persist
-across multiple distinct benchmark initialization states if they reflect more than
-a fixed-reset peculiarity.
-
 ## Required next experiments
 
 1. Stage 2 — RTC local operating-point sensitivity (complete)
 2. Stage 3 — OOD × horizon confirmation (complete)
 3. Stage 3B — targeted cross-task object-layout replication (complete)
-4. Stage 3C — reset-only initialization diversity/determinism audit
-5. Stage 3D — initialization-generalization on surviving object-layout effects
+4. Stage 3C — reset-only initialization diversity/determinism audit (complete; failed closed)
+5. Experiment A — within-task `long_stove_moka` object-layout variant generalization (active)
+6. Experiment B — additional multi-stage task object-layout generalization (conditional)
 
 ## Explicit non-claims
 
@@ -175,17 +189,6 @@ the object-layout interaction is a family-level tendency across task demands or
 a localized long-task result.
 
 
-Stage 3D:
-
-```text
-conditional surviving object-layout tasks
-RTC, n_action_steps=25
-Native/+200 ms
-initialization indices = 0..7
-rollout seeds = 22,23
-64 episodes per surviving task
-```
-
 
 Stage 3C — reset-only initialization audit:
 
@@ -194,4 +197,32 @@ Stage 3C — reset-only initialization audit:
 = 144 reset/fingerprint operations; no policy rollouts
 ```
 
-Stage 3D consumes only the frozen validated initialization artifact.
+## Post-Stage-3C active follow-up
+
+Experiment A is the required next experiment:
+
+```text
+task = long_stove_moka
+task type = multi_stage_sequential
+perturbation = Objects Layout
+new variants = 3
+RTC; n_action_steps=25
+delay = Native,+200
+seeds = 22..29
+libero_episode_index=0
+64 episodes
+```
+
+Experiment B is conditional on the frozen Experiment-A gate and, if dispatched, uses:
+
+```text
+task = LIVING_ROOM_SCENE2_put_both_the_alphabet_soup_and_the_tomato_sauce_in_the_basket
+task type = multi_stage_sequential
+perturbation = Objects Layout
+variants = 3
+RTC; n_action_steps=25
+delay = Native,+200
+seeds = 30..37
+libero_episode_index=0
+64 episodes
+```

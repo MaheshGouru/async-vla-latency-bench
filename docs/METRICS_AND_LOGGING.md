@@ -447,7 +447,6 @@ analysis_status ∈ {
 
 Stage 2 local operating-point analysis is `posthoc_sensitivity`.
 Sensor noise is `posthoc_replication`.
-VLASH, if run, is `conditional_method_validation`.
 
 
 ## 19. Stage 2 baseline-normalized sensitivity
@@ -528,29 +527,3 @@ stage3c_spec_hash
 ```
 
 No success, action-age, RTC, or policy-inference metrics belong to Stage 3C.
-
-## Stage 3D initialization-generalization fields
-
-Stage 3D must distinguish initialization identity from rollout seed. Add/retain:
-
-```text
-initialization_index_or_id
-initial_state_fingerprint
-rollout_seed
-survival_rule_version
-survival_rule_inputs_hash
-stage3d_spec_hash
-analysis_status = initialization_generalization
-```
-
-Paper-facing uncertainty for Stage 3D must cluster by initialization index. The two
-rollout seeds are within-initialization replicates and must not be treated as
-independent environment-initialization samples.
-
-
-### Stage 3D cluster definition
-
-The bootstrap cluster is one `initialization_index`. For a given task and sampled
-index, carry all 8 episode rows together: 2 rollout seeds × 2 scenes × 2 delays.
-Never resample rollout seeds or individual episodes as independent environment
-draws. Report raw successes/trials and per-initialization interaction values.

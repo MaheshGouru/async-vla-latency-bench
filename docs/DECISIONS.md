@@ -297,15 +297,6 @@ held-out seeds 14..21.
 still spans three horizons, but the two values below 25 are selected from Stage 2
 ID-only results, with `{10,20,25}` as the documented fallback.
 
-## D023 — VLASH is conditional external validation
-
-**Date:** 2026-08-16
-
-**Decision:** Add a compact VLASH subset only after Stages 2 and 3 and only if
-official code passes a strict π0.5/LIBERO compatibility gate.
-
-**Consequence:** SmolVLA remains outside the critical path.
-
 ## D024 — Do not equate `n_action_steps` with RTC formal horizon without audit
 
 **Date:** 2026-08-16
@@ -323,7 +314,6 @@ implementation inspection proves equivalence to RTC execution horizon `s`.
 ```text
 Stage 2 local sensitivity: [5,6,7,8,9]
 Stage 3 held-out confirmation: [14,15,16,17,18,19,20,21]
-Stage 4 conditional VLASH: [22,23,24,25,26]
 ```
 
 **Rationale:** These are disjoint from completed Stage 1 `[0..4]` and from the
@@ -425,7 +415,6 @@ Stage 0/1 episode seeds.
 ```text
 Stage 2: 5..9
 Stage 3: 14..21
-Stage 4: 22..26
 ```
 
 **Rationale:** This gives independent replication while preserving comparability.
@@ -505,8 +494,7 @@ Run 96 new OOD rows. Total new Stage 3B execution is **144 episodes**. No new
 `long_stove_moka` episodes are run.
 
 **Interpretation:** Stage 3B is explicitly a post-Stage-3 targeted cross-task
-replication, not preregistered confirmation and not an independent new-seed
-replication. Stage 4 seeds `[22..26]` remain untouched.
+replication, not preregistered confirmation and not an independent new-seed replication.
 
 
 ## D3C01 — Stage 3B is completed; do not reuse its label
@@ -530,49 +518,112 @@ operations total. No policy rollout or success analysis occurs in Stage 3C.
 within each index and be 8/8 distinct across indices within each task/scene. Fail
 closed rather than substitute other indices.
 
-## D3D01 — Stage 3D tests initialization-generalization
+
+## D034 — Stage 2 validates a local RTC operating region
 
 **Date:** 2026-08-16
 
-**Decision:** Stage 3D consumes only the frozen Stage 3C validated-initialization
-artifact and evaluates object-layout effects selected from completed Stage 3/3B by
-the documented directional persistence rule. This selection is post-Stage-3B and
-must not be called preregistered confirmation.
+**Decision:** Retain the Stage-1 reference `n_action_steps=25, +200 ms`; do not re-optimize Stage 1 from Stage-2 outcomes.
 
-**Execution:**
+**Evidence:** At +200 ms, pooled ID success is 14/15 at each of h=20,25,30 but 6/15 at h=10. Queue-underrun/hold totals at +200 ms are 1385 for h=10, 72 for h=15, and 0 for h=20/25/30.
+
+**Consequence:** Stage 2 is a supporting configuration-sensitivity analysis. The 25-action reference is described as locally stable, not globally optimal.
+
+## D035 — Stage 3 rejects broad replication and retains one localized candidate
+
+**Date:** 2026-08-16
+
+**Decision:** Do not generalize the Stage-1 localized negative cells as a broad OOD effect.
+
+**Evidence:** `long_stove_moka × object_layout` remains negative at all frozen horizons (`I_20=-0.125`, `I_25=-0.250`, `I_30=-0.125`); robot-initial-state, lighting, and post-hoc sensor noise do not reproduce the negative Stage-1 direction.
+
+**Consequence:** Frame the paper around sparse/heterogeneous OOD × delay interactions, not universal amplification.
+
+## D036 — Stage 3B shows task dependence within object-layout OOD
+
+**Date:** 2026-08-16
+
+**Decision:** Preserve Stage 3B as completed targeted post-Stage-3 evidence and update the paper claim using its exact outcomes.
+
+**Evidence:**
 
 ```text
+spatial_transport:
+  I20=0.000, I25=0.000, I30=0.000
+
+goal_drawer:
+  I20=+0.125, I25=+0.125, I30=0.000
+
+long_stove_moka:
+  I20=-0.125, I25=-0.250, I30=-0.125
+```
+
+The spatial OOD cells are 8/8 -> 8/8 at all horizons. The goal-drawer OOD cells are also 8/8 -> 8/8 at all horizons. Only `long_stove_moka` shows a negative interaction across all three frozen horizons.
+
+**Consequence:** Do **not** claim that object-layout OOD generally reduces delay tolerance across tasks. The surviving effect is task-dependent and localized to the evaluated multi-stage task. Stage 3B remains post-selection evidence, not preregistered family-level confirmation.
+
+## D037 — Stage 3C fails the initialization-diversity capability gate
+
+**Date:** 2026-08-16
+
+**Decision:** Do not run an initialization-generalization rollout experiment for the frozen object-layout variants.
+
+**Evidence:** For all three OOD variants, requested initialization indices 1..7 resolve to 0, leaving one distinct OOD initialization.
+
+**Consequence:** Earlier stages remain valid, but claims are restricted to repeated rollouts from the benchmark-provided OOD initialization. Do not substitute indices or reinterpret rollout seeds as initialization samples.
+
+## D038 — Next test is within-task layout-variant generalization on the surviving task
+
+**Date:** 2026-08-16
+
+**Decision:** Run Experiment A on `long_stove_moka` only.
+
+Frozen design:
+
+```text
+task = long_stove_moka
+suite/task_id = libero_10 / 2
+perturbation = Objects Layout
+new variants = exactly 3, selected deterministically before outcomes
+exclude prior classification_id=1941 / _add_25
 RTC
 n_action_steps = 25
 delay = Native,+200 ms
-initialization indices = 0..7, exactly as validated by Stage 3C
-rollout seeds = 22,23
-ID + exact frozen object-layout OOD
-64 rollout episodes per surviving task
+seeds = [22,23,24,25,26,27,28,29]
+libero_episode_index = 0
+16 fresh ID + 48 OOD = 64 episodes
 ```
 
-The two rollout seeds are within-initialization replicates; statistical uncertainty
-clusters on initialization index.
+**Rationale:** Stage 3B already supplies clean non-negative cross-task results for the spatial and drawer variants. The highest-value unresolved question is whether the stove/moka negative interaction survives different object-layout instances of the same task.
 
-## D3D02 — VLASH remains outside the active plan
+**Consequence:** Do not spend Experiment-A compute re-running more layout variants of the Stage-3B null tasks. Do not reopen the horizon sweep.
 
-**Date:** 2026-08-16
-
-**Decision:** The historical Stage 4/VLASH file is retained only for provenance.
-Seeds `22,23` are used by Stage 3D as within-initialization rollout replicates.
-
-
-## D3D03 — Tighten Stage 3C/3D dispatch invariants
+## D039 — Additional multi-stage task replication is conditional and pre-gated
 
 **Date:** 2026-08-16
 
-**Decision:** Stage 3C uses no policy seed, fixed environment-construction seed `0`,
-initialization indices `[0..7]`, and exactly three clean resets per task × scene ×
-index. Stage 3D uses exactly rollout seeds `[22,23]`, RTC, `n_action_steps=25`,
-Native/+200 ms, and exactly 64 rows per admitted task.
+**Decision:** Experiment B runs only if Experiment A satisfies the frozen gate:
 
-Stage 3D task inclusion is evaluated once from frozen completed Stage 3/3B results
-using the documented directional rule and written to hashed
-`stage3d_surviving_tasks.json`; the rollout manifest must consume this file and
-must not recompute or alter selection. No task, initialization index, seed, horizon,
-or delay substitution is permitted after dispatch.
+```text
+>=2/3 new stove/moka variants have I<0
+AND mean I across the 3 variants <0
+AND no unresolved validation/provenance failure
+```
+
+If dispatched, use exactly:
+
+```text
+task = LIVING_ROOM_SCENE2_put_both_the_alphabet_soup_and_the_tomato_sauce_in_the_basket
+suite/task_id = libero_10 / 0
+task type = multi_stage_sequential
+perturbation = Objects Layout
+variants = exactly 3 deterministically frozen before outcomes
+RTC
+n_action_steps = 25
+delay = Native,+200 ms
+seeds = [30,31,32,33,34,35,36,37]
+libero_episode_index = 0
+16 fresh ID + 48 OOD = 64 episodes
+```
+
+**Consequence:** If Experiment A fails its gate, do not dispatch Experiment B merely to search for a favorable multi-stage task.

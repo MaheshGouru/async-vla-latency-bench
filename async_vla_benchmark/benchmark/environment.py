@@ -168,6 +168,7 @@ def make_libero_env(
     episode_length: int | None = None,
     num_steps_wait: int = 10,
     episode_index: int = 0,
+    reset_on_create: bool = True,
 ) -> Any:
     """Build a single LIBERO environment with deterministic initial-state selection."""
     seed_environment_rng(seed)
@@ -191,7 +192,8 @@ def make_libero_env(
         num_steps_wait=num_steps_wait,
         control_mode=control_mode,
     )
-    env.reset(seed=seed)
+    if reset_on_create:
+        env.reset(seed=seed)
     return env
 
 
@@ -209,6 +211,7 @@ def make_libero_plus_env(
     episode_length: int | None = None,
     num_steps_wait: int = 10,
     episode_index: int = 0,
+    reset_on_create: bool = True,
 ) -> Any:
     """Build a single LIBERO-plus environment (OOD perturbation variant).
 
@@ -247,7 +250,8 @@ def make_libero_plus_env(
         control_mode=control_mode,
         is_libero_plus=True,
     )
-    env.reset(seed=seed)
+    if reset_on_create:
+        env.reset(seed=seed)
     return env
 
 
