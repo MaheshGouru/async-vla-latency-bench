@@ -1,25 +1,54 @@
-# Post-Stage-3C Active Experiment Plan
+# Post-Stage-3C Experiment Plan — Updated After Experiments A and B
 
-Stage 3C established that the frozen LIBERO-Plus object-layout variants expose only one OOD initialization state, so cross-initialization generalization cannot be evaluated under the benchmark interface. Do not manufacture initialization diversity.
+## Completed follow-ups
 
-## Required next experiment
+### Experiment A — COMPLETE
 
-Run `EXPERIMENT_A_OBJECT_LAYOUT_VARIANT_GENERALIZATION.md`.
+`long_stove_moka`, three new Objects-Layout variants, RTC, `n_action_steps=25`, Native/+200 ms, seeds `22..29`, initialization index 0, 64 valid analysis episodes.
 
-It tests whether the Stage-3 `long_stove_moka × object_layout` interaction persists across **three additional deterministically frozen object-layout variants of the same multi-stage task**.
-
-Frozen execution: RTC, `n_action_steps=25`, delays `{Native,+200 ms}`, seeds `[22..29]`, `libero_episode_index=0`, 16 fresh ID + 48 OOD = **64 new episodes**, plus seed-999 smoke outside analysis.
-
-## Conditional follow-up
-
-Run `EXPERIMENT_B_ADDITIONAL_MULTI_STAGE_TASK_GENERALIZATION.md` only if Experiment A passes the frozen gate:
+Result:
 
 ```text
->= 2/3 new variants have I < 0
-AND mean I across the 3 variants < 0
-AND no unresolved validation/provenance failure
+I = -0.375, +0.125, -0.125
+negative in 2/3 new layouts
+mean I = -0.125
 ```
 
-Experiment B uses the frozen `libero_10` task `LIVING_ROOM_SCENE2_put_both_the_alphabet_soup_and_the_tomato_sauce_in_the_basket`, three deterministically frozen object-layout variants, RTC, `n_action_steps=25`, delays `{Native,+200 ms}`, seeds `[30..37]`, initialization 0, and **64 new episodes**, plus seed-999 smoke outside analysis.
+Interpretation: the negative effect is not unique to the original layout, but is heterogeneous across layouts.
 
-No other experiment is active.
+### Experiment B — COMPLETE
+
+`LIVING_ROOM_SCENE2_put_both_the_alphabet_soup_and_the_tomato_sauce_in_the_basket`, three Objects-Layout variants, RTC, `n_action_steps=25`, Native/+200 ms, seeds `30..37`, initialization index 0, 64 analysis episodes.
+
+Result:
+
+```text
+I = -0.375, +0.250, +0.625
+negative in 1/3 layouts
+mean I = +0.167
+```
+
+Interpretation: the negative `long_stove_moka` pattern does not consistently transfer to a second multi-stage task.
+
+## Active next experiment
+
+### Stage 4 — second-policy OpenVLA-OFT replication
+
+Run exactly `STAGE_4_SECOND_POLICY_OPENVLA_OFT.md`.
+
+```text
+policy = moojink/openvla-7b-oft-finetuned-libero-spatial-object-goal-10
+tasks = spatial_transport, long_stove_moka
+perturbation = Objects Layout
+exact OOD variants = c1773/add_15 and c1941/add_25
+execution = naive async, not RTC
+native chunk = 8 actions
+request threshold = 4
+delay = Native,+200 ms
+seeds = 38..45
+libero_episode_index = 0
+64 analysis episodes
+4 seed-999 smoke episodes excluded from analysis
+```
+
+Do not add more π0.5 tasks before Stage 4 unless Stage 4 is infeasible for implementation reasons. The highest-value remaining question is cross-policy external validity.

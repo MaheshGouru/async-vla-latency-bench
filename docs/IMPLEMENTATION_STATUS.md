@@ -1,6 +1,6 @@
 # Implementation Status
 
-Last updated: 2026-08-16
+Last updated: 2026-08-22
 
 ## Completed stages
 
@@ -10,6 +10,10 @@ Stage 1 — COMPLETE
 Stage 2 — COMPLETE
 Stage 3 — COMPLETE
 Stage 3B — COMPLETE
+Stage 3C — COMPLETE, FAILED CLOSED
+Experiment A — COMPLETE
+Experiment B — COMPLETE
+Stage 4 — SPECIFIED, NOT YET RUN
 ```
 
 The completed Stage 0 and Stage 1 specifications/results are frozen and must not be
@@ -135,44 +139,81 @@ Authoritative concise numerical record: `COMPLETED_RESULTS_LEDGER.md`.
 - Stage 3B: complete. `spatial_transport` has I=0 at all three horizons; `goal_drawer` is non-negative; `long_stove_moka` remains negative at all three horizons.
 - Stage 3C: complete, failed closed because all three OOD variants expose one distinct initialization.
 
-## Active next experiments
+## Experiment A — COMPLETE
 
-See `POST_STAGE3C_NEXT_EXPERIMENTS.md`.
+Frozen analysis matrix:
 
-1. **Experiment A — required next:** `long_stove_moka` only, 3 new deterministic object-layout variants, RTC, `n_action_steps=25`, Native/+200 ms, seeds `[22..29]`, `libero_episode_index=0`, **64 new episodes**.
-2. **Experiment B — conditional:** only if Experiment A passes its frozen gate; one additional `libero_10` multi-stage task, 3 object-layout variants, RTC, `n_action_steps=25`, Native/+200 ms, seeds `[30..37]`, `libero_episode_index=0`, **64 new episodes**.
+```text
+task = long_stove_moka
+3 new object-layout variants
+RTC
+n_action_steps = 25
+delay = Native,+200 ms
+seeds = 22..29
+libero_episode_index = 0
+64/64 analysis episodes valid
+```
 
-Do not reinterpret rollout seeds as environment-initialization diversity.
+Observed interactions:
 
+```text
+c1950 / level3_sample1: I = -0.375
+c1953 / level4_sample2: I = +0.125
+c1955 / level4_sample4: I = -0.125
+mean I = -0.125
+negative in 2/3 new variants
+```
 
-## Final pre-dispatch repository audit (2026-08-17)
+The frozen Experiment-A gate passed.
 
-**Experiment A is implemented and run-ready, but has not yet been executed.** The implementation includes:
+## Experiment B — COMPLETE
 
-- a dedicated deterministic frozen-variant resolver and hashed CSV;
-- the exact 64-row physical manifest with 16 shared ID controls and 48 OOD episodes;
-- an explicit `experiment_a` provenance label and explicit requested/resolved initialization index 0;
-- initialization-pairing audit, seed-999 smoke manifest, resumable single-GPU runner, and fail-closed validation;
-- per-variant four-cell summaries and paired-seed bootstrap interactions;
-- a machine-enforced Experiment-B gate that requires both the frozen scientific criteria and a complete passing validation record.
+Frozen analysis matrix:
 
-Experiment B remains blocked until completed Experiment-A results satisfy that frozen gate.
+```text
+task = LIVING_ROOM_SCENE2_put_both_the_alphabet_soup_and_the_tomato_sauce_in_the_basket
+3 deterministic object-layout variants
+RTC
+n_action_steps = 25
+delay = Native,+200 ms
+seeds = 30..37
+libero_episode_index = 0
+64 analysis episodes
+```
 
-## Experiment B implementation status (2026-08-17)
+Observed interactions:
 
-**Experiment B is implemented and conditionally run-ready, but has not been executed.** Its code does not authorize dispatch by itself. Variant resolution, manifest creation, seed-999 smoke creation, rollout dispatch, validation, and analysis all require the hashed passing `experiment_a_to_b_v1` gate.
+```text
+I = -0.375, +0.250, +0.625
+negative in 1/3 variants
+mean I = +0.167
+```
 
-Implemented safeguards and workflow:
+Decision: the negative `long_stove_moka` object-layout × delay pattern does not generalize consistently to the second multi-stage task.
 
-- exact frozen `libero_10` task 0 name assertion;
-- deterministic three-variant object-layout resolver and immutable hashed CSV;
-- exact 64-row matrix with 16 physically unique shared ID controls and 48 OOD episodes;
-- RTC horizon 25, Native/+200 ms, seeds 30–37, and explicit requested/resolved initialization index 0;
-- 8-episode seed-999 smoke outside the analysis seed set;
-- detached, resumable, serial ID-then-OOD single-A100 notebooks under `notebooks/experiment_b_jupyter/`;
-- fail-closed artifact/provenance validation and paired-seed per-variant interaction analysis;
-- unique 64-row episode-accounting output so shared ID controls cannot be pooled three times.
+## Stage 4 — second-policy OpenVLA-OFT replication — SPECIFIED, NOT YET RUN
 
-Do not run Experiment B unless Experiment A notebook 05 produces a passing gate with `experiment_b_dispatch=true`.
+Authoritative spec:
 
-No superseded follow-up work is part of the active experiment plan.
+```text
+STAGE_4_SECOND_POLICY_OPENVLA_OFT.md
+```
+
+Frozen matrix:
+
+```text
+policy = moojink/openvla-7b-oft-finetuned-libero-spatial-object-goal-10
+tasks = spatial_transport, long_stove_moka
+perturbation = Objects Layout
+exact OOD variants = c1773/add_15 and c1941/add_25
+execution = naive_async_openvla_oft (not RTC)
+native_chunk_size = 8
+request_threshold_actions = 4
+delay = Native,+200 ms
+seeds = 38..45
+libero_episode_index = 0
+64 analysis episodes
+4 seed-999 smoke episodes outside analysis
+```
+
+Do not reinterpret rollout seeds as environment-initialization diversity. Do not retune Stage 4 after observing outcomes.

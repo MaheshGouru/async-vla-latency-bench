@@ -234,3 +234,18 @@ AND there is no unresolved validation/provenance failure
 ```
 
 Do not relax this rule after seeing Experiment-A outcomes.
+
+
+## Completion addendum — 2026-08-22
+
+Experiment A completed with 64/64 valid analysis episodes.
+
+```text
+c1950 / level3_sample1: I = -0.375
+c1953 / level4_sample2: I = +0.125
+c1955 / level4_sample4: I = -0.125
+mean I = -0.125
+negative in 2/3 new variants
+```
+
+The frozen gate to Experiment B passed.

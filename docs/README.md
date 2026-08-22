@@ -9,11 +9,14 @@ Stage 2  COMPLETE
 Stage 3  COMPLETE
 Stage 3B COMPLETE
 Stage 3C COMPLETE — benchmark initialization-diversity gate failed closed
+Experiment A COMPLETE
+Experiment B COMPLETE
+Stage 4 ACTIVE NEXT — second-policy OpenVLA-OFT replication
 ```
 
-Stage 3C established that each frozen LIBERO-Plus object-layout OOD variant exposes only one distinct initialization state: requested indices `1..7` resolve to index `0`. Earlier stages remain valid, but no claim of robustness across the environment-initialization distribution is supported.
+Stage 3C established that each frozen LIBERO-Plus object-layout OOD variant exposes only one distinct initialization state: requested indices `1..7` resolve to index `0`. Earlier rollout results remain valid, but no claim of robustness across the environment-initialization distribution is supported.
 
-The active follow-up plan is in `POST_STAGE3C_NEXT_EXPERIMENTS.md`.
+Experiments A and B are complete. Experiment A reproduced a negative `long_stove_moka × object_layout` interaction in 2/3 new layouts (mean `I=-0.125`); Experiment B reproduced a negative interaction in only 1/3 layouts on the second multi-stage task (mean `I=+0.167`). The active next experiment is Stage 4, defined in `STAGE_4_SECOND_POLICY_OPENVLA_OFT.md`.
 
 ---
 
@@ -23,9 +26,12 @@ The active follow-up plan is in `POST_STAGE3C_NEXT_EXPERIMENTS.md`.
 Revised Stage 0: complete
 Stage 1 broad OOD screen: complete
 Stage 2 local operating-point sensitivity: complete
-Stage 3 held-out OOD confirmation: complete
+Stage 3 fresh-rollout OOD confirmation: complete
 Stage 3B targeted cross-task object-layout replication: complete
-Next: Experiment A within-task `long_stove_moka` object-layout variant generalization
+Stage 3C initialization audit: complete; failed closed
+Experiment A within-task layout-variant generalization: complete
+Experiment B second multi-stage task generalization: complete
+Next: Stage 4 second-policy OpenVLA-OFT diagnostic
 ```
 
 ## Current paper question
@@ -33,8 +39,7 @@ Next: Experiment A within-task `long_stove_moka` object-layout variant generaliz
 > **How does temporal action coverage determine asynchronous VLA robustness to
 > inference delay, and do distribution shifts move that robustness boundary?**
 
-Stage 1 did **not** show broad OOD amplification of +200 ms delay. The next
-experiments focus on the much stronger horizon-dependence signal.
+Stage 1 did **not** show broad OOD amplification of +200 ms delay. The completed follow-ups show a strong temporal-action-coverage effect and sparse, task/layout-dependent OOD × delay interactions. Stage 4 now tests cross-policy external validity.
 
 ## Completed Stage 0
 
@@ -177,6 +182,9 @@ Stage 3C performed no policy rollouts. It audited indices `{0..7}` by three repe
 | `STAGE_3_OOD_HORIZON_CONFIRMATION.md` | held-out OOD × horizon follow-up |
 | `STAGE_3B_OBJECT_LAYOUT_CROSS_TASK_REPLICATION.md` | completed targeted cross-task object-layout replication |
 | `STAGE_3C_INITIALIZATION_AUDIT.md` | reset-only determinism/distinctness audit over indices 0..7 |
+| `EXPERIMENT_A_OBJECT_LAYOUT_VARIANT_GENERALIZATION.md` | completed within-task multi-layout replication |
+| `EXPERIMENT_B_ADDITIONAL_MULTI_STAGE_TASK_GENERALIZATION.md` | completed second multi-stage task replication |
+| `STAGE_4_SECOND_POLICY_OPENVLA_OFT.md` | active second-policy external-validity diagnostic |
 | `STAGE_2_CONFIRMATORY_FOLLOWUP.md` | deprecated pointer retained for provenance |
 | `EXPERIMENT_MATRIX_POST_STAGE1.md` | concise new-run matrix |
 | `METRICS_AND_LOGGING.md` | canonical metrics/logging |
@@ -189,7 +197,6 @@ Stage 3C performed no policy rollouts. It audited indices `{0..7}` by three repe
 
 Do not add:
 - SmolVLA;
-- OpenVLA-OFT;
 - new training/fine-tuning;
 - dynamic intervention benchmark;
 - hardware claims;

@@ -169,7 +169,7 @@ Do not treat action age as a monotonic quality score.
 ## 11. Limitations
 
 Include:
-- one VLA checkpoint;
+- one primary VLA checkpoint; Stage 4 provides a small second-policy diagnostic rather than a full replication;
 - simulation only;
 - three base tasks;
 - one Stage 1 variant per family;
@@ -182,6 +182,19 @@ Include:
 - sensor noise is post-hoc;
 - no safety/hardware claim;
 - fixed OOD initialization: Stage 3C established that the frozen object-layout variants expose only one distinct OOD reset state;
+
+## 11.5 Second-policy external-validity diagnostic
+
+Stage 4 tests OpenVLA-OFT on the smallest diagnostic subset:
+
+```text
+spatial_transport × object_layout
+long_stove_moka × object_layout
+Native,+200 ms
+naive async
+```
+
+Use Stage 4 only to assess qualitative cross-policy transfer. Do not present it as an RTC comparison or an architecture-controlled ablation.
 
 ## 12. Conclusion
 
@@ -210,6 +223,14 @@ Stage 3 horizons are frozen at `{20,25,30}` before Stage 2 execution. This is a
 symmetric ±5-action neighborhood around the completed Stage 1 reference at 25,
 not a horizon set selected after viewing Stage 2.
 
-## Post-Stage-3C active follow-up
+## Post-Stage-3C completed follow-ups
 
-The next experiment is `long_stove_moka` **within-task layout-variant generalization**: three new object-layout variants, RTC, `n_action_steps=25`, Native/+200 ms, seeds `22..29`, 64 episodes. Only if its frozen gate passes should the additional `libero_10` multi-stage task be run with seeds `30..37`.
+Experiment A: negative interaction on 2/3 new `long_stove_moka` layouts; mean `I=-0.125`.
+
+Experiment B: negative interaction on 1/3 layouts on the second multi-stage task; mean `I=+0.167`.
+
+These results support a heterogeneous task/layout story and weaken any monotonic multi-turn interpretation.
+
+## Active next experiment
+
+Stage 4 is the second-policy OpenVLA-OFT diagnostic defined in `STAGE_4_SECOND_POLICY_OPENVLA_OFT.md`.

@@ -228,3 +228,28 @@ Stage 3: long_stove_moka × object_layout has I={-0.125,-0.250,-0.125}; other se
 Stage 3B: cross-task object-layout result is task-dependent: spatial 0; goal non-negative; stove/moka negative
 Stage 3C: failed closed; one distinct OOD initialization per frozen object-layout variant
 ```
+
+
+## Stage 4 — second-policy diagnostic
+
+```text
+policy = OpenVLA-OFT combined four-suite checkpoint
+tasks = 2
+scenes = ID + exact Objects-Layout OOD
+delays = Native,+200 ms
+seeds = 38..45
+execution = naive async
+native action coverage = 8
+```
+
+Physical analysis episodes:
+
+```text
+2 tasks × 2 scenes × 2 delays × 8 seeds = 64
+```
+
+Smoke episodes:
+
+```text
+4 × seed999, excluded from analysis
+```

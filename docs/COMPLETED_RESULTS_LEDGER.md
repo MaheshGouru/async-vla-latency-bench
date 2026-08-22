@@ -231,30 +231,85 @@ SHA-256 f38bde65fe1d87ecb90a9dbe53ef42a6eef361938317308dc8b5803f65455413
 
 ---
 
-## Active follow-up experiments
+## Experiment A — within-task object-layout variant generalization — COMPLETE
 
-1. **Experiment A — within-task object-layout variant generalization (required next).**
-   - task: `long_stove_moka` only;
-   - perturbation: `Objects Layout`;
-   - freeze 3 new deterministic variants, excluding `_add_25`;
-   - RTC, `n_action_steps=25`, Native/+200 ms;
-   - seeds `[22..29]`;
-   - initialization index `0`;
-   - 16 fresh ID + 48 OOD = **64 episodes**.
-
-2. **Experiment B — additional multi-stage task generalization (conditional).**
-   - dispatch only if Experiment A passes its frozen replication gate;
-   - task: `libero_10` task 0, `LIVING_ROOM_SCENE2_put_both_the_alphabet_soup_and_the_tomato_sauce_in_the_basket`;
-   - perturbation: `Objects Layout`;
-   - freeze 3 deterministic variants;
-   - RTC, `n_action_steps=25`, Native/+200 ms;
-   - seeds `[30..37]`;
-   - initialization index `0`;
-   - 16 fresh ID + 48 OOD = **64 episodes**.
-
-Authoritative run specs:
+Frozen design:
 
 ```text
-EXPERIMENT_A_OBJECT_LAYOUT_VARIANT_GENERALIZATION.md
-EXPERIMENT_B_ADDITIONAL_MULTI_STAGE_TASK_GENERALIZATION.md
+task = long_stove_moka
+3 new deterministic object-layout variants
+RTC
+n_action_steps = 25
+delay = Native,+200 ms
+seeds = 22..29
+libero_episode_index = 0
+64/64 valid analysis episodes
+```
+
+Results:
+
+| new layout variant | OOD Native | OOD +200 | ID Native | ID +200 | interaction I |
+|---|---:|---:|---:|---:|---:|
+| `c1950 / level3_sample1` | 6/8 | 3/8 | 6/8 | 6/8 | **-0.375** |
+| `c1953 / level4_sample2` | 4/8 | 5/8 | 6/8 | 6/8 | +0.125 |
+| `c1955 / level4_sample4` | 8/8 | 7/8 | 6/8 | 6/8 | **-0.125** |
+
+```text
+2/3 new variants negative
+mean I = -0.125
+```
+
+Decision: the negative `long_stove_moka` interaction is not unique to the original `_add_25` layout, but is not universal across layouts.
+
+---
+
+## Experiment B — additional multi-stage task generalization — COMPLETE
+
+Frozen design:
+
+```text
+task = LIVING_ROOM_SCENE2_put_both_the_alphabet_soup_and_the_tomato_sauce_in_the_basket
+3 deterministic object-layout variants
+RTC
+n_action_steps = 25
+delay = Native,+200 ms
+seeds = 30..37
+libero_episode_index = 0
+64 analysis episodes
+```
+
+Completed interactions:
+
+```text
+I = -0.375, +0.250, +0.625
+negative in 1/3 variants
+mean I = +0.167
+```
+
+Decision: the negative object-layout × delay pattern does **not** generalize consistently to the second multi-stage task. Do not claim a monotonic atomic-turn effect or a general multi-stage vulnerability.
+
+---
+
+## Active next experiment — Stage 4 second-policy external-validity diagnostic
+
+Authoritative spec:
+
+```text
+STAGE_4_SECOND_POLICY_OPENVLA_OFT.md
+```
+
+Frozen design:
+
+```text
+policy = OpenVLA-OFT combined LIBERO checkpoint
+tasks = spatial_transport, long_stove_moka
+perturbation = Objects Layout
+exact OOD variants = c1773/add_15 and c1941/add_25
+execution = naive async, not RTC
+native action coverage = 8
+request threshold = 4
+delay = Native,+200 ms
+seeds = 38..45
+libero_episode_index = 0
+64 analysis episodes
 ```

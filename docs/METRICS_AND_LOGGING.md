@@ -527,3 +527,54 @@ stage3c_spec_hash
 ```
 
 No success, action-age, RTC, or policy-inference metrics belong to Stage 3C.
+
+
+## 21. Stage 4 second-policy fields
+
+Stage 4 uses OpenVLA-OFT and naive asynchronous execution rather than RTC. Log:
+
+```text
+policy_family
+checkpoint_id
+checkpoint_revision
+openvla_oft_git_sha
+action_head_identity
+processor_identity
+resolved_unnorm_key
+native_chunk_size
+configured_action_coverage
+request_threshold_actions
+added_delay_ms
+measured_request_latency_ms
+total_logical_latency_ms
+logical_delay_steps
+mean_action_age_ms
+p95_action_age_ms
+queue_underrun_steps
+hold_action_steps
+success
+```
+
+Frozen Stage-4 values:
+
+```text
+policy_family = openvla_oft
+native_chunk_size = 8
+configured_action_coverage = 8
+request_threshold_actions = 4
+added_delay_ms ∈ {0,200}
+seeds = 38..45
+```
+
+Do not emit RTC guidance fields as if they were meaningful for OpenVLA-OFT. They must be null/not-applicable.
+
+Primary Stage-4 interaction per task:
+
+```text
+I_task =
+  [S(OOD,+200)-S(OOD,Native)]
+  -
+  [S(ID,+200)-S(ID,Native)]
+```
+
+Report all four raw `successes/8` cells and an eight-seed paired-bootstrap interval.

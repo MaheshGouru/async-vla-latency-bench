@@ -41,6 +41,14 @@
 KXXX | Area | Issue | Impact | Mitigation
 ```
 
-## Post-Stage-3C active follow-up
+## Current active follow-up
 
-See `POST_STAGE3C_NEXT_EXPERIMENTS.md`. The primary remaining experiment is three new object-layout variants of `long_stove_moka` at RTC, `n_action_steps=25`, Native/+200, seeds `22..29`, 64 episodes. A different multi-stage `libero_10` task is conditional on the frozen Experiment-A gate.
+Experiments A and B are complete. Stage 4 is the active next experiment.
+
+Additional current risks:
+
+```text
+K035 | Cross-policy fairness | OpenVLA-OFT has native 8-action chunks and no RTC path | direct numeric comparison to π0.5 RTC conflates policy and execution semantics | treat Stage 4 as qualitative second-policy external-validity diagnostic
+K036 | Short native coverage | OpenVLA-OFT's 8-action chunk may underrun even at Native latency | Stage 4 could become an operating-envelope rather than OOD-interaction test | do not retune after observing outcomes; report underruns/action age explicitly
+K037 | Second-policy scope | Stage 4 uses only two tasks and one OOD family | cannot support broad cross-policy universality | claim only qualitative transfer/non-transfer on the diagnostic subset
+```

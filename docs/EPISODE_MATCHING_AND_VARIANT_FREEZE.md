@@ -267,3 +267,34 @@ ID and object-layout OOD fingerprints at the same index are not required to matc
 because object layout is the treatment. Stage 3C outputs the frozen
 `stage3c_validated_initializations.csv`; it contains no rollout seeds and no policy
 outcomes.
+
+
+## 9. Stage 4 second-policy matching rule
+
+Stage 4 uses fresh rollout seeds:
+
+```text
+SEEDS = [38,39,40,41,42,43,44,45]
+initialization_index_or_id = libero_episode_index:0
+```
+
+Frozen task/variant pairs:
+
+| Task | `classification_id` | `api_task_index` | difficulty | Exact `variant_name` |
+|---|---:|---:|---:|---|
+| `spatial_transport` | `1773` | `1772` | `3` | `pick_up_the_black_bowl_from_table_center_and_place_it_on_the_plate_add_15` |
+| `long_stove_moka` | `1941` | `1940` | `2` | `KITCHEN_SCENE3_turn_on_the_stove_and_put_the_moka_pot_on_it_add_25` |
+
+Stage 4 has no horizon sweep. OpenVLA-OFT uses its native 8-action chunk, naive asynchronous execution, and request threshold 4.
+
+For each fixed:
+
+```text
+(task_key, scene_condition, exact_variant_or_ID, seed)
+```
+
+the Native and +200-ms rows must share the same requested/resolved initialization index and reset-state fingerprint.
+
+Do not require ID and OOD fingerprints to match because Objects Layout changes geometry.
+
+Seeds remain rollout/policy stochasticity seeds, not environment-initialization identities. Stage 3C's one-initialization limitation applies to the frozen OOD variants.

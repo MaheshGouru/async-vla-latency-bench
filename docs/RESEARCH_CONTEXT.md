@@ -40,6 +40,14 @@ Secondary questions:
 lerobot/pi05_libero_finetuned
 ```
 
+## Second-policy external-validity model
+
+```text
+moojink/openvla-7b-oft-finetuned-libero-spatial-object-goal-10
+```
+
+Stage 4 uses OpenVLA-OFT under policy-compatible naive asynchronous execution; it is not an RTC replication.
+
 ## Core methods
 
 ```text
@@ -108,6 +116,31 @@ Stage 3B completed the cross-task object-layout replication. `spatial_transport`
 
 The reset-only audit failed closed: for every frozen OOD object-layout variant, requested initialization indices `1..7` resolved to `0`, yielding only one distinct OOD initialization state. Cross-initialization generalization is therefore not evaluable for these variants.
 
+
+### Experiment A
+
+Within `long_stove_moka`, three new deterministic object-layout variants produced:
+
+```text
+I = -0.375, +0.125, -0.125
+negative in 2/3 variants
+mean I = -0.125
+```
+
+The original Stage-3 layout was also negative (`I_25=-0.250`). Thus the signal is not a single-layout artifact, but it is heterogeneous across layouts.
+
+### Experiment B
+
+On `LIVING_ROOM_SCENE2_put_both_the_alphabet_soup_and_the_tomato_sauce_in_the_basket`, three object-layout variants produced:
+
+```text
+I = -0.375, +0.250, +0.625
+negative in 1/3 variants
+mean I = +0.167
+```
+
+Therefore the negative `long_stove_moka` interaction does not transfer consistently to a second multi-stage task. The paper should not claim monotonic degradation with atomic manipulation turns or a general multi-stage vulnerability.
+
 ## New hypotheses
 
 ### H1 — Horizon × latency envelope
@@ -131,8 +164,11 @@ The horizon/latency relationship differs between RTC and a naive asynchronous qu
 2. Stage 3 — OOD × horizon confirmation (complete)
 3. Stage 3B — targeted cross-task object-layout replication (complete)
 4. Stage 3C — reset-only initialization diversity/determinism audit (complete; failed closed)
-5. Experiment A — within-task `long_stove_moka` object-layout variant generalization (active)
-6. Experiment B — additional multi-stage task object-layout generalization (conditional)
+5. Experiment A — within-task `long_stove_moka` object-layout variant generalization (complete)
+6. Experiment B — additional multi-stage task object-layout generalization (complete)
+7. **Stage 4 — second-policy OpenVLA-OFT replication (active next)**
+
+Stage 4 is intentionally diagnostic: prior-null `spatial_transport` versus prior-negative `long_stove_moka`, Objects Layout only, exact frozen variants, Native/+200 ms, naive async, seeds `38..45`, 64 analysis episodes.
 
 ## Explicit non-claims
 
@@ -142,7 +178,9 @@ Do not claim:
 - that `n_action_steps` equals RTC formal execution horizon `s` unless audited;
 - a new async algorithm;
 - safety or hardware validity;
-- universal superiority of any execution method.
+- universal superiority of any execution method;
+- monotonic degradation with atomic manipulation turn count;
+- cross-policy generalization until Stage 4 is completed.
 
 
 ## Frozen post-Stage-1 sensitivity design
@@ -197,32 +235,23 @@ Stage 3C — reset-only initialization audit:
 = 144 reset/fingerprint operations; no policy rollouts
 ```
 
-## Post-Stage-3C active follow-up
+## Post-Stage-3C completed follow-ups and active next step
 
-Experiment A is the required next experiment:
+Experiment A and Experiment B are complete with the outcomes recorded above.
 
-```text
-task = long_stove_moka
-task type = multi_stage_sequential
-perturbation = Objects Layout
-new variants = 3
-RTC; n_action_steps=25
-delay = Native,+200
-seeds = 22..29
-libero_episode_index=0
-64 episodes
-```
-
-Experiment B is conditional on the frozen Experiment-A gate and, if dispatched, uses:
+Stage 4 is now the active next experiment:
 
 ```text
-task = LIVING_ROOM_SCENE2_put_both_the_alphabet_soup_and_the_tomato_sauce_in_the_basket
-task type = multi_stage_sequential
+policy = OpenVLA-OFT combined four-suite checkpoint
+tasks = spatial_transport, long_stove_moka
 perturbation = Objects Layout
-variants = 3
-RTC; n_action_steps=25
-delay = Native,+200
-seeds = 30..37
-libero_episode_index=0
-64 episodes
+exact variants = spatial add_15; long_stove_moka add_25
+execution = naive async (not RTC)
+native action coverage = 8 actions
+request threshold = 4 actions
+delay = Native,+200 ms
+seeds = 38..45
+libero_episode_index = 0
+analysis episodes = 64
+smoke episodes = 4 at seed 999, excluded from analysis
 ```

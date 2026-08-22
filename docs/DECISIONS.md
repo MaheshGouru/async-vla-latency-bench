@@ -627,3 +627,58 @@ libero_episode_index = 0
 ```
 
 **Consequence:** If Experiment A fails its gate, do not dispatch Experiment B merely to search for a favorable multi-stage task.
+
+
+## D040 — Close Experiment A as completed multi-layout replication
+
+**Date:** 2026-08-22
+
+**Decision:** Experiment A is complete and passes its frozen gate.
+
+```text
+I = -0.375, +0.125, -0.125
+2/3 new layouts negative
+mean I = -0.125
+```
+
+**Consequence:** The `long_stove_moka` signal is not treated as a one-layout artifact, but neither is it treated as universal across layouts.
+
+## D041 — Close Experiment B and reject a general multi-stage/turn-count interpretation
+
+**Date:** 2026-08-22
+
+**Decision:** Experiment B is complete.
+
+```text
+I = -0.375, +0.250, +0.625
+1/3 layouts negative
+mean I = +0.167
+```
+
+**Consequence:** Do not claim that object-layout × delay sensitivity transfers generally to multi-stage tasks, and do not claim monotonic degradation with atomic manipulation turn count.
+
+## D042 — Add Stage 4 second-policy external-validity diagnostic
+
+**Date:** 2026-08-22
+
+**Decision:** The next experiment is a small OpenVLA-OFT replication using one prior-null and one prior-negative π0.5 task.
+
+Frozen Stage-4 matrix:
+
+```text
+policy = moojink/openvla-7b-oft-finetuned-libero-spatial-object-goal-10
+tasks = spatial_transport, long_stove_moka
+perturbation = Objects Layout
+exact OOD variants = c1773/add_15, c1941/add_25
+execution = naive async, not RTC
+native action chunk = 8
+request threshold = 4
+delay = Native,+200 ms
+seeds = 38..45
+libero_episode_index = 0
+64 analysis episodes
+```
+
+**Rationale:** After Experiments A/B, the largest remaining external-validity limitation is the use of a single primary VLA policy. More π0.5 task expansion has lower marginal value than a second-policy diagnostic.
+
+**Consequence:** Stage 4 must not be described as an RTC replication or as a controlled architecture ablation.

@@ -171,3 +171,16 @@ Interpretation is pre-frozen:
 - repeated negative interactions support generalization beyond one task identity within a multi-stage regime;
 - mixed/null results imply the vulnerability remains task-specific;
 - no additional task may be substituted based on outcomes.
+
+
+## Completion addendum — 2026-08-22
+
+Experiment B completed.
+
+```text
+per-variant I = -0.375, +0.250, +0.625
+negative in 1/3 variants
+mean I = +0.167
+```
+
+Interpretation: the negative `long_stove_moka` object-layout × delay pattern does not consistently transfer to this second multi-stage task. Do not infer a monotonic atomic-turn effect.
