@@ -1,16 +1,21 @@
-# Stage 4 — conditional official VLASH validation
+# Stage 4 — OpenVLA-OFT second-policy diagnostic
 
-Stage 4 is optional and fail-closed. Run these notebooks in order only after the
-complete Stage 3 validator and analysis pass.
+Run notebooks `01` through `05` in order on one physical NVIDIA A100. Stage 4
+is the frozen 64-episode OpenVLA-OFT diagnostic in
+`docs/STAGE_4_SECOND_POLICY_OPENVLA_OFT.md`; it is naive asynchronous execution,
+not RTC.
 
-1. `01_official_vlash_compatibility_gate.ipynb` records the pinned official
-   repository/checkpoint audit. A package import alone is not a pass.
-2. `02_review_and_freeze_candidates.ipynb` reads complete Stage 3 results and
-   freezes one or two reviewed prespecified candidates before VLASH outcomes.
-3. `03_freeze_matched_manifest.ipynb` creates the unique physical episode
-   manifest, sharing ID controls by base task.
+The setup notebook creates a separate Python 3.10 environment because the pinned
+official OpenVLA-OFT stack uses PyTorch 2.2 and its custom Transformers 4.40.1
+fork. Set the global `GPU` variable to an idle physical A100 in notebooks 01, 03,
+and 04. Run ID and OOD serially; never launch both shards together.
 
-The rollout, smoke, analysis, and export notebooks remain intentionally absent
-until the official VLASH π0.5/LIBERO compatibility gate passes. Do not replace
-VLASH with a home-grown asynchronous approximation.
+1. `01_setup_and_policy_preflight.ipynb`
+2. `02_freeze_manifest_and_pairing.ipynb`
+3. `03_seed999_smoke.ipynb`
+4. `04_full_serial_run.ipynb`
+5. `05_validate_analyze_export.ipynb`
 
+Do not change the tasks, variants, 8-action coverage, request threshold 4,
+Native/+200-ms delays, initialization index 0, or seeds 38–45 after outcomes are
+observed.

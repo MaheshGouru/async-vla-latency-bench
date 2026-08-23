@@ -51,7 +51,7 @@ def main():
             seed_environment_rng(seed)
             requested_index = int(row.get("requested_initialization_index", "0"))
             experiment_label = row.get("stage", row.get("stage_or_experiment_label", ""))
-            is_zero_reset_experiment = experiment_label in ("experiment_a", "experiment_b")
+            is_zero_reset_experiment = experiment_label in ("experiment_a", "experiment_b", "stage4_second_policy")
             env = maker(row["suite"], task_index, seed=seed, control_mode=cfg.control_mode,
                 obs_type=cfg.obs_type, camera_name=cfg.camera_name, observation_width=cfg.observation_width,
                 observation_height=cfg.observation_height, init_states=cfg.init_states,

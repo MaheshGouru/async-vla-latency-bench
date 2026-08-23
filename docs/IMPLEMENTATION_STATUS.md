@@ -191,7 +191,7 @@ mean I = +0.167
 
 Decision: the negative `long_stove_moka` object-layout × delay pattern does not generalize consistently to the second multi-stage task.
 
-## Stage 4 — second-policy OpenVLA-OFT replication — SPECIFIED, NOT YET RUN
+## Stage 4 — second-policy OpenVLA-OFT replication — IMPLEMENTED, NOT YET RUN
 
 Authoritative spec:
 
@@ -217,3 +217,9 @@ libero_episode_index = 0
 ```
 
 Do not reinterpret rollout seeds as environment-initialization diversity. Do not retune Stage 4 after observing outcomes.
+
+Implementation now includes the literal 64-row manifest, pinned official
+OpenVLA-OFT adapter and 300k-step component checks, reset-pairing audit,
+seed-999 smoke gate, serial scene runner, validation, paired analysis, and the
+five-notebook single-A100 workflow in `notebooks/stage4_jupyter/`. Runtime
+completion remains pending; implementation status is not a result.

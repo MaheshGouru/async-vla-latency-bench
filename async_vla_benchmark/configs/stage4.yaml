@@ -1,21 +1,39 @@
-repository: huggingface/lerobot
-repository_revision: "2aba372b4e217cc47db28e0f836859b20d1456c9"
-policy_checkpoint: lerobot/pi05_libero_finetuned
-checkpoint_revision: "8e174154ef5f6c60a8da12ae99c303d8963138c1"
+policy_family: openvla_oft
+checkpoint_id: moojink/openvla-7b-oft-finetuned-libero-spatial-object-goal-10
+policy_checkpoint: moojink/openvla-7b-oft-finetuned-libero-spatial-object-goal-10
+checkpoint_revision: "13cdacd486c504e65408fc3c9e12fec9c5bf0382"
+repository: moojink/openvla-oft
+repository_revision: "e4287e94541f459edc4feabc4e181f537cd569a8"
+openvla_oft_repository: https://github.com/moojink/openvla-oft
+openvla_oft_commit: "e4287e94541f459edc4feabc4e181f537cd569a8"
 device: cuda
 mujoco_backend: egl
-policy_n_action_steps: 25
 control_mode: relative
 obs_type: pixels_agent_pos
 camera_name: "agentview_image,robot0_eye_in_hand_image"
-observation_width: 224
-observation_height: 224
+observation_width: 256
+observation_height: 256
 init_states: true
 num_steps_wait: 10
+episode_length: 520
+control_rate_hz: 20
+native_chunk_size: 8
+policy_n_action_steps: 8
+configured_action_coverage: 8
+request_threshold_actions: 4
+methods: [naive_async_openvla_oft]
+execution_horizons: [8]
 latency_profiles:
   native: {use_measured_native_latency: true, added_latency_ms: 0}
   native_plus_200: {use_measured_native_latency: true, added_latency_ms: 200}
-execution_horizons: [25]
-methods: [rtc, vlash]
-seeds: [22, 23, 24, 25, 26]
-analysis_status: conditional_method_validation
+added_delays_ms: [0, 200]
+seeds: [38, 39, 40, 41, 42, 43, 44, 45]
+requested_initialization_index: 0
+use_l1_regression: true
+use_diffusion: false
+use_film: false
+num_images_in_input: 2
+use_proprio: true
+center_crop: true
+load_in_8bit: false
+load_in_4bit: false

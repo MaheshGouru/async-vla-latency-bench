@@ -177,7 +177,10 @@ def timed_request(
 
     observation_capture_ns = time.perf_counter_ns()
     preprocessing_start_ns = time.perf_counter_ns()
-    batch = preprocess_observation(preprocessor, observation, task_instruction)
+    if hasattr(policy, "prepare_observation"):
+        batch = policy.prepare_observation(observation, task_instruction)
+    else:
+        batch = preprocess_observation(preprocessor, observation, task_instruction)
     preprocessing_end_ns = time.perf_counter_ns()
 
     # Spec §7: synchronize before the measured inference, time it with CUDA
