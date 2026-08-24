@@ -682,3 +682,28 @@ libero_episode_index = 0
 **Rationale:** After Experiments A/B, the largest remaining external-validity limitation is the use of a single primary VLA policy. More π0.5 task expansion has lower marginal value than a second-policy diagnostic.
 
 **Consequence:** Stage 4 must not be described as an RTC replication or as a controlled architecture ablation.
+
+
+## D043 — Retain Stage 4 as completed native-8 preliminary diagnostic
+
+**Date:** 2026-08-24
+
+**Decision:** Stage 4 is complete and immutable at OpenVLA-OFT native/default coverage 8. Its long-task result is floor-limited and its operating point was not independently calibrated.
+
+**Consequence:** Do not overwrite Stage 4. Use it as provenance and a native-stack operating-envelope result.
+
+## D044 — Add Stage 5 capability audit and ID-only OpenVLA-OFT coverage calibration
+
+**Date:** 2026-08-24
+
+**Decision:** Before making a final calibrated second-policy claim, determine whether OpenVLA-OFT can legitimately expose more than 8 future actions from a single inference. If tunable, calibrate coverage on ID only with seeds `46..50` using a local-stability rule rather than maximum-success tuning.
+
+**Consequence:** OOD outcomes may not influence coverage selection. Chunk concatenation, action repetition, or any artificial >native horizon is prohibited.
+
+## D045 — Conditional Stage 5B final replication
+
+**Date:** 2026-08-24
+
+**Decision:** If Stage 5A yields a legitimate calibrated operating point warranting a rerun, repeat the exact Stage-4 two-task/Objects-Layout/Native-vs-+200-ms diagnostic with fresh seeds `51..58`.
+
+**Consequence:** If the model is natively fixed to exactly 8 actions, do not run an artificial Stage 5B; retain Stage 4 and report the fixed native-horizon limitation.

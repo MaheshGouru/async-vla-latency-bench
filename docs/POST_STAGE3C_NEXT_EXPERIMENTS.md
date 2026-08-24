@@ -30,25 +30,21 @@ mean I = +0.167
 
 Interpretation: the negative `long_stove_moka` pattern does not consistently transfer to a second multi-stage task.
 
-## Active next experiment
+## Stage 4 — COMPLETE preliminary/native-stack diagnostic
 
-### Stage 4 — second-policy OpenVLA-OFT replication
-
-Run exactly `STAGE_4_SECOND_POLICY_OPENVLA_OFT.md`.
+At OpenVLA-OFT coverage 8:
 
 ```text
-policy = moojink/openvla-7b-oft-finetuned-libero-spatial-object-goal-10
-tasks = spatial_transport, long_stove_moka
-perturbation = Objects Layout
-exact OOD variants = c1773/add_15 and c1941/add_25
-execution = naive async, not RTC
-native chunk = 8 actions
-request threshold = 4
-delay = Native,+200 ms
-seeds = 38..45
-libero_episode_index = 0
-64 analysis episodes
-4 seed-999 smoke episodes excluded from analysis
+spatial_transport: I=+0.250; ID 8/8->6/8; OOD 8/8->8/8
+long_stove_moka:   I=+0.125; ID 1/8->0/8; OOD 0/8->0/8
 ```
 
-Do not add more π0.5 tasks before Stage 4 unless Stage 4 is infeasible for implementation reasons. The highest-value remaining question is cross-policy external validity.
+The long task is floor-limited, and coverage 8 was not calibrated for asynchronous latency.
+
+## Active next experiment
+
+### Stage 5 — OpenVLA-OFT temporal-coverage calibration and conditional final replication
+
+Run exactly `STAGE_5_OPENVLA_OFT_COVERAGE_CALIBRATION_AND_FINAL_REPLICATION.md`.
+
+First audit whether the checkpoint can legitimately provide >8 future actions from one inference. Only if it can should a larger-coverage sweep be run. Coverage selection must use ID only. A final OOD × delay rerun uses fresh seeds `51..58` only after coverage is frozen.

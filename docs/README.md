@@ -184,7 +184,8 @@ Stage 3C performed no policy rollouts. It audited indices `{0..7}` by three repe
 | `STAGE_3C_INITIALIZATION_AUDIT.md` | reset-only determinism/distinctness audit over indices 0..7 |
 | `EXPERIMENT_A_OBJECT_LAYOUT_VARIANT_GENERALIZATION.md` | completed within-task multi-layout replication |
 | `EXPERIMENT_B_ADDITIONAL_MULTI_STAGE_TASK_GENERALIZATION.md` | completed second multi-stage task replication |
-| `STAGE_4_SECOND_POLICY_OPENVLA_OFT.md` | active second-policy external-validity diagnostic |
+| `STAGE_4_SECOND_POLICY_OPENVLA_OFT.md` | completed native-8 second-policy preliminary diagnostic |
+| `STAGE_5_OPENVLA_OFT_COVERAGE_CALIBRATION_AND_FINAL_REPLICATION.md` | active OpenVLA-OFT coverage audit/calibration + conditional final replication |
 | `STAGE_2_CONFIRMATORY_FOLLOWUP.md` | deprecated pointer retained for provenance |
 | `EXPERIMENT_MATRIX_POST_STAGE1.md` | concise new-run matrix |
 | `METRICS_AND_LOGGING.md` | canonical metrics/logging |
@@ -235,9 +236,11 @@ Future stages use new seed blocks rather than recycling Stage 0/1 episodes.
 
 ## Active post-Stage-3C experiment specifications
 
-- `EXPERIMENT_A_OBJECT_LAYOUT_VARIANT_GENERALIZATION.md` — required next experiment: `long_stove_moka` only, 3 new object-layout variants, RTC, `n_action_steps=25`, Native/+200 ms, seeds `22..29`, 64 new episodes.
-- `EXPERIMENT_B_ADDITIONAL_MULTI_STAGE_TASK_GENERALIZATION.md` — conditional follow-up: `libero_10` task 0, 3 object-layout variants, RTC, `n_action_steps=25`, Native/+200 ms, seeds `30..37`, 64 new episodes.
+Experiments A and B are complete. Stage 4 is also complete as a preliminary/native-stack OpenVLA-OFT diagnostic at 8-action coverage.
 
+The active next protocol is:
+
+- `STAGE_5_OPENVLA_OFT_COVERAGE_CALIBRATION_AND_FINAL_REPLICATION.md` — first audit whether OpenVLA-OFT can legitimately expose more than 8 future actions from one inference; if tunable, perform ID-only coverage calibration and freeze a locally stable operating point; then conditionally rerun the same two-task OOD × delay diagnostic with fresh seeds.
 
 ## Results ledger
 
@@ -246,9 +249,20 @@ Future stages use new seed blocks rather than recycling Stage 0/1 episodes.
 
 ## Final active execution order
 
-1. Implement and preflight **Experiment A — Within-Task Object-Layout Variant Generalization** exactly as specified.
-2. Run Experiment A only after its three new layout variants are frozen and hashed.
-3. Evaluate the frozen Experiment-B dispatch gate.
-4. Run **Experiment B — Additional Multi-Stage Task Object-Layout Generalization** only if that gate passes.
+1. Run Stage 5A0 capability audit.
+2. If OpenVLA-OFT is fixed to an 8-action native horizon, stop the coverage sweep and retain Stage 4 as the native-horizon second-policy diagnostic.
+3. If multiple legitimate coverages are available from one inference, run Stage 5A on ID only using fresh seeds `46..50` and freeze a locally stable operating point without consulting OOD outcomes.
+4. If warranted by Stage 5A, run Stage 5B on the exact Stage-4 task/variant contrast with fresh seeds `51..58`.
 
-Experiment A is required. Experiment B is conditional. No other follow-up experiment is active.
+Do not manufacture longer OpenVLA coverage by concatenating predictions or repeating actions.
+
+
+### Stage 4 history note
+
+`STAGE_4_SECOND_POLICY_OPENVLA_OFT.md` is the frozen pre-run Stage 4 specification and must not be modified retroactively.
+
+Post-run Stage 4 results, caveats, and the motivation for Stage 5 are recorded separately in:
+
+```text
+STAGE_4_RESULTS_AND_INTERPRETATION.md
+```

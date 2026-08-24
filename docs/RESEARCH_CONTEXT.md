@@ -180,7 +180,7 @@ Do not claim:
 - safety or hardware validity;
 - universal superiority of any execution method;
 - monotonic degradation with atomic manipulation turn count;
-- cross-policy generalization until Stage 4 is completed.
+- calibrated cross-policy generalization until Stage 5 is resolved.
 
 
 ## Frozen post-Stage-1 sensitivity design
@@ -237,21 +237,21 @@ Stage 3C — reset-only initialization audit:
 
 ## Post-Stage-3C completed follow-ups and active next step
 
-Experiment A and Experiment B are complete with the outcomes recorded above.
-
-Stage 4 is now the active next experiment:
+Experiments A and B are complete. Stage 4 is complete as a native/default-8 OpenVLA-OFT diagnostic:
 
 ```text
-policy = OpenVLA-OFT combined four-suite checkpoint
-tasks = spatial_transport, long_stove_moka
-perturbation = Objects Layout
-exact variants = spatial add_15; long_stove_moka add_25
-execution = naive async (not RTC)
-native action coverage = 8 actions
-request threshold = 4 actions
-delay = Native,+200 ms
-seeds = 38..45
-libero_episode_index = 0
-analysis episodes = 64
-smoke episodes = 4 at seed 999, excluded from analysis
+spatial_transport: I = +0.250; ID 8/8->6/8; OOD 8/8->8/8
+long_stove_moka:   I = +0.125; ID 1/8->0/8; OOD 0/8->0/8
 ```
+
+The long task is at/near floor, and Stage 4 was not preceded by an OpenVLA-specific coverage calibration.
+
+Stage 5 is now active:
+
+```text
+Stage 5A0: audit whether >8 native future actions are legitimately available from one inference
+Stage 5A: if tunable, ID-only temporal-coverage calibration; seeds 46..50
+Stage 5B: conditional final OOD × delay replication at frozen calibrated coverage; seeds 51..58
+```
+
+If the checkpoint's maximum native horizon is exactly 8, no artificial longer-horizon rerun is allowed; Stage 4 is then interpreted as a native-horizon operating-envelope diagnostic.

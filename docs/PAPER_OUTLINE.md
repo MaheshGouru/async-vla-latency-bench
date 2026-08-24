@@ -169,7 +169,7 @@ Do not treat action age as a monotonic quality score.
 ## 11. Limitations
 
 Include:
-- one primary VLA checkpoint; Stage 4 provides a small second-policy diagnostic rather than a full replication;
+- one primary VLA checkpoint; Stage 4 provides a native-horizon second-policy diagnostic, with Stage 5 used to resolve whether OpenVLA-OFT coverage is tunable/calibratable;
 - simulation only;
 - three base tasks;
 - one Stage 1 variant per family;
@@ -185,16 +185,17 @@ Include:
 
 ## 11.5 Second-policy external-validity diagnostic
 
-Stage 4 tests OpenVLA-OFT on the smallest diagnostic subset:
+Stage 4 completed OpenVLA-OFT at its native/default 8-action coverage. Spatial transport remained robust under OOD+delay, while the stove/moka task was at/near floor, preventing a clean interaction test.
+
+Stage 5 resolves the coverage asymmetry with π0.5:
 
 ```text
-spatial_transport × object_layout
-long_stove_moka × object_layout
-Native,+200 ms
-naive async
+5A0: verify OpenVLA-OFT native output-horizon semantics
+5A: if tunable, calibrate executable temporal coverage on ID only
+5B: conditionally rerun the same two-task OOD × delay contrast at the frozen calibrated coverage
 ```
 
-Use Stage 4 only to assess qualitative cross-policy transfer. Do not present it as an RTC comparison or an architecture-controlled ablation.
+Do not present Stage 4 as a coverage-matched or architecture-controlled comparison. If Stage 5A proves the horizon is fixed at 8, frame Stage 4 as evidence about a native-stack temporal-coverage limitation.
 
 ## 12. Conclusion
 
@@ -233,4 +234,4 @@ These results support a heterogeneous task/layout story and weaken any monotonic
 
 ## Active next experiment
 
-Stage 4 is the second-policy OpenVLA-OFT diagnostic defined in `STAGE_4_SECOND_POLICY_OPENVLA_OFT.md`.
+Stage 5 is defined in `STAGE_5_OPENVLA_OFT_COVERAGE_CALIBRATION_AND_FINAL_REPLICATION.md`.
