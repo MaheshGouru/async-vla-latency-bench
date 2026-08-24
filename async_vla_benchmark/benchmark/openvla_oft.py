@@ -51,6 +51,11 @@ class OpenVLAOFTPolicy:
             use_proprio=True, center_crop=True, num_open_loop_steps=8,
             load_in_8bit=False, load_in_4bit=False, use_wandb=False,
         )
+        # OpenVLA-OFT's default task_suite_name is a StrEnum; the upstream
+        # check_unnorm_key needs a string key to resolve the *_no_noops norm
+        # stats stored in the checkpoint config. set_suite() will override this
+        # once the model is loaded.
+        self.cfg.task_suite_name = "libero_spatial"
         self.model, self.action_head, self.proprio_projector, noisy, self.processor = initialize_model(self.cfg)
         if noisy is not None: raise RuntimeError("Stage 4 prohibits a diffusion/noisy-action projector")
         self._get_vla_action = get_vla_action
@@ -72,6 +77,13 @@ class OpenVLAOFTPolicy:
         by_lower = {key.lower(): value for key, value in pixels.items()}
         full = next((value for key, value in by_lower.items() if "agentview" in key), None)
         wrist = next((value for key, value in by_lower.items() if "eye_in_hand" in key or "wrist" in key), None)
+        # LeRobot's LiberoEnv maps camera names to "image" / "image2" via its
+        # camera_name_mapping. Fall back to that ordering when original names
+        # are not present.
+        if full is None and "image" in by_lower:
+            full = by_lower["image"]
+        if wrist is None and "image2" in by_lower:
+            wrist = by_lower["image2"]
         if full is None or wrist is None: raise ValueError(f"two-image path unavailable; pixel keys={sorted(pixels)}")
         return {
             "full_image": self._resize(np.asarray(full, dtype=np.uint8), 224),
