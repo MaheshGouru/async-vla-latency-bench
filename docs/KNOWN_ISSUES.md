@@ -43,12 +43,12 @@ KXXX | Area | Issue | Impact | Mitigation
 
 ## Current active follow-up
 
-Experiments A and B are complete. Stage 4 is the active next experiment.
-
-Additional current risks:
+Stage 4 is complete; Stage 5 is active.
 
 ```text
-K035 | Cross-policy fairness | OpenVLA-OFT has native 8-action chunks and no RTC path | direct numeric comparison to π0.5 RTC conflates policy and execution semantics | treat Stage 4 as qualitative second-policy external-validity diagnostic
-K036 | Short native coverage | OpenVLA-OFT's 8-action chunk may underrun even at Native latency | Stage 4 could become an operating-envelope rather than OOD-interaction test | do not retune after observing outcomes; report underruns/action age explicitly
-K037 | Second-policy scope | Stage 4 uses only two tasks and one OOD family | cannot support broad cross-policy universality | claim only qualitative transfer/non-transfer on the diagnostic subset
+K035 | Cross-policy fairness | π0.5 coverage was calibrated; OpenVLA-OFT Stage 4 used native/default 8 without an equivalent calibration | cross-policy interpretation may conflate policy and operating point | resolve with Stage 5 capability audit + ID-only coverage calibration if tunable
+K036 | Short native coverage | Stage 4 shows strong queue starvation at OpenVLA-OFT coverage 8 under +200 ms | Stage 4 may primarily measure the native temporal-coverage limit | Stage 5A0 determines whether >8 is legitimately available; never fabricate longer chunks
+K037 | Second-policy scope | only two tasks and one OOD family | cannot support broad architecture-independent universality | retain diagnostic framing
+K038 | Floor effect | OpenVLA-OFT long_stove_moka is 1/8 ID Native and 0/8 in the other three cells | OOD × delay interaction is not identifiable there | do not interpret I=+0.125 substantively; rerun only if Stage 5 finds a legitimate calibrated operating point
+K039 | Post-Stage-4 calibration | Stage 5 is motivated by observed Stage-4 starvation | risk of outcome-adaptive tuning | Stage 5A uses ID only, fresh seeds, predeclared capability gate and stable-point rule; Stage 4 remains immutable provenance
 ```

@@ -13,7 +13,8 @@ Stage 3B — COMPLETE
 Stage 3C — COMPLETE, FAILED CLOSED
 Experiment A — COMPLETE
 Experiment B — COMPLETE
-Stage 4 — SPECIFIED, NOT YET RUN
+Stage 4 — COMPLETE (PRELIMINARY NATIVE-8 DIAGNOSTIC)
+Stage 5 — ACTIVE NEXT
 ```
 
 The completed Stage 0 and Stage 1 specifications/results are frozen and must not be
@@ -191,35 +192,31 @@ mean I = +0.167
 
 Decision: the negative `long_stove_moka` object-layout × delay pattern does not generalize consistently to the second multi-stage task.
 
-## Stage 4 — second-policy OpenVLA-OFT replication — IMPLEMENTED, NOT YET RUN
+## Stage 4 — second-policy OpenVLA-OFT replication — COMPLETE
+
+Completed 64-row analysis matrix at native/default coverage 8.
+
+```text
+spatial_transport: ID Native 8/8; ID +200 6/8; OOD Native 8/8; OOD +200 8/8; I=+0.250 [0.000,0.500]
+long_stove_moka:   ID Native 1/8; ID +200 0/8; OOD Native 0/8; OOD +200 0/8; I=+0.125 [0.000,0.375]
+```
+
+The long task is floor-limited. Added latency also produced substantial queue starvation under the 8-action horizon. Stage 4 is therefore retained as a completed native-stack preliminary diagnostic, not the final calibrated cross-policy experiment.
+
+## Stage 5 — ACTIVE NEXT
 
 Authoritative spec:
 
 ```text
-STAGE_4_SECOND_POLICY_OPENVLA_OFT.md
+STAGE_5_OPENVLA_OFT_COVERAGE_CALIBRATION_AND_FINAL_REPLICATION.md
 ```
 
-Frozen matrix:
+Execution order:
 
 ```text
-policy = moojink/openvla-7b-oft-finetuned-libero-spatial-object-goal-10
-tasks = spatial_transport, long_stove_moka
-perturbation = Objects Layout
-exact OOD variants = c1773/add_15 and c1941/add_25
-execution = naive_async_openvla_oft (not RTC)
-native_chunk_size = 8
-request_threshold_actions = 4
-delay = Native,+200 ms
-seeds = 38..45
-libero_episode_index = 0
-64 analysis episodes
-4 seed-999 smoke episodes outside analysis
+5A0 capability audit -> determine whether >8 native future actions are legitimately available
+5A ID-only coverage calibration -> only if tunable; seeds 46..50
+5B final two-task OOD × delay rerun -> only if warranted; seeds 51..58
 ```
 
-Do not reinterpret rollout seeds as environment-initialization diversity. Do not retune Stage 4 after observing outcomes.
-
-Implementation now includes the literal 64-row manifest, pinned official
-OpenVLA-OFT adapter and 300k-step component checks, reset-pairing audit,
-seed-999 smoke gate, serial scene runner, validation, paired analysis, and the
-five-notebook single-A100 workflow in `notebooks/stage4_jupyter/`. Runtime
-completion remains pending; implementation status is not a result.
+No chunk concatenation, action repetition, OOD-informed coverage selection, or post-hoc delay relaxation is allowed.

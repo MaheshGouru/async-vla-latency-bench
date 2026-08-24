@@ -578,3 +578,20 @@ I_task =
 ```
 
 Report all four raw `successes/8` cells and an eight-seed paired-bootstrap interval.
+
+
+## 22. Stage 5 coverage-calibration fields
+
+In addition to Stage-4 fields, record:
+
+```text
+model_native_output_horizon
+configured_action_coverage
+coverage_is_single_inference_native
+request_threshold_actions
+realized_coverage_ratio
+coverage_candidate_set_hash
+coverage_selection_status
+```
+
+Stage 5A must contain ID scenes only and seeds `46..50`. Stage 5B, if run, uses the frozen Stage-5A coverage and fresh seeds `51..58`.

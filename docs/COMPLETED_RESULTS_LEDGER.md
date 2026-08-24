@@ -290,26 +290,28 @@ Decision: the negative object-layout × delay pattern does **not** generalize co
 
 ---
 
-## Active next experiment — Stage 4 second-policy external-validity diagnostic
-
-Authoritative spec:
+## Stage 4 — OpenVLA-OFT native-8 second-policy diagnostic — COMPLETE
 
 ```text
-STAGE_4_SECOND_POLICY_OPENVLA_OFT.md
+spatial_transport:
+  ID Native 8/8
+  ID +200  6/8
+  OOD Native 8/8
+  OOD +200 8/8
+  I = +0.250; paired-bootstrap 95% CI [0.000,0.500]
+
+long_stove_moka:
+  ID Native 1/8
+  ID +200  0/8
+  OOD Native 0/8
+  OOD +200 0/8
+  I = +0.125; paired-bootstrap 95% CI [0.000,0.375]
 ```
 
-Frozen design:
+Interpretation: the π0.5 negative long-task interaction did not transfer cleanly, but the OpenVLA long-task test is floor-limited. Native/default 8-action coverage also showed substantial queue starvation under +200 ms.
 
-```text
-policy = OpenVLA-OFT combined LIBERO checkpoint
-tasks = spatial_transport, long_stove_moka
-perturbation = Objects Layout
-exact OOD variants = c1773/add_15 and c1941/add_25
-execution = naive async, not RTC
-native action coverage = 8
-request threshold = 4
-delay = Native,+200 ms
-seeds = 38..45
-libero_episode_index = 0
-64 analysis episodes
-```
+---
+
+## Active next experiment — Stage 5 OpenVLA-OFT temporal-coverage calibration
+
+First determine whether the checkpoint legitimately exposes more than 8 future actions from one inference. If it does, run ID-only calibration and freeze a locally stable coverage before any OOD rerun. If 8 is the native maximum, do not fabricate a longer horizon; retain Stage 4 as the native-horizon diagnostic.

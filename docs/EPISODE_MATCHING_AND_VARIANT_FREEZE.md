@@ -298,3 +298,12 @@ the Native and +200-ms rows must share the same requested/resolved initializatio
 Do not require ID and OOD fingerprints to match because Objects Layout changes geometry.
 
 Seeds remain rollout/policy stochasticity seeds, not environment-initialization identities. Stage 3C's one-initialization limitation applies to the frozen OOD variants.
+
+
+## 10. Stage 5 matching and freeze rule
+
+Stage 5A calibration uses fresh seeds `46..50` on ID only. For each `(task, coverage, seed)`, Native and +200-ms rows must share the same reset fingerprint.
+
+Stage 5B, if run, uses fresh seeds `51..58` and the exact Stage-4 OOD variants `c1773/add_15` and `c1941/add_25`. The selected coverage must be frozen before any Stage-5B OOD rollout.
+
+Stage 5 does not create initialization diversity; `libero_episode_index=0` remains the benchmark-provided reset and seeds remain rollout stochasticity.

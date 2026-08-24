@@ -253,3 +253,33 @@ Smoke episodes:
 ```text
 4 × seed999, excluded from analysis
 ```
+
+
+## Stage 4 completed snapshot
+
+```text
+OpenVLA-OFT native/default coverage = 8
+spatial_transport: I=+0.250; ID 8/8->6/8; OOD 8/8->8/8
+long_stove_moka:   I=+0.125; ID 1/8->0/8; OOD 0/8->0/8
+```
+
+## Stage 5 — OpenVLA-OFT coverage calibration + conditional final replication
+
+Stage 5A0 is a capability audit. If multiple legitimate coverages are exposed from one inference, Stage 5A uses:
+
+```text
+ID only
+tasks = spatial_transport,long_stove_moka
+delay = Native,+200 ms
+coverage candidates = supported values frozen before outcomes; preferred {8,12,16,20,25} only if truly supported
+seeds = 46..50
+```
+
+Stage 5B, if warranted:
+
+```text
+2 tasks × 2 scenes × 2 delays × 8 seeds = 64
+seeds = 51..58
+coverage = frozen Stage-5A operating point
+exact OOD variants = same as Stage 4
+```
