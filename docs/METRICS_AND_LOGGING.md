@@ -595,3 +595,71 @@ coverage_selection_status
 ```
 
 Stage 5A must contain ID scenes only and seeds `46..50`. Stage 5B, if run, uses the frozen Stage-5A coverage and fresh seeds `51..58`.
+
+## Stage 3 New — high-power replication metrics
+
+Primary success metric remains binary episode success.
+
+Required Stage 3 New analysis identity:
+
+```text
+stage = stage_3_new_high_power_replication
+candidate_key
+candidate_original_status
+seed
+task_key
+scene_condition
+perturbation_key
+classification_id
+api_task_index
+variant_name
+n_action_steps
+delay_condition
+added_delay_ms
+execution_method
+```
+
+Fresh seed block:
+
+```text
+46..173 inclusive
+n = 128
+```
+
+For every candidate and horizon:
+
+```text
+I_h =
+  [S(OOD,+200,h)-S(OOD,Native,h)]
+  -
+  [S(ID,+200,h)-S(ID,Native,h)]
+```
+
+Report:
+
+```text
+successes / 128
+Wilson 95% CI for every success proportion
+I_h
+seed-cluster paired-bootstrap 95% CI for I_h
+```
+
+Bootstrap the complete seed block. Do not bootstrap the four cells
+independently.
+
+For the three object-layout task conditions also report direct paired-bootstrap
+heterogeneity contrasts:
+
+```text
+I_long - I_spatial
+I_long - I_goal
+```
+
+at each of `h={20,25,30}`.
+
+The same physical shared-ID row may participate in several candidate-level
+contrasts. This reuse must remain explicit; it does not create additional
+independent episode observations.
+
+Old Stage 3/3B rows may appear in a historical comparison plot but must not be
+included in the primary Stage 3 New point estimates or confidence intervals.

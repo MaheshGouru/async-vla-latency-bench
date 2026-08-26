@@ -203,20 +203,46 @@ long_stove_moka:   ID Native 1/8; ID +200 0/8; OOD Native 0/8; OOD +200 0/8; I=+
 
 The long task is floor-limited. Added latency also produced substantial queue starvation under the 8-action horizon. Stage 4 is therefore retained as a completed native-stack preliminary diagnostic, not the final calibrated cross-policy experiment.
 
-## Stage 5 — ACTIVE NEXT
+## Stage 5 — CANCELED BEFORE EXECUTION
+
+No further OpenVLA policy runs are planned.
+
+The Stage 5 protocol is retained for provenance only and must not be dispatched.
+
+## Stage 3 New — ACTIVE FINAL EXPERIMENT
 
 Authoritative spec:
 
 ```text
-STAGE_5_OPENVLA_OFT_COVERAGE_CALIBRATION_AND_FINAL_REPLICATION.md
+STAGE_3_NEW_HIGH_POWER_REPLICATION.md
 ```
 
-Execution order:
+Frozen matrix:
 
 ```text
-5A0 capability audit -> determine whether >8 native future actions are legitimately available
-5A ID-only coverage calibration -> only if tunable; seeds 46..50
-5B final two-task OOD × delay rerun -> only if warranted; seeds 51..58
+policy = π0.5
+method = RTC
+candidate pairs = 6 exact frozen Stage 3 / Stage 3B task × perturbation pairs
+include Stage-3 post-hoc goal_drawer × sensor_noise = yes
+horizons = 20,25,30
+delay = Native,+200 ms
+seeds = 46..173
+fresh seeds = 128
+libero_episode_index = 0
+shared ID controls = yes
+new physical episodes = 6,912
 ```
 
-No chunk concatenation, action repetition, OOD-informed coverage selection, or post-hoc delay relaxation is allowed.
+Primary dataset must contain only the new seed block. Do not pool old Stage 3 /
+Stage 3B rows into the primary high-power estimates.
+
+Implementation priority:
+
+```text
+1. manifest generator with exact six-candidate freeze
+2. deterministic resumable runner
+3. shared-ID execution without duplicate physical rows
+4. per-seed six-cell reset-pairing audit
+5. 128-seed clustered bootstrap analysis
+6. low-n versus high-n comparison figure
+```

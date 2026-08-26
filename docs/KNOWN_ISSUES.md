@@ -43,12 +43,12 @@ KXXX | Area | Issue | Impact | Mitigation
 
 ## Current active follow-up
 
-Stage 4 is complete; Stage 5 is active.
+Stage 5 is canceled. Stage 3 New is the active final experiment.
 
 ```text
-K035 | Cross-policy fairness | π0.5 coverage was calibrated; OpenVLA-OFT Stage 4 used native/default 8 without an equivalent calibration | cross-policy interpretation may conflate policy and operating point | resolve with Stage 5 capability audit + ID-only coverage calibration if tunable
-K036 | Short native coverage | Stage 4 shows strong queue starvation at OpenVLA-OFT coverage 8 under +200 ms | Stage 4 may primarily measure the native temporal-coverage limit | Stage 5A0 determines whether >8 is legitimately available; never fabricate longer chunks
-K037 | Second-policy scope | only two tasks and one OOD family | cannot support broad architecture-independent universality | retain diagnostic framing
-K038 | Floor effect | OpenVLA-OFT long_stove_moka is 1/8 ID Native and 0/8 in the other three cells | OOD × delay interaction is not identifiable there | do not interpret I=+0.125 substantively; rerun only if Stage 5 finds a legitimate calibrated operating point
-K039 | Post-Stage-4 calibration | Stage 5 is motivated by observed Stage-4 starvation | risk of outcome-adaptive tuning | Stage 5A uses ID only, fresh seeds, predeclared capability gate and stable-point rule; Stage 4 remains immutable provenance
+K040 | Interaction precision | Stage 3/3B use only eight rollout seeds per cell | 0.125 cell granularity and very wide interaction uncertainty can make apparent heterogeneity indistinguishable from rollout noise | rerun the complete unique Stage 3/3B matrix with 128 fresh seeds/cell
+K041 | Multiple candidate interactions | Stage 3 New reports 6 candidates × 3 horizons | per-cell significance fishing could recreate the original selection problem | report all effects/CIs; h=25 is frozen primary operating point; use direct cross-task interaction contrasts and preserve post-hoc labels
+K042 | Shared ID controls | four goal-drawer OOD candidates share the same ID base task | copying ID rows could be mistaken for independent policy rollouts | execute one physical ID episode per task×horizon×delay×seed and reuse by reference in candidate-level analysis
+K043 | Compute interruption | Stage 3 New requires 6,912 fresh physical episodes | partial completion could tempt outcome-dependent matrix reduction | deterministic manifest + resume; never choose a favorable subset after interim outcomes
+K044 | Prior low-n narrative | current paper language says interactions are sparse/heterogeneous | high-n rerun may contradict it | precommit to revising the narrative in either direction based on Stage 3 New
 ```

@@ -41,10 +41,29 @@ long_stove_moka:   I=+0.125; ID 1/8->0/8; OOD 0/8->0/8
 
 The long task is floor-limited, and coverage 8 was not calibrated for asynchronous latency.
 
-## Active next experiment
+## Final active experiment
 
-### Stage 5 — OpenVLA-OFT temporal-coverage calibration and conditional final replication
+### Stage 3 New — high-power Stage 3 / Stage 3B replication
 
-Run exactly `STAGE_5_OPENVLA_OFT_COVERAGE_CALIBRATION_AND_FINAL_REPLICATION.md`.
+Run exactly:
 
-First audit whether the checkpoint can legitimately provide >8 future actions from one inference. Only if it can should a larger-coverage sweep be run. Coverage selection must use ID only. A final OOD × delay rerun uses fresh seeds `51..58` only after coverage is frozen.
+```text
+STAGE_3_NEW_HIGH_POWER_REPLICATION.md
+```
+
+The experiment reruns the six unique task × perturbation pairs represented by
+Stage 3 and Stage 3B, including the Stage-3 post-hoc sensor-noise condition.
+
+```text
+π0.5 + RTC
+horizons = 20,25,30
+delay = Native,+200 ms
+fresh seeds = 46..173
+128 seeds/cell
+6,912 new physical episodes with shared ID controls
+```
+
+No old Stage 3/3B episode outcomes are pooled into the primary estimates.
+
+Stage 5 OpenVLA-OFT is canceled before execution. The remaining compute budget
+is dedicated to reducing uncertainty in the existing interaction matrix.

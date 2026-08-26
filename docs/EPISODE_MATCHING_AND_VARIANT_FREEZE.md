@@ -307,3 +307,57 @@ Stage 5A calibration uses fresh seeds `46..50` on ID only. For each `(task, cove
 Stage 5B, if run, uses fresh seeds `51..58` and the exact Stage-4 OOD variants `c1773/add_15` and `c1941/add_25`. The selected coverage must be frozen before any Stage-5B OOD rollout.
 
 Stage 5 does not create initialization diversity; `libero_episode_index=0` remains the benchmark-provided reset and seeds remain rollout stochasticity.
+
+## Stage 3 New matching and reuse rule
+
+Fresh seeds:
+
+```text
+SEEDS = 46..173 inclusive
+```
+
+For every fixed:
+
+```text
+(task_key, scene_condition, exact_variant_identity, seed)
+```
+
+all:
+
+```text
+{h20,h25,h30} × {Native,+200}
+```
+
+must share the same requested/resolved initialization index and reset-state
+fingerprint wherever benchmark semantics permit.
+
+The Stage 3C limitation still applies: seeds are rollout stochasticity, not
+distinct environment initializations.
+
+### Shared ID controls
+
+Execute each unique fresh ID control once for:
+
+```text
+(task_key, horizon, delay, seed)
+```
+
+and reuse it logically for every candidate OOD perturbation on the same base
+task.
+
+In particular, one `goal_drawer` ID block is shared by:
+
+```text
+goal_object_layout
+goal_robot_initial_state
+goal_light_conditions
+goal_sensor_noise_posthoc
+```
+
+Do not duplicate physical ID rows in `stage3_new_episode_results.csv`.
+
+### Exact OOD freeze
+
+The Stage 3 New candidate OOD identities are exactly those listed in
+`STAGE_3_NEW_HIGH_POWER_REPLICATION.md`. They are inherited from the completed
+Stage 3 / Stage 3B frozen variants and must not be re-resolved or substituted.

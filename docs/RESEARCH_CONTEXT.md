@@ -158,17 +158,46 @@ aggregate Stage 1 interaction at 25 actions is near zero.
 ### H4 — Method dependence
 The horizon/latency relationship differs between RTC and a naive asynchronous queue.
 
-## Required next experiments
+## Experiment progression and active next experiment
 
-1. Stage 2 — RTC local operating-point sensitivity (complete)
-2. Stage 3 — OOD × horizon confirmation (complete)
-3. Stage 3B — targeted cross-task object-layout replication (complete)
-4. Stage 3C — reset-only initialization diversity/determinism audit (complete; failed closed)
-5. Experiment A — within-task `long_stove_moka` object-layout variant generalization (complete)
-6. Experiment B — additional multi-stage task object-layout generalization (complete)
-7. **Stage 4 — second-policy OpenVLA-OFT replication (active next)**
+Completed:
 
-Stage 4 is intentionally diagnostic: prior-null `spatial_transport` versus prior-negative `long_stove_moka`, Objects Layout only, exact frozen variants, Native/+200 ms, naive async, seeds `38..45`, 64 analysis episodes.
+1. Stage 2 — RTC local operating-point sensitivity
+2. Stage 3 — low-replication OOD × horizon confirmation
+3. Stage 3B — low-replication cross-task object-layout replication
+4. Stage 3C — initialization audit; failed closed
+5. Experiment A — within-task layout generalization
+6. Experiment B — second multi-stage task generalization
+7. Stage 4 — preliminary OpenVLA-OFT native-8 diagnostic
+
+Canceled before execution:
+
+```text
+Stage 5 — OpenVLA-OFT temporal-coverage calibration/final replication
+```
+
+Active final experiment:
+
+```text
+STAGE_3_NEW_HIGH_POWER_REPLICATION.md
+```
+
+Stage 3 New directly addresses the main remaining statistical limitation:
+
+```text
+same π0.5 + RTC scientific conditions as the union of Stage 3 and Stage 3B
+6 exact frozen task × perturbation pairs
+horizons = {20,25,30}
+delay = {Native,+200 ms}
+fresh seeds = 46..173
+128 seeds per unique cell
+old Stage 3/3B rows excluded from primary estimates
+6,912 new physical episodes using shared ID controls
+```
+
+Until Stage 3 New is complete, the paper's claim that OOD × delay interactions
+are sparse/task-dependent/layout-dependent is **provisional** because the
+original Stage 3/3B interaction estimates used only eight rollout seeds per cell.
 
 ## Explicit non-claims
 
@@ -180,7 +209,8 @@ Do not claim:
 - safety or hardware validity;
 - universal superiority of any execution method;
 - monotonic degradation with atomic manipulation turn count;
-- calibrated cross-policy generalization until Stage 5 is resolved.
+- cross-policy generalization from the completed preliminary OpenVLA diagnostic;
+- that the low-n Stage 3/3B heterogeneity pattern is robust until Stage 3 New is complete.
 
 
 ## Frozen post-Stage-1 sensitivity design
@@ -235,23 +265,19 @@ Stage 3C — reset-only initialization audit:
 = 144 reset/fingerprint operations; no policy rollouts
 ```
 
-## Post-Stage-3C completed follow-ups and active next step
+## Active final high-power confirmation
 
-Experiments A and B are complete. Stage 4 is complete as a native/default-8 OpenVLA-OFT diagnostic:
+The final compute budget is allocated to `STAGE_3_NEW_HIGH_POWER_REPLICATION.md`.
 
-```text
-spatial_transport: I = +0.250; ID 8/8->6/8; OOD 8/8->8/8
-long_stove_moka:   I = +0.125; ID 1/8->0/8; OOD 0/8->0/8
-```
+The experiment reruns all four Stage-3 candidates (including the sensor-noise
+post-hoc condition) plus the two unique Stage-3B object-layout additions. The
+overlapping `long_stove_moka × object_layout` condition is run only once.
 
-The long task is at/near floor, and Stage 4 was not preceded by an OpenVLA-specific coverage calibration.
-
-Stage 5 is now active:
+The only intended scientific change is replication:
 
 ```text
-Stage 5A0: audit whether >8 native future actions are legitimately available from one inference
-Stage 5A: if tunable, ID-only temporal-coverage calibration; seeds 46..50
-Stage 5B: conditional final OOD × delay replication at frozen calibrated coverage; seeds 51..58
+old: 8 seeds/cell
+new: 128 entirely fresh seeds/cell
 ```
 
-If the checkpoint's maximum native horizon is exactly 8, no artificial longer-horizon rerun is allowed; Stage 4 is then interpreted as a native-horizon operating-envelope diagnostic.
+OpenVLA Stage 5 is canceled.

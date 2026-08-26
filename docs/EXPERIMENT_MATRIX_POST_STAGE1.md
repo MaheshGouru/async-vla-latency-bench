@@ -283,3 +283,34 @@ seeds = 51..58
 coverage = frozen Stage-5A operating point
 exact OOD variants = same as Stage 4
 ```
+
+## Stage 3 New — final high-power replication
+
+Authoritative spec:
+
+```text
+STAGE_3_NEW_HIGH_POWER_REPLICATION.md
+```
+
+Frozen matrix:
+
+```text
+policy = π0.5
+method = RTC
+candidates = 6 unique Stage 3/3B task × perturbation pairs
+horizons = 20,25,30
+scene = ID/OOD
+delay = Native,+200 ms
+seeds = 46..173
+n = 128 fresh seeds/cell
+```
+
+Physical run count with shared ID controls:
+
+```text
+OOD: 6 × 3 × 2 × 128 = 4,608
+ID:  3 × 3 × 2 × 128 = 2,304
+TOTAL = 6,912
+```
+
+Stage 5 OpenVLA calibration is canceled before execution.

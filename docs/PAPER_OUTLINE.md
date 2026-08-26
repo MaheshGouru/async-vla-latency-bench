@@ -235,3 +235,29 @@ These results support a heterogeneous task/layout story and weaken any monotonic
 ## Active next experiment
 
 Stage 5 is defined in `STAGE_5_OPENVLA_OFT_COVERAGE_CALIBRATION_AND_FINAL_REPLICATION.md`.
+
+## Stage 3 New — final precision experiment
+
+Before final paper freeze, repeat the complete unique Stage 3 / Stage 3B
+condition set at `n=128` fresh seeds/cell.
+
+This experiment is designed specifically to address the uncertainty limitation
+in the existing interaction table:
+
+```text
+old Stage 3/3B: n = 8 per cell
+Stage 3 New:    n = 128 fresh seeds per cell
+```
+
+The main Results revision after completion should:
+
+1. show the high-replication interaction-versus-horizon figure in place of the
+   low-n Stage 3/3B figure;
+2. report all six candidate conditions, including the post-hoc sensor-noise row;
+3. directly test cross-task object-layout contrasts rather than inferring
+   heterogeneity from separate significance calls;
+4. state clearly whether the original sparse/heterogeneous narrative survives.
+
+No further OpenVLA experiment is planned. Stage 4 may remain in an appendix or
+limitations discussion as preliminary provenance, but it is not part of the
+final experimental critical path.

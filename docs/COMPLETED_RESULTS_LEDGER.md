@@ -315,3 +315,32 @@ Interpretation: the π0.5 negative long-task interaction did not transfer cleanl
 ## Active next experiment — Stage 5 OpenVLA-OFT temporal-coverage calibration
 
 First determine whether the checkpoint legitimately exposes more than 8 future actions from one inference. If it does, run ID-only calibration and freeze a locally stable coverage before any OOD rerun. If 8 is the native maximum, do not fabricate a longer horizon; retain Stage 4 as the native-horizon diagnostic.
+
+---
+
+## Stage 3 New — high-power replication — ACTIVE
+
+This is a prospective experiment and therefore has no result rows yet.
+
+Purpose:
+
+> Re-estimate the complete unique Stage 3 / Stage 3B interaction matrix at high
+> replication to determine whether the earlier sparse/heterogeneous pattern is
+> reproducible rather than a consequence of `n=8` rollout noise.
+
+Frozen design:
+
+```text
+π0.5 + RTC
+6 unique task × perturbation pairs
+horizons = 20,25,30
+delay = Native,+200 ms
+seeds = 46..173
+n = 128 fresh seeds per unique cell
+old Stage 3/3B rows excluded from primary analysis
+shared ID controls across perturbations on the same task
+physical episodes = 6,912
+```
+
+Do not add any Stage 3 New result to this ledger until the validation gates in
+`STAGE_3_NEW_HIGH_POWER_REPLICATION.md` pass.

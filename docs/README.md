@@ -177,7 +177,7 @@ Stage 3C performed no policy rollouts. It audited indices `{0..7}` by three repe
 | `STAGE_0_LATENCY_CALIBRATION.md` | historical calibration spec |
 | `STAGE_0_N_ACTION_STEPS_25_CONDUCT.md` | actual revised Stage 0 conduct |
 | `STAGE_1_EXPLORATORY_SCREEN.md` | broad OOD × delay screen + result addendum |
-| `STAGE_2_LOCAL_OPERATING_POINT_SENSITIVITY.md` | highest-priority next experiment |
+| `STAGE_2_LOCAL_OPERATING_POINT_SENSITIVITY.md` | completed temporal-coverage sensitivity experiment |
 | `STAGE_2_HORIZON_LATENCY_PHASE_DIAGRAM.md` | superseded full-grid pointer retained for provenance |
 | `STAGE_3_OOD_HORIZON_CONFIRMATION.md` | held-out OOD × horizon follow-up |
 | `STAGE_3B_OBJECT_LAYOUT_CROSS_TASK_REPLICATION.md` | completed targeted cross-task object-layout replication |
@@ -185,7 +185,8 @@ Stage 3C performed no policy rollouts. It audited indices `{0..7}` by three repe
 | `EXPERIMENT_A_OBJECT_LAYOUT_VARIANT_GENERALIZATION.md` | completed within-task multi-layout replication |
 | `EXPERIMENT_B_ADDITIONAL_MULTI_STAGE_TASK_GENERALIZATION.md` | completed second multi-stage task replication |
 | `STAGE_4_SECOND_POLICY_OPENVLA_OFT.md` | completed native-8 second-policy preliminary diagnostic |
-| `STAGE_5_OPENVLA_OFT_COVERAGE_CALIBRATION_AND_FINAL_REPLICATION.md` | active OpenVLA-OFT coverage audit/calibration + conditional final replication |
+| `STAGE_5_OPENVLA_OFT_COVERAGE_CALIBRATION_AND_FINAL_REPLICATION.md` | canceled before execution; retained for provenance |
+| `STAGE_3_NEW_HIGH_POWER_REPLICATION.md` | **active final experiment: fresh 128-seed rerun of the Stage 3/3B matrix** |
 | `STAGE_2_CONFIRMATORY_FOLLOWUP.md` | deprecated pointer retained for provenance |
 | `EXPERIMENT_MATRIX_POST_STAGE1.md` | concise new-run matrix |
 | `METRICS_AND_LOGGING.md` | canonical metrics/logging |
@@ -234,35 +235,27 @@ Future stages use new seed blocks rather than recycling Stage 0/1 episodes.
 - Stage 2: pair horizon/delay cells internally on task + seed + initialization.
 - Stage 3: reuse the **exact Stage 1 OOD variant identities** with held-out seeds.
 
-## Active post-Stage-3C experiment specifications
+## Active final experiment
 
-Experiments A and B are complete. Stage 4 is also complete as a preliminary/native-stack OpenVLA-OFT diagnostic at 8-action coverage.
+OpenVLA Stage 5 is canceled before execution. No additional OpenVLA policy runs are planned.
 
-The active next protocol is:
-
-- `STAGE_5_OPENVLA_OFT_COVERAGE_CALIBRATION_AND_FINAL_REPLICATION.md` — first audit whether OpenVLA-OFT can legitimately expose more than 8 future actions from one inference; if tunable, perform ID-only coverage calibration and freeze a locally stable operating point; then conditionally rerun the same two-task OOD × delay diagnostic with fresh seeds.
-
-## Results ledger
-
-`COMPLETED_RESULTS_LEDGER.md` is the authoritative concise numerical summary for completed Stages 1, 2, 3, 3B, and 3C. Stage-3B numerical outcomes are integrated from the completed result archive.
-
-
-## Final active execution order
-
-1. Run Stage 5A0 capability audit.
-2. If OpenVLA-OFT is fixed to an 8-action native horizon, stop the coverage sweep and retain Stage 4 as the native-horizon second-policy diagnostic.
-3. If multiple legitimate coverages are available from one inference, run Stage 5A on ID only using fresh seeds `46..50` and freeze a locally stable operating point without consulting OOD outcomes.
-4. If warranted by Stage 5A, run Stage 5B on the exact Stage-4 task/variant contrast with fresh seeds `51..58`.
-
-Do not manufacture longer OpenVLA coverage by concatenating predictions or repeating actions.
-
-
-### Stage 4 history note
-
-`STAGE_4_SECOND_POLICY_OPENVLA_OFT.md` is the frozen pre-run Stage 4 specification and must not be modified retroactively.
-
-Post-run Stage 4 results, caveats, and the motivation for Stage 5 are recorded separately in:
+Run exactly:
 
 ```text
-STAGE_4_RESULTS_AND_INTERPRETATION.md
+STAGE_3_NEW_HIGH_POWER_REPLICATION.md
 ```
+
+Stage 3 New reruns the union of Stage 3 and Stage 3B with no new scientific factor:
+
+```text
+π0.5 + RTC
+6 exact frozen task × perturbation pairs
+horizons = 20,25,30
+delay = Native,+200 ms
+fresh seeds = 46..173
+128 seeds per unique cell
+shared ID controls
+6,912 new physical policy episodes
+```
+
+The purpose is to determine whether the earlier low-replication interaction pattern is reproducible or was dominated by rollout noise.

@@ -707,3 +707,69 @@ libero_episode_index = 0
 **Decision:** If Stage 5A yields a legitimate calibrated operating point warranting a rerun, repeat the exact Stage-4 two-task/Objects-Layout/Native-vs-+200-ms diagnostic with fresh seeds `51..58`.
 
 **Consequence:** If the model is natively fixed to exactly 8 actions, do not run an artificial Stage 5B; retain Stage 4 and report the fixed native-horizon limitation.
+
+## D043 — Cancel further OpenVLA experiments
+
+**Date:** 2026-08-26
+
+**Decision:** Do not execute Stage 5 or any additional OpenVLA-OFT experiment.
+
+**Reason:** External review identified the low number of rollouts in the
+existing four-cell interaction estimates as a more important threat to the
+paper's central inference than second-policy breadth.
+
+**Consequence:** Stage 4 remains historical provenance only. Stage 5 is canceled
+before execution.
+
+---
+
+## D044 — Replace the final experiment with a fresh high-power Stage 3 / 3B replication
+
+**Date:** 2026-08-26
+
+**Decision:** Run `STAGE_3_NEW_HIGH_POWER_REPLICATION.md`.
+
+Freeze:
+
+```text
+policy = π0.5
+method = RTC
+candidate set = union of unique Stage 3 and Stage 3B task × perturbation pairs
+include Stage-3 post-hoc goal_drawer × sensor_noise = yes
+horizons = {20,25,30}
+delay = {Native,+200 ms}
+fresh seeds = 46..173
+n = 128 seeds per unique cell
+libero_episode_index = 0
+```
+
+The overlapping `long_stove_moka × object_layout` condition is executed once.
+Shared ID controls are executed once per base task and reused logically across
+perturbation analyses.
+
+Expected new physical rollouts:
+
+```text
+OOD = 4,608
+ID = 2,304
+total = 6,912
+```
+
+The old eight-seed Stage 3/3B rows are not pooled into the primary high-powered
+estimates.
+
+---
+
+## D045 — Treat current sparse/heterogeneous interaction language as provisional
+
+**Date:** 2026-08-26
+
+**Decision:** Until Stage 3 New completes, do not present the low-replication
+Stage 3/3B pattern as established evidence of interaction heterogeneity.
+
+**Reason:** At `n=8`, binary cell proportions move in increments of `0.125`, and
+the worst-case standard error of a four-cell interaction is approximately
+`0.354`.
+
+**Consequence:** Stage 3 New may strengthen, weaken, or falsify the existing
+interaction narrative. Paper language must follow the high-replication result.

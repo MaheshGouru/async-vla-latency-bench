@@ -1,3 +1,21 @@
+# STATUS — CANCELED BEFORE EXECUTION
+
+**Canceled on 2026-08-26. No Stage 5 OpenVLA-OFT experiments will be run.**
+
+The protocol below is retained only for provenance. It must not be dispatched.
+The active final experiment is:
+
+```text
+STAGE_3_NEW_HIGH_POWER_REPLICATION.md
+```
+
+Reason: reviewer feedback identified low rollout count in the existing Stage 3 /
+Stage 3B four-cell interaction estimates as the higher-value limitation to
+address. The remaining compute budget is therefore concentrated on a fresh
+128-seed replication of the π0.5 Stage 3/3B matrix.
+
+---
+
 # Stage 5 — OpenVLA-OFT Temporal-Coverage Calibration and Final Second-Policy Replication
 
 ## 0. Motivation
