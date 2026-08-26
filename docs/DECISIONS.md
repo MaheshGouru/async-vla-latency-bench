@@ -738,8 +738,8 @@ candidate set = union of unique Stage 3 and Stage 3B task × perturbation pairs
 include Stage-3 post-hoc goal_drawer × sensor_noise = yes
 horizons = {20,25,30}
 delay = {Native,+200 ms}
-fresh seeds = 46..173
-n = 128 seeds per unique cell
+fresh seeds = 46..109
+n = 64 seeds per unique cell
 libero_episode_index = 0
 ```
 
@@ -750,9 +750,9 @@ perturbation analyses.
 Expected new physical rollouts:
 
 ```text
-OOD = 4,608
-ID = 2,304
-total = 6,912
+OOD = 1,152
+ID = 1,152
+total = 3,456
 ```
 
 The old eight-seed Stage 3/3B rows are not pooled into the primary high-powered

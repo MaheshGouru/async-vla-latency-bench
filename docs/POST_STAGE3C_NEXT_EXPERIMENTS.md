@@ -58,9 +58,9 @@ Stage 3 and Stage 3B, including the Stage-3 post-hoc sensor-noise condition.
 π0.5 + RTC
 horizons = 20,25,30
 delay = Native,+200 ms
-fresh seeds = 46..173
-128 seeds/cell
-6,912 new physical episodes with shared ID controls
+fresh seeds = 46..109
+64 seeds/cell
+3,456 new physical episodes with shared ID controls
 ```
 
 No old Stage 3/3B episode outcomes are pooled into the primary estimates.

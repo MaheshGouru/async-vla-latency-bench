@@ -189,10 +189,10 @@ same π0.5 + RTC scientific conditions as the union of Stage 3 and Stage 3B
 6 exact frozen task × perturbation pairs
 horizons = {20,25,30}
 delay = {Native,+200 ms}
-fresh seeds = 46..173
-128 seeds per unique cell
+fresh seeds = 46..109
+64 seeds per unique cell
 old Stage 3/3B rows excluded from primary estimates
-6,912 new physical episodes using shared ID controls
+3,456 new physical episodes using shared ID controls
 ```
 
 Until Stage 3 New is complete, the paper's claim that OOD × delay interactions

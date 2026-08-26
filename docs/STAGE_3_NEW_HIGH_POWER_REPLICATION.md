@@ -26,6 +26,8 @@ It is **not**:
 
 The sole substantive change is **statistical replication**.
 
+The final replication target is **64 completely fresh seeds per unique cell**, chosen as the compute-feasible compromise between the original `n=8` design and the initially considered `n=128` design.
+
 ---
 
 ## 1. Motivation
@@ -51,8 +53,8 @@ SE(I) <= sqrt(4 * 0.25 / n) = 1/sqrt(n)
 so:
 
 ```text
-n = 8    -> SE(I) <= 0.354 -> ~95% half-width <= 0.69
-n = 128  -> SE(I) <= 0.088 -> ~95% half-width <= 0.17
+n = 8   -> SE(I) <= 0.354 -> ~95% half-width <= 0.69
+n = 64  -> SE(I) <= 0.125 -> ~95% half-width <= 0.25
 ```
 
 The previous qualitative conclusion that OOD × delay interactions were sparse
@@ -62,7 +64,7 @@ Stage 3 New directly addresses that weakness by rerunning the **same scientific
 conditions** with:
 
 ```text
-128 completely fresh rollout seeds per unique cell
+64 completely fresh rollout seeds per unique cell
 ```
 
 The old Stage 3 / 3B rows remain historical discovery/low-replication evidence
@@ -92,7 +94,7 @@ interaction definition     = same difference-in-differences I
 
 ```text
 old Stage 3 / 3B seeds     = 14..21  (8 seeds)
-Stage 3 New seeds          = 46..173 (128 completely fresh seeds)
+Stage 3 New seeds          = 46..109 (128 completely fresh seeds)
 ```
 
 No old Stage 3 / Stage 3B success rows are pooled into the primary Stage 3 New
@@ -105,10 +107,10 @@ analysis.
 Use exactly:
 
 ```python
-SEEDS = list(range(46, 174))
-assert len(SEEDS) == 128
+SEEDS = list(range(46, 110))
+assert len(SEEDS) == 64
 assert SEEDS[0] == 46
-assert SEEDS[-1] == 173
+assert SEEDS[-1] == 109
 ```
 
 Do not replace failed policy rollouts with different seeds.
@@ -154,7 +156,7 @@ Therefore Stage 3 New contains exactly:
 3 horizons
 2 delay conditions
 2 scene conditions for each candidate analysis
-128 fresh rollout seeds
+64 fresh rollout seeds
 ```
 
 ---
@@ -179,7 +181,7 @@ For each unique OOD candidate:
 scene ∈ {ID, OOD}
 delay ∈ {Native, Native +200 ms}
 n_action_steps ∈ {20,25,30}
-seed ∈ {46,...,173}
+seed ∈ {46,...,109}
 method = RTC
 libero_episode_index = 0
 ```
@@ -223,7 +225,7 @@ candidate analyses for that same base task.
 × 3 horizons
 × 2 delays
 × 128 seeds
-= 4,608 OOD episodes
+= 1,152 OOD episodes
 ```
 
 ### Physical ID episodes
@@ -233,20 +235,20 @@ candidate analyses for that same base task.
 × 3 horizons
 × 2 delays
 × 128 seeds
-= 2,304 ID episodes
+= 1,152 ID episodes
 ```
 
 ### Total new physical policy rollouts
 
 ```text
-4,608 + 2,304 = 6,912 new episodes
+2,304 + 1,152 = 3,456 new episodes
 ```
 
 For presentation, the six candidate-specific four-cell matrices contain:
 
 ```text
 6 candidates × 3 horizons × 4 cells × 128
-= 9,216 candidate-cell observations
+= 4,608 candidate-cell observations
 ```
 
 but the shared ID rows are **references to the same physical episodes**. Never
@@ -348,7 +350,7 @@ I_h
 
 with a seed-cluster paired bootstrap 95% confidence interval.
 
-Resample the **128 complete seed blocks**, not individual episode rows.
+Resample the **64 complete seed blocks**, not individual episode rows.
 
 Each resampled seed block must carry all relevant:
 
@@ -553,7 +555,7 @@ stage3_new_low_n_vs_high_n_interactions.png
 ```
 
 The low-n versus high-n plot may display Stage 3/3B estimates for historical
-comparison, but the new primary estimates must use only seeds `46..173`.
+comparison, but the new primary estimates must use only seeds `46..109`.
 
 ---
 
@@ -562,7 +564,7 @@ comparison, but the new primary estimates must use only seeds `46..173`.
 Before any result is interpreted, assert:
 
 ```text
-seeds == exactly 46..173
+seeds == exactly 46..109
 len(unique seeds) == 128
 horizons == {20,25,30}
 added_delay_ms == {0,200}
@@ -574,9 +576,9 @@ candidate set == exactly the six frozen candidate pairs above
 Expected physical counts:
 
 ```text
-OOD rows = 4,608
-ID rows  = 2,304
-total physical rows = 6,912
+OOD rows = 2,304
+ID rows  = 1,152
+total physical rows = 3,456
 ```
 
 For every OOD candidate × seed:
@@ -607,7 +609,7 @@ Reject analysis if:
 This experiment is intentionally large:
 
 ```text
-6,912 new physical policy episodes
+3,456 new physical policy episodes
 ```
 
 The runner must support deterministic resume from a manifest.

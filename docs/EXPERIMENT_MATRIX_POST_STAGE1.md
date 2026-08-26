@@ -301,16 +301,16 @@ candidates = 6 unique Stage 3/3B task × perturbation pairs
 horizons = 20,25,30
 scene = ID/OOD
 delay = Native,+200 ms
-seeds = 46..173
-n = 128 fresh seeds/cell
+seeds = 46..109
+n = 64 fresh seeds/cell
 ```
 
 Physical run count with shared ID controls:
 
 ```text
-OOD: 6 × 3 × 2 × 128 = 4,608
-ID:  3 × 3 × 2 × 128 = 2,304
-TOTAL = 6,912
+OOD: 6 × 3 × 2 × 128 = 1,152
+ID:  3 × 3 × 2 × 128 = 1,152
+TOTAL = 3,456
 ```
 
 Stage 5 OpenVLA calibration is canceled before execution.

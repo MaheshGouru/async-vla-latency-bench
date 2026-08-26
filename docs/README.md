@@ -186,7 +186,7 @@ Stage 3C performed no policy rollouts. It audited indices `{0..7}` by three repe
 | `EXPERIMENT_B_ADDITIONAL_MULTI_STAGE_TASK_GENERALIZATION.md` | completed second multi-stage task replication |
 | `STAGE_4_SECOND_POLICY_OPENVLA_OFT.md` | completed native-8 second-policy preliminary diagnostic |
 | `STAGE_5_OPENVLA_OFT_COVERAGE_CALIBRATION_AND_FINAL_REPLICATION.md` | canceled before execution; retained for provenance |
-| `STAGE_3_NEW_HIGH_POWER_REPLICATION.md` | **active final experiment: fresh 128-seed rerun of the Stage 3/3B matrix** |
+| `STAGE_3_NEW_HIGH_POWER_REPLICATION.md` | **active final experiment: fresh 64-seed rerun of the Stage 3/3B matrix** |
 | `STAGE_2_CONFIRMATORY_FOLLOWUP.md` | deprecated pointer retained for provenance |
 | `EXPERIMENT_MATRIX_POST_STAGE1.md` | concise new-run matrix |
 | `METRICS_AND_LOGGING.md` | canonical metrics/logging |
@@ -252,10 +252,10 @@ Stage 3 New reruns the union of Stage 3 and Stage 3B with no new scientific fact
 6 exact frozen task × perturbation pairs
 horizons = 20,25,30
 delay = Native,+200 ms
-fresh seeds = 46..173
-128 seeds per unique cell
+fresh seeds = 46..109
+64 seeds per unique cell
 shared ID controls
-6,912 new physical policy episodes
+3,456 new physical policy episodes
 ```
 
 The purpose is to determine whether the earlier low-replication interaction pattern is reproducible or was dominated by rollout noise.

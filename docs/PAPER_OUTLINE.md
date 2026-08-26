@@ -246,7 +246,7 @@ in the existing interaction table:
 
 ```text
 old Stage 3/3B: n = 8 per cell
-Stage 3 New:    n = 128 fresh seeds per cell
+Stage 3 New:    n = 64 fresh seeds per cell
 ```
 
 The main Results revision after completion should:

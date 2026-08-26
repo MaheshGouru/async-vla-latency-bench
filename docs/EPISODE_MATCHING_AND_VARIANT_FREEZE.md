@@ -313,7 +313,7 @@ Stage 5 does not create initialization diversity; `libero_episode_index=0` remai
 Fresh seeds:
 
 ```text
-SEEDS = 46..173 inclusive
+SEEDS = 46..109 inclusive
 ```
 
 For every fixed:

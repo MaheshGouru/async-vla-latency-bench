@@ -226,11 +226,11 @@ candidate pairs = 6 exact frozen Stage 3 / Stage 3B task × perturbation pairs
 include Stage-3 post-hoc goal_drawer × sensor_noise = yes
 horizons = 20,25,30
 delay = Native,+200 ms
-seeds = 46..173
+seeds = 46..109
 fresh seeds = 128
 libero_episode_index = 0
 shared ID controls = yes
-new physical episodes = 6,912
+new physical episodes = 3,456
 ```
 
 Primary dataset must contain only the new seed block. Do not pool old Stage 3 /
@@ -243,6 +243,6 @@ Implementation priority:
 2. deterministic resumable runner
 3. shared-ID execution without duplicate physical rows
 4. per-seed six-cell reset-pairing audit
-5. 128-seed clustered bootstrap analysis
+5. 64-seed clustered bootstrap analysis
 6. low-n versus high-n comparison figure
 ```
