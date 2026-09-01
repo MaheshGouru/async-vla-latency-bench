@@ -88,6 +88,10 @@ else
     echo "No usable sudo (rootless/no-new-privileges container detected)."
     echo "Falling back to a conda-forge user-space prefix at \$HOME/stage1-native."
     command -v mamba >/dev/null 2>&1 && CONDA_BIN=mamba || CONDA_BIN=conda
+    # Shared multi-user conda installs (e.g. TLJH) keep a shared package cache
+    # this user can't write a lockfile into. Redirect to a per-user cache dir.
+    mkdir -p "$HOME/.conda/pkgs"
+    export CONDA_PKGS_DIRS="$HOME/.conda/pkgs"
     if [ ! -x "$HOME/stage1-native/bin/convert" ]; then
         "$CONDA_BIN" create -y -p "$HOME/stage1-native" -c conda-forge \
             imagemagick mesalib glew expat glib fontconfig patchelf unzip
