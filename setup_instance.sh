@@ -44,40 +44,66 @@ echo "========================================================"
 # -----------------------------------------------------------
 echo ""
 echo ">>> [1/8] Installing system packages..."
-sudo apt-get update -qq
-sudo apt-get install -y --no-install-recommends \
-    git \
-    unzip \
-    build-essential \
-    cmake \
-    patchelf \
-    libgl1-mesa-dev \
-    libegl1-mesa-dev \
-    libglew-dev \
-    libosmesa6-dev \
-    libglib2.0-0 \
-    libexpat1 \
-    libfontconfig1-dev \
-    imagemagick \
-    libmagickwand-dev \
-    software-properties-common \
-    curl \
-    wget \
-    tmux
+if sudo -n true 2>/dev/null; then
+    sudo apt-get update -qq
+    sudo apt-get install -y --no-install-recommends \
+        git \
+        unzip \
+        build-essential \
+        cmake \
+        patchelf \
+        libgl1-mesa-dev \
+        libegl1-mesa-dev \
+        libglew-dev \
+        libosmesa6-dev \
+        libglib2.0-0 \
+        libexpat1 \
+        libfontconfig1-dev \
+        imagemagick \
+        libmagickwand-dev \
+        software-properties-common \
+        curl \
+        wget \
+        tmux
 
-# Python 3.12 via deadsnakes (Lambda/CUDA base image ships 3.10)
-sudo add-apt-repository -y ppa:deadsnakes/ppa
-sudo apt-get update -qq
-sudo apt-get install -y --no-install-recommends \
-    python3.12 \
-    python3.12-dev \
-    python3.12-venv
+    # Python 3.12 via deadsnakes (Lambda/CUDA base image ships 3.10)
+    sudo add-apt-repository -y ppa:deadsnakes/ppa
+    sudo apt-get update -qq
+    sudo apt-get install -y --no-install-recommends \
+        python3.12 \
+        python3.12-dev \
+        python3.12-venv
 
-# Make python3.12 the default python3
-sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.12 10
-sudo update-alternatives --install /usr/bin/python  python  /usr/bin/python3.12 10
-sudo python3.12 -m ensurepip --upgrade
-sudo python3.12 -m pip install --upgrade pip wheel setuptools
+    # Make python3.12 the default python3
+    sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.12 10
+    sudo update-alternatives --install /usr/bin/python  python  /usr/bin/python3.12 10
+    sudo python3.12 -m ensurepip --upgrade
+    sudo python3.12 -m pip install --upgrade pip wheel setuptools
+else
+    # Rootless container (e.g. no-new-privileges): no apt available. Build the
+    # native libs apt would have provided as a conda-forge prefix at
+    # $HOME/stage1-native instead. run_stage3_new.py's _ensure_ood_native_prefix
+    # already knows to point MAGICK_HOME/PATH/LD_LIBRARY_PATH at this exact
+    # directory for the OOD scene, so no further wiring is needed at run time.
+    echo "No usable sudo (rootless/no-new-privileges container detected)."
+    echo "Falling back to a conda-forge user-space prefix at \$HOME/stage1-native."
+    command -v mamba >/dev/null 2>&1 && CONDA_BIN=mamba || CONDA_BIN=conda
+    if [ ! -x "$HOME/stage1-native/bin/convert" ]; then
+        "$CONDA_BIN" create -y -p "$HOME/stage1-native" -c conda-forge \
+            imagemagick mesalib glew expat glib fontconfig patchelf unzip
+    fi
+    export PATH="$HOME/stage1-native/bin:$PATH"
+    export LD_LIBRARY_PATH="$HOME/stage1-native/lib:${LD_LIBRARY_PATH:-}"
+    export CPATH="$HOME/stage1-native/include:${CPATH:-}"
+    export LIBRARY_PATH="$HOME/stage1-native/lib:${LIBRARY_PATH:-}"
+    export PKG_CONFIG_PATH="$HOME/stage1-native/lib/pkgconfig:${PKG_CONFIG_PATH:-}"
+    if ! command -v python3.12 >/dev/null 2>&1; then
+        echo "ERROR: python3.12 not found and cannot install it without sudo."
+        echo "Ask your environment provider for a Python 3.12 base image, or add"
+        echo "'python=3.12' to the conda create command above and re-run."
+        exit 1
+    fi
+fi
 
 echo "Python: $(python3 --version)"
 echo "DONE system packages"
