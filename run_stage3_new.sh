@@ -114,4 +114,4 @@ user = api.whoami(token=token)["name"]
 print(f"Upload complete: https://huggingface.co/datasets/{user}/stage3-new-results")
 PYEOF
 
-sudo shutdown -h now
+sudo -n true 2>/dev/null && sudo shutdown -h now || echo "No usable sudo — skipping auto-shutdown; everything above already completed."
