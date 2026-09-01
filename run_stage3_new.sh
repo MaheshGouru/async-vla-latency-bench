@@ -66,12 +66,19 @@ echo "========================================================"
 # or it silently can't find Mesa's software EGL driver at all; the plain
 # LD_LIBRARY_PATH prefix handles the rest (libEGL/libGL/MagickWand).
 if [ -d "$STAGE1_NATIVE" ]; then
+    # robosuite's own EGL device selection (not mujoco's) checks
+    # MUJOCO_EGL_DEVICE_ID first and falls back to parsing CUDA_VISIBLE_DEVICES
+    # as a plain integer otherwise -- which crashes on a MIG UUID like
+    # "MIG-3c487...". We're on Mesa's software EGL renderer here (not real
+    # hardware EGL), which only ever enumerates one device, so index 0 is
+    # always correct regardless of the underlying MIG slice.
     NATIVE_ENV=(env
         "PYTHONPATH=$LIBERO_PLUS"
         "LD_LIBRARY_PATH=$STAGE1_NATIVE/lib:${LD_LIBRARY_PATH:-}"
         "PATH=$STAGE1_NATIVE/bin:$PATH"
         "MAGICK_HOME=$STAGE1_NATIVE"
-        "__EGL_VENDOR_LIBRARY_DIRS=$STAGE1_NATIVE/share/glvnd/egl_vendor.d")
+        "__EGL_VENDOR_LIBRARY_DIRS=$STAGE1_NATIVE/share/glvnd/egl_vendor.d"
+        "MUJOCO_EGL_DEVICE_ID=0")
 else
     NATIVE_ENV=(env "PYTHONPATH=$LIBERO_PLUS")
 fi

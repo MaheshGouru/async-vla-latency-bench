@@ -288,11 +288,19 @@ def main() -> int:
                       f"success={summary['success']}", flush=True)
             except Exception as exc:
                 failures += 1
-                _merge(invalid_path, [{
-                    "run_id": plan["run_id"], "seed": plan["seed"],
-                    "failure_class": "infrastructure_corruption",
-                    "invalid_reason": repr(exc),
-                }])
+                try:
+                    _merge(invalid_path, [{
+                        "run_id": plan["run_id"], "seed": plan["seed"],
+                        "failure_class": "infrastructure_corruption",
+                        "invalid_reason": repr(exc),
+                    }])
+                except Exception as log_exc:
+                    # Never let a bookkeeping failure (e.g. a corrupted CSV from
+                    # a prior crash) take down the whole multi-hour run over a
+                    # single episode that was already going to be marked invalid.
+                    print(f"WARNING: could not record invalid episode "
+                          f"{plan['run_id']} to {invalid_path}: {log_exc}",
+                          flush=True)
                 print(f"[{completed}/{len(plans)}] {plan['run_id']}: INVALID {exc}",
                       flush=True)
                 if args.verbose:
