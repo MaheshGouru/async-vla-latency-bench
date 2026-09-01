@@ -7,6 +7,7 @@ REPO=~/async-vla-latency-bench
 OUT=~/stage3_new
 MANIFEST=$OUT/stage3_new_manifest.csv
 LIBERO_PLUS=~/LIBERO-plus
+STAGE1_NATIVE=~/stage1-native
 
 BENCH_SHA=11fcf477223cc6212b7c1d9bca82e081cf3a1f1d
 LEROBOT_SHA=2aba372b4e217cc47db28e0f836859b20d1456c9
@@ -59,10 +60,25 @@ echo ""
 echo "========================================================"
 echo "[4/7] Full OOD run (2,304 episodes)..."
 echo "========================================================"
-PYTHONPATH="$LIBERO_PLUS" $VENV_OOD/bin/python -m async_vla_benchmark.scripts.run_stage3_new \
+# On rootless containers, ~/stage1-native is a conda-forge prefix built by
+# setup_instance.sh's sudo fallback (see [1/8] there). Its GLVND libEGL.so
+# dispatcher needs __EGL_VENDOR_LIBRARY_DIRS pointed at its vendor ICD JSON
+# or it silently can't find Mesa's software EGL driver at all; the plain
+# LD_LIBRARY_PATH prefix handles the rest (libEGL/libGL/MagickWand).
+if [ -d "$STAGE1_NATIVE" ]; then
+    NATIVE_ENV=(env
+        "PYTHONPATH=$LIBERO_PLUS"
+        "LD_LIBRARY_PATH=$STAGE1_NATIVE/lib:${LD_LIBRARY_PATH:-}"
+        "PATH=$STAGE1_NATIVE/bin:$PATH"
+        "MAGICK_HOME=$STAGE1_NATIVE"
+        "__EGL_VENDOR_LIBRARY_DIRS=$STAGE1_NATIVE/share/glvnd/egl_vendor.d")
+else
+    NATIVE_ENV=(env "PYTHONPATH=$LIBERO_PLUS")
+fi
+"${NATIVE_ENV[@]}" $VENV_OOD/bin/python -m async_vla_benchmark.scripts.run_stage3_new \
     --config "$REPO/async_vla_benchmark/configs/stage3_new.yaml" \
     --manifest "$MANIFEST" \
-    --output-dir "$OUT" --scene ood --resume
+    --output-dir "$OUT" --scene ood --resume --verbose
 
 echo ""
 echo "========================================================"
