@@ -8,14 +8,16 @@ OUT=~/stage3_new
 MANIFEST=$OUT/stage3_new_manifest.csv
 LIBERO_PLUS=~/LIBERO-plus
 STAGE1_NATIVE=~/stage1-native
+STAGE1_NATIVE_APT=~/stage1-native-apt
+XKBCOMP_REDIRECT=~/xkbcomp_redirect.so
 
 BENCH_SHA=11fcf477223cc6212b7c1d9bca82e081cf3a1f1d
 LEROBOT_SHA=2aba372b4e217cc47db28e0f836859b20d1456c9
 LIBEROPLUS_SHA=4976dc30028e805ff8094b55501d532c48fec182
 MODEL_SHA=8e174154ef5f6c60a8da12ae99c303d8963138c1
 
-export MUJOCO_GL=egl
-export PYOPENGL_PLATFORM=egl
+export MUJOCO_GL=osmesa
+export PYOPENGL_PLATFORM=osmesa
 export MPLBACKEND=Agg
 
 mkdir -p "$OUT"
@@ -70,24 +72,36 @@ echo "========================================================"
 echo "[4/7] Full OOD run (2,304 episodes)..."
 echo "========================================================"
 # On rootless containers, ~/stage1-native is a conda-forge prefix built by
-# setup_instance.sh's sudo fallback (see [1/8] there). Its GLVND libEGL.so
-# dispatcher needs __EGL_VENDOR_LIBRARY_DIRS pointed at its vendor ICD JSON
-# or it silently can't find Mesa's software EGL driver at all; the plain
-# LD_LIBRARY_PATH prefix handles the rest (libEGL/libGL/MagickWand).
+# setup_instance.sh's sudo fallback (see [1/8] there). This box has no EGL
+# at all (confirmed: no libEGL, no vendor ICDs, no NVIDIA EGL anywhere on
+# the filesystem) -- but it does have a real system GLX/GL stack, so we
+# render via GLFW against a virtual X display (Xvfb) instead. Xvfb itself
+# was apt-get-download'd (no root needed) into ~/stage1-native-apt, along
+# with its transitive deps (libxfont2, libfontenc1, x11-xkb-utils, xkb-data).
 if [ -d "$STAGE1_NATIVE" ]; then
-    # robosuite's own EGL device selection (not mujoco's) checks
-    # MUJOCO_EGL_DEVICE_ID first and falls back to parsing CUDA_VISIBLE_DEVICES
-    # as a plain integer otherwise -- which crashes on a MIG UUID like
-    # "MIG-3c487...". We're on Mesa's software EGL renderer here (not real
-    # hardware EGL), which only ever enumerates one device, so index 0 is
-    # always correct regardless of the underlying MIG slice.
-    NATIVE_ENV=(env
+    XDG_RUNTIME_DIR_PATH="/tmp/xdg-runtime-$(whoami)"
+    mkdir -p "$XDG_RUNTIME_DIR_PATH"
+    chmod 700 "$XDG_RUNTIME_DIR_PATH"
+
+    # Xvfb hardcodes exec("/usr/bin/xkbcomp") with no override flag, and
+    # /usr/bin isn't writable here -- an LD_PRELOAD shim (xkbcomp_redirect.c)
+    # intercepts that execve() and redirects it to our apt-extracted binary.
+    if [ ! -e /tmp/.X99-lock ]; then
+        LD_LIBRARY_PATH="$STAGE1_NATIVE_APT/usr/lib/x86_64-linux-gnu:${LD_LIBRARY_PATH:-}" \
+        LD_PRELOAD="$XKBCOMP_REDIRECT" \
+        XKBCOMP_REPLACEMENT="$STAGE1_NATIVE_APT/usr/bin/xkbcomp" \
+            "$STAGE1_NATIVE_APT/usr/bin/Xvfb" :99 -screen 0 1280x1024x24 -nolisten tcp &
+        sleep 2
+    fi
+
+    NATIVE_ENV=(env -u PYOPENGL_PLATFORM
         "PYTHONPATH=$LIBERO_PLUS"
         "LD_LIBRARY_PATH=$STAGE1_NATIVE/lib:${LD_LIBRARY_PATH:-}"
         "PATH=$STAGE1_NATIVE/bin:$PATH"
         "MAGICK_HOME=$STAGE1_NATIVE"
-        "__EGL_VENDOR_LIBRARY_DIRS=$STAGE1_NATIVE/share/glvnd/egl_vendor.d"
-        "MUJOCO_EGL_DEVICE_ID=0")
+        "MUJOCO_GL=glfw"
+        "DISPLAY=:99"
+        "XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR_PATH")
 else
     NATIVE_ENV=(env "PYTHONPATH=$LIBERO_PLUS")
 fi
