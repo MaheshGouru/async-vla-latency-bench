@@ -20,6 +20,15 @@ export MPLBACKEND=Agg
 
 mkdir -p "$OUT"
 
+# Heartbeat: a stale-timestamp check (`date -d @$(cat ~/stage3_new/heartbeat.txt)`
+# or just comparing mtime to `date`) tells you in seconds whether this run is
+# still alive, instead of needing to reattach and watch output for a while --
+# useful after the whole underlying server got stopped/restarted mid-run once
+# already (idle-culler on this shared JupyterHub instance).
+( while true; do date +%s > "$OUT/heartbeat.txt"; sleep 60; done ) &
+HEARTBEAT_PID=$!
+trap 'kill "$HEARTBEAT_PID" 2>/dev/null || true' EXIT
+
 echo "========================================================"
 echo "[1/7] Generating full manifest..."
 echo "========================================================"
