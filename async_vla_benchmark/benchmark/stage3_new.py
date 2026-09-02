@@ -1,6 +1,9 @@
 """Frozen Stage 3 New — high-power replication of the Stage 3 / Stage 3B matrix.
 
-64 completely fresh rollout seeds (46-109) per unique cell.
+36 completely fresh rollout seeds (46-81) per unique cell -- reduced from the
+originally planned 64 (46-109) to fit a hard compute-time budget. Still far
+more than the original 8-seed Stage 3/3B design (margin of error ~0.33 vs
+~0.25 at 64 seeds vs ~0.69 at 8 seeds).
 Seeds 14-21 (old Stage 3/3B block) must never appear here.
 """
 
@@ -11,15 +14,15 @@ from typing import Mapping, Sequence
 
 HORIZONS = (20, 25, 30)
 ADDED_DELAYS_MS = (0, 200)
-SEEDS = tuple(range(46, 110))  # 64 fresh seeds
+SEEDS = tuple(range(46, 82))  # 36 fresh seeds
 METHOD = "rtc"
 STAGE_LABEL = "stage3_new"
 
 _OLD_SEEDS = frozenset(range(14, 22))
 
-_EXPECTED_OOD   = 6 * 3 * 2 * 64   # 2,304
-_EXPECTED_ID    = 3 * 3 * 2 * 64   # 1,152
-_EXPECTED_TOTAL = _EXPECTED_OOD + _EXPECTED_ID  # 3,456
+_EXPECTED_OOD   = 6 * 3 * 2 * len(SEEDS)
+_EXPECTED_ID    = 3 * 3 * 2 * len(SEEDS)
+_EXPECTED_TOTAL = _EXPECTED_OOD + _EXPECTED_ID
 
 TASKS = {
     "spatial_transport": {

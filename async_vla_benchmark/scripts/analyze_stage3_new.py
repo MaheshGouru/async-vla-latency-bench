@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Bootstrap analysis for Stage 3 New high-power replication.
 
-Resamples 64 complete seed blocks (not individual rows) with at least 10,000
-replicates. Primary operating point: h=25. Includes cross-task object-layout
+Resamples complete seed blocks (not individual rows), one block per SEEDS
+entry, with at least 10,000 replicates. Primary operating point: h=25. Includes cross-task object-layout
 contrasts and a low-n vs high-n comparison table.
 """
 from __future__ import annotations
@@ -10,7 +10,7 @@ import argparse, math, os, random
 from pathlib import Path
 
 from async_vla_benchmark.benchmark.logging import read_csv, write_csv
-from async_vla_benchmark.benchmark.stage3_new import CANDIDATES, HORIZONS, SEEDS, _OLD_SEEDS
+from async_vla_benchmark.benchmark.stage3_new import CANDIDATES, HORIZONS, SEEDS, _OLD_SEEDS, _EXPECTED_TOTAL
 
 _OBJECT_LAYOUT_KEYS = ("spatial_object_layout", "goal_object_layout", "long_stove_object_layout")
 
@@ -94,8 +94,8 @@ def main() -> int:
     if result_seeds & _OLD_SEEDS:
         raise ValueError("Results contain forbidden old Stage 3/3B seeds (14-21)")
 
-    if len(all_rows) != 3456 and not args.allow_incomplete:
-        raise ValueError(f"Refusing incomplete analysis: {len(all_rows)}/3456 valid rows")
+    if len(all_rows) != _EXPECTED_TOTAL and not args.allow_incomplete:
+        raise ValueError(f"Refusing incomplete analysis: {len(all_rows)}/{_EXPECTED_TOTAL} valid rows")
 
     unique = {r["run_id"]: r for r in all_rows}
     if len(unique) != len(all_rows) and not args.allow_incomplete:
@@ -308,7 +308,7 @@ def main() -> int:
     lines = [
         "# Stage 3 New — High-Power Replication Observations",
         "",
-        f"- Completed: {len(rows)}/3456 valid episodes.",
+        f"- Completed: {len(rows)}/{_EXPECTED_TOTAL} valid episodes.",
         f"- Fresh seeds: {min(seeds_present)}..{max(seeds_present)} "
         f"({len(seeds_present)} seeds per cell).",
         "- Old Stage 3/3B seeds (14-21) excluded from all estimates.",

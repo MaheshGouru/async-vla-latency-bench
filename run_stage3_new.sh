@@ -60,7 +60,7 @@ $VENV_ID/bin/python -m async_vla_benchmark.scripts.run_stage3_new \
 
 echo ""
 echo "========================================================"
-echo "[3/7] Full ID run (1,152 episodes)..."
+echo "[3/7] Full ID run (648 episodes; already complete from restored 64-seed data)..."
 echo "========================================================"
 $VENV_ID/bin/python -m async_vla_benchmark.scripts.run_stage3_new \
     --config "$REPO/async_vla_benchmark/configs/stage3_new.yaml" \
@@ -69,7 +69,7 @@ $VENV_ID/bin/python -m async_vla_benchmark.scripts.run_stage3_new \
 
 echo ""
 echo "========================================================"
-echo "[4/7] Full OOD run (2,304 episodes)..."
+echo "[4/7] Full OOD run (1,296 episodes; reduced from 2,304 for the 20hr deadline)..."
 echo "========================================================"
 # On rootless containers, ~/stage1-native is a conda-forge prefix built by
 # setup_instance.sh's sudo fallback (see [1/8] there). This box has no EGL
