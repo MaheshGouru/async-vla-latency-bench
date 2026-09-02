@@ -99,7 +99,7 @@ if [ -d "$STAGE1_NATIVE" ]; then
         "LD_LIBRARY_PATH=$STAGE1_NATIVE/lib:${LD_LIBRARY_PATH:-}"
         "PATH=$STAGE1_NATIVE/bin:$PATH"
         "MAGICK_HOME=$STAGE1_NATIVE"
-        "MUJOCO_GL=glfw"
+        "MUJOCO_GL=glx"
         "DISPLAY=:99"
         "XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR_PATH")
 else
