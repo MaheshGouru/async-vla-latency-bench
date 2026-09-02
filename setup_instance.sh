@@ -18,7 +18,7 @@ LEROBOT_COMMIT="2aba372b4e217cc47db28e0f836859b20d1456c9"
 LIBERO_PLUS_SHA="4976dc3"
 MODEL_REVISION="8e174154ef5f6c60a8da12ae99c303d8963138c1"
 REPO_URL="https://github.com/MaheshGouru/async-vla-latency-bench.git"
-REPO_BRANCH="mathew_branch"
+REPO_BRANCH="stage3-new-36-seeds"
 LIBERO_PLUS_URL="https://github.com/sylvestf/LIBERO-plus.git"
 
 REPO="$HOME/async-vla-latency-bench"

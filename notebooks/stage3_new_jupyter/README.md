@@ -11,14 +11,14 @@ Frozen physical matrix:
 RTC only
 horizons                 = {20,25,30}
 added delay              = {0,200} ms
-fresh rollout seeds      = {46,...,109} (64 seeds)
-shared ID episodes       = 1,152
-OOD episodes             = 2,304
-total physical episodes  = 3,456
+fresh rollout seeds      = {46,...,81} (36 seeds)
+shared ID episodes       = 648
+OOD episodes             = 1,296
+total physical episodes  = 1,944
 ```
 
 The three base-task ID controls are executed once and joined logically to the
-six candidate analyses. In particular, the 384 `goal_drawer` ID episodes are
+six candidate analyses. In particular, the 216 `goal_drawer` ID episodes are
 reused across its four OOD candidates without copying episode rows. Sensor
 noise remains labeled `posthoc_replication`.
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate the Stage 3 New 3,456-row manifest (or an 18-row smoke manifest)."""
+"""Generate the Stage 3 New 1,944-row manifest (or an 18-row smoke manifest)."""
 from __future__ import annotations
 import argparse
 from pathlib import Path
