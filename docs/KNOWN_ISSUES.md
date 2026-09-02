@@ -46,9 +46,9 @@ KXXX | Area | Issue | Impact | Mitigation
 Stage 5 is canceled. Stage 3 New is the active final experiment.
 
 ```text
-K040 | Interaction precision | Stage 3/3B use only eight rollout seeds per cell | 0.125 cell granularity and very wide interaction uncertainty can make apparent heterogeneity indistinguishable from rollout noise | rerun the complete unique Stage 3/3B matrix with 64 fresh seeds/cell
+K040 | Interaction precision | Stage 3/3B use only eight rollout seeds per cell | 0.125 cell granularity and very wide interaction uncertainty can make apparent heterogeneity indistinguishable from rollout noise | rerun the complete unique Stage 3/3B matrix with 36 fresh seeds/cell
 K041 | Multiple candidate interactions | Stage 3 New reports 6 candidates × 3 horizons | per-cell significance fishing could recreate the original selection problem | report all effects/CIs; h=25 is frozen primary operating point; use direct cross-task interaction contrasts and preserve post-hoc labels
 K042 | Shared ID controls | four goal-drawer OOD candidates share the same ID base task | copying ID rows could be mistaken for independent policy rollouts | execute one physical ID episode per task×horizon×delay×seed and reuse by reference in candidate-level analysis
-K043 | Compute interruption | Stage 3 New requires 3,456 fresh physical episodes | partial completion could tempt outcome-dependent matrix reduction | deterministic manifest + resume; never choose a favorable subset after interim outcomes
+K043 | Compute interruption | Stage 3 New requires 1,944 fresh physical episodes | partial completion could tempt outcome-dependent matrix reduction | deterministic manifest + resume; never choose a favorable subset after interim outcomes
 K044 | Prior low-n narrative | current paper language says interactions are sparse/heterogeneous | high-n rerun may contradict it | precommit to revising the narrative in either direction based on Stage 3 New
 ```

@@ -12,7 +12,7 @@ STAGE_3_NEW_HIGH_POWER_REPLICATION.md
 Reason: reviewer feedback identified low rollout count in the existing Stage 3 /
 Stage 3B four-cell interaction estimates as the higher-value limitation to
 address. The remaining compute budget is therefore concentrated on a fresh
-128-seed replication of the π0.5 Stage 3/3B matrix.
+36-seed replication of the π0.5 Stage 3/3B matrix.
 
 ---
 

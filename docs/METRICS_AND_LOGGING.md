@@ -622,8 +622,8 @@ execution_method
 Fresh seed block:
 
 ```text
-46..109 inclusive
-n = 64
+46..81 inclusive
+n = 36
 ```
 
 For every candidate and horizon:
@@ -638,7 +638,7 @@ I_h =
 Report:
 
 ```text
-successes / 128
+successes / 36
 Wilson 95% CI for every success proportion
 I_h
 seed-cluster paired-bootstrap 95% CI for I_h

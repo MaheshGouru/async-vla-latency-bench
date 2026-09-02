@@ -189,10 +189,10 @@ same π0.5 + RTC scientific conditions as the union of Stage 3 and Stage 3B
 6 exact frozen task × perturbation pairs
 horizons = {20,25,30}
 delay = {Native,+200 ms}
-fresh seeds = 46..109
-64 seeds per unique cell
+fresh seeds = 46..81
+36 seeds per unique cell
 old Stage 3/3B rows excluded from primary estimates
-3,456 new physical episodes using shared ID controls
+1,944 new physical episodes using shared ID controls
 ```
 
 Until Stage 3 New is complete, the paper's claim that OOD × delay interactions
@@ -277,7 +277,7 @@ The only intended scientific change is replication:
 
 ```text
 old: 8 seeds/cell
-new: 128 entirely fresh seeds/cell
+new: 36 entirely fresh seeds/cell
 ```
 
 OpenVLA Stage 5 is canceled.

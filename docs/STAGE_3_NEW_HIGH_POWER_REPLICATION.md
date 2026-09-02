@@ -26,7 +26,7 @@ It is **not**:
 
 The sole substantive change is **statistical replication**.
 
-The final replication target is **64 completely fresh seeds per unique cell**, chosen as the compute-feasible compromise between the original `n=8` design and the initially considered `n=128` design.
+The final replication target is **36 completely fresh seeds per unique cell**, chosen as the compute-feasible compromise between the original `n=8` design and the initially considered `n=128` design.
 
 ---
 
@@ -54,7 +54,7 @@ so:
 
 ```text
 n = 8   -> SE(I) <= 0.354 -> ~95% half-width <= 0.69
-n = 64  -> SE(I) <= 0.125 -> ~95% half-width <= 0.25
+n = 36  -> SE(I) <= 0.167 -> ~95% half-width <= 0.33
 ```
 
 The previous qualitative conclusion that OOD × delay interactions were sparse
@@ -64,7 +64,7 @@ Stage 3 New directly addresses that weakness by rerunning the **same scientific
 conditions** with:
 
 ```text
-64 completely fresh rollout seeds per unique cell
+36 completely fresh rollout seeds per unique cell
 ```
 
 The old Stage 3 / 3B rows remain historical discovery/low-replication evidence
@@ -94,7 +94,7 @@ interaction definition     = same difference-in-differences I
 
 ```text
 old Stage 3 / 3B seeds     = 14..21  (8 seeds)
-Stage 3 New seeds          = 46..109 (128 completely fresh seeds)
+Stage 3 New seeds          = 46..81  (36 completely fresh seeds)
 ```
 
 No old Stage 3 / Stage 3B success rows are pooled into the primary Stage 3 New
@@ -107,10 +107,10 @@ analysis.
 Use exactly:
 
 ```python
-SEEDS = list(range(46, 110))
-assert len(SEEDS) == 64
+SEEDS = list(range(46, 82))
+assert len(SEEDS) == 36
 assert SEEDS[0] == 46
-assert SEEDS[-1] == 109
+assert SEEDS[-1] == 81
 ```
 
 Do not replace failed policy rollouts with different seeds.
@@ -156,7 +156,7 @@ Therefore Stage 3 New contains exactly:
 3 horizons
 2 delay conditions
 2 scene conditions for each candidate analysis
-64 fresh rollout seeds
+36 fresh rollout seeds
 ```
 
 ---
@@ -181,7 +181,7 @@ For each unique OOD candidate:
 scene ∈ {ID, OOD}
 delay ∈ {Native, Native +200 ms}
 n_action_steps ∈ {20,25,30}
-seed ∈ {46,...,109}
+seed ∈ {46,...,81}
 method = RTC
 libero_episode_index = 0
 ```
@@ -224,8 +224,8 @@ candidate analyses for that same base task.
 6 candidate pairs
 × 3 horizons
 × 2 delays
-× 128 seeds
-= 1,152 OOD episodes
+× 36 seeds
+= 1,296 OOD episodes
 ```
 
 ### Physical ID episodes
@@ -234,21 +234,21 @@ candidate analyses for that same base task.
 3 base tasks
 × 3 horizons
 × 2 delays
-× 128 seeds
-= 1,152 ID episodes
+× 36 seeds
+= 648 ID episodes
 ```
 
 ### Total new physical policy rollouts
 
 ```text
-2,304 + 1,152 = 3,456 new episodes
+1,296 + 648 = 1,944 new episodes
 ```
 
 For presentation, the six candidate-specific four-cell matrices contain:
 
 ```text
-6 candidates × 3 horizons × 4 cells × 128
-= 4,608 candidate-cell observations
+6 candidates × 3 horizons × 4 cells × 36
+= 2,592 candidate-cell observations
 ```
 
 but the shared ID rows are **references to the same physical episodes**. Never
@@ -335,7 +335,7 @@ The point of Stage 3 New is **precision**, not significance fishing.
 For every candidate × horizon × scene × delay cell report:
 
 ```text
-successes / 128
+successes / 36
 success proportion
 Wilson 95% CI
 ```
@@ -350,7 +350,7 @@ I_h
 
 with a seed-cluster paired bootstrap 95% confidence interval.
 
-Resample the **64 complete seed blocks**, not individual episode rows.
+Resample the **36 complete seed blocks**, not individual episode rows.
 
 Each resampled seed block must carry all relevant:
 
@@ -465,12 +465,12 @@ task/perturbation effect.
 | Stage 3 | confirm selected Stage-1 candidates across nearby horizons | 8 seeds/cell | fresh rollouts, 4 candidate pairs |
 | Stage 3B | test object-layout signal across the other Stage-1 tasks | 8 seeds/cell | targeted cross-task follow-up |
 | Experiments A/B | layout/task generalization | 8 seeds/cell | additional layouts / second multi-stage task |
-| **Stage 3 New** | **re-estimate the Stage 3/3B interaction matrix with high precision** | **128 completely fresh seeds/cell** | **no new scientific factor; only much larger replication** |
+| **Stage 3 New** | **re-estimate the Stage 3/3B interaction matrix with high precision** | **36 completely fresh seeds/cell** | **no new scientific factor; only much larger replication** |
 
 The key methodological sentence for the paper is:
 
 > “Because the initial confirmatory matrices used eight stochastic rollouts per
-> cell, we repeated the complete Stage 3/3B condition set using 128 entirely
+> cell, we repeated the complete Stage 3/3B condition set using 36 entirely
 > fresh rollout seeds per unique cell while holding tasks, variants, horizons,
 > delay, policy, and execution semantics fixed.”
 
@@ -555,7 +555,7 @@ stage3_new_low_n_vs_high_n_interactions.png
 ```
 
 The low-n versus high-n plot may display Stage 3/3B estimates for historical
-comparison, but the new primary estimates must use only seeds `46..109`.
+comparison, but the new primary estimates must use only seeds `46..81`.
 
 ---
 
@@ -564,8 +564,8 @@ comparison, but the new primary estimates must use only seeds `46..109`.
 Before any result is interpreted, assert:
 
 ```text
-seeds == exactly 46..109
-len(unique seeds) == 128
+seeds == exactly 46..81
+len(unique seeds) == 36
 horizons == {20,25,30}
 added_delay_ms == {0,200}
 execution_method == rtc
@@ -576,9 +576,9 @@ candidate set == exactly the six frozen candidate pairs above
 Expected physical counts:
 
 ```text
-OOD rows = 2,304
-ID rows  = 1,152
-total physical rows = 3,456
+OOD rows = 1,296
+ID rows  = 648
+total physical rows = 1,944
 ```
 
 For every OOD candidate × seed:
@@ -609,7 +609,7 @@ Reject analysis if:
 This experiment is intentionally large:
 
 ```text
-3,456 new physical policy episodes
+1,944 new physical policy episodes
 ```
 
 The runner must support deterministic resume from a manifest.

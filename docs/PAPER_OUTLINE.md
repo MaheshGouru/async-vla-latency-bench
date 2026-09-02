@@ -239,14 +239,14 @@ Stage 5 is defined in `STAGE_5_OPENVLA_OFT_COVERAGE_CALIBRATION_AND_FINAL_REPLIC
 ## Stage 3 New — final precision experiment
 
 Before final paper freeze, repeat the complete unique Stage 3 / Stage 3B
-condition set at `n=128` fresh seeds/cell.
+condition set at `n=36` fresh seeds/cell.
 
 This experiment is designed specifically to address the uncertainty limitation
 in the existing interaction table:
 
 ```text
 old Stage 3/3B: n = 8 per cell
-Stage 3 New:    n = 64 fresh seeds per cell
+Stage 3 New:    n = 36 fresh seeds per cell
 ```
 
 The main Results revision after completion should:

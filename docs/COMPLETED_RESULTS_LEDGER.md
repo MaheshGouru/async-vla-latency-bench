@@ -335,11 +335,11 @@ Frozen design:
 6 unique task × perturbation pairs
 horizons = 20,25,30
 delay = Native,+200 ms
-seeds = 46..109
-n = 64 fresh seeds per unique cell
+seeds = 46..81
+n = 36 fresh seeds per unique cell
 old Stage 3/3B rows excluded from primary analysis
 shared ID controls across perturbations on the same task
-physical episodes = 3,456
+physical episodes = 1,944
 ```
 
 Do not add any Stage 3 New result to this ledger until the validation gates in
