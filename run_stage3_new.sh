@@ -3,7 +3,7 @@ set -euo pipefail
 
 VENV_ID=~/venv-stage1-id
 VENV_OOD=~/venv-stage1-ood
-REPO=~/async-vla-latency-bench
+REPO="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 OUT=~/stage3_new
 MANIFEST=$OUT/stage3_new_manifest.csv
 LIBERO_PLUS=~/LIBERO-plus
@@ -11,7 +11,7 @@ STAGE1_NATIVE=~/stage1-native
 STAGE1_NATIVE_APT=~/stage1-native-apt
 XKBCOMP_REDIRECT=~/xkbcomp_redirect.so
 
-BENCH_SHA=11fcf477223cc6212b7c1d9bca82e081cf3a1f1d
+BENCH_SHA=anonymous-source  # First-party revision withheld for anonymous review.
 LEROBOT_SHA=2aba372b4e217cc47db28e0f836859b20d1456c9
 LIBEROPLUS_SHA=4976dc30028e805ff8094b55501d532c48fec182
 MODEL_SHA=8e174154ef5f6c60a8da12ae99c303d8963138c1
@@ -156,8 +156,7 @@ api.upload_file(
     repo_type="dataset",
     token=token,
 )
-user = api.whoami(token=token)["name"]
-print(f"Upload complete: https://huggingface.co/datasets/{user}/stage3-new-results")
+print("Upload complete")
 PYEOF
 
 sudo -n true 2>/dev/null && sudo shutdown -h now || echo "No usable sudo — skipping auto-shutdown; everything above already completed."

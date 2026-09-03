@@ -62,7 +62,7 @@ def main():
     output = args.output_dir / "stage3c_initialization_audit.csv"
     previous = read_csv(output) if output.exists() else []
     rows = [row for row in previous if row.get("scene_condition") != args.scene]
-    benchmark_repo_sha = git_sha(Path.cwd())
+    benchmark_repo_sha = "anonymous-source"  # First-party revision withheld for review.
     libero_plus_sha = git_sha(args.libero_plus_repo)
     try:
         libero_package_version = importlib.metadata.version("hf_libero")

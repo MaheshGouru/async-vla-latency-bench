@@ -23,7 +23,7 @@ retroactively edited.
 Verified Stage 1 result archive:
 
 ```text
-/Users/tejasrikurapati/Downloads/stage1_results.tar.gz
+artifacts/stage1_results.tar.gz
 SHA-256 10a615ebaee14f6e604e32bac751ee4ae33400b8fb7aee5f0a10bd9cc5869441
 480/480 results; missing=0; invalid=0
 ```

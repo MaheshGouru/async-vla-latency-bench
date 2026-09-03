@@ -17,11 +17,9 @@ set -euo pipefail
 LEROBOT_COMMIT="2aba372b4e217cc47db28e0f836859b20d1456c9"
 LIBERO_PLUS_SHA="4976dc3"
 MODEL_REVISION="8e174154ef5f6c60a8da12ae99c303d8963138c1"
-REPO_URL="https://github.com/MaheshGouru/async-vla-latency-bench.git"
-REPO_BRANCH="mathew_branch"
 LIBERO_PLUS_URL="https://github.com/sylvestf/LIBERO-plus.git"
 
-REPO="$HOME/async-vla-latency-bench"
+REPO="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 VENV_ID="$HOME/venv-stage1-id"
 VENV_OOD="$HOME/venv-stage1-ood"
 LIBERO_PLUS="$HOME/LIBERO-plus"
@@ -113,18 +111,16 @@ echo "Python: $(python3 --version)"
 echo "DONE system packages"
 
 # -----------------------------------------------------------
-# 2. Clone benchmark repo
+# 2. Use the extracted anonymous benchmark
 # -----------------------------------------------------------
 echo ""
-echo ">>> [2/8] Cloning benchmark repo..."
-if [ ! -d "$REPO/.git" ]; then
-    git clone "$REPO_URL" "$REPO"
+echo ">>> [2/8] Using extracted benchmark..."
+if [ ! -d "$REPO/async_vla_benchmark" ]; then
+    echo "ERROR: extract the complete code archive before running setup."
+    exit 1
 fi
-git -C "$REPO" fetch origin
-git -C "$REPO" checkout "$REPO_BRANCH"
-git -C "$REPO" pull origin "$REPO_BRANCH"
-BENCH_SHA=$(git -C "$REPO" rev-parse HEAD)
-echo "Repo SHA: $BENCH_SHA"
+BENCH_SHA=anonymous-source
+echo "Source revision: withheld for anonymous review"
 
 # -----------------------------------------------------------
 # 3. Clone LIBERO-Plus
@@ -294,8 +290,7 @@ echo ""
 echo "========================================================"
 echo "SETUP COMPLETE"
 echo "========================================================"
-echo "  Repo:         $REPO  (SHA: $BENCH_SHA)"
-echo "  Branch:       $REPO_BRANCH"
+echo "  Repo:         $REPO  (source: $BENCH_SHA)"
 echo "  LIBERO-Plus:  $LIBERO_PLUS  (SHA: $PLUS_FINAL_SHA)"
 echo "  venv-id:      $VENV_ID"
 echo "  venv-ood:     $VENV_OOD"

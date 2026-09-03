@@ -4,6 +4,10 @@ This isolated package implements the π0.5–LIBERO latency benchmark specified 
 `docs/DAYS_1_3_SPEC.md`. It does not train a policy or implement deferred methods such
 as VLASH, FASTER, DEHP, SmolVLA, or OpenVLA.
 
+For anonymous review, extract the code archive to `~/async-vla-latency-bench`.
+The archive omits Git history and personal editor settings. `anonymous-source`
+marks a withheld first-party revision, not a Git SHA; third-party pins are retained.
+
 ## What is implemented
 
 - Discrete-event episode execution for the four baseline strategies:
