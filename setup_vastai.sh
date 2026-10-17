@@ -179,18 +179,20 @@ echo "DONE venv-stage1-ood"
 echo ""
 echo ">>> [6/8] Pre-creating LIBERO config..."
 "$VENV_ID/bin/python" -c "
-import libero, os, yaml
-root = os.path.join(os.path.dirname(libero.__file__), 'libero')
+import os, yaml
+from libero.libero import get_default_path_dict
 cfg_dir = os.path.expanduser('~/.libero')
 os.makedirs(cfg_dir, exist_ok=True)
 cfg_path = os.path.join(cfg_dir, 'config.yaml')
-if not os.path.exists(cfg_path):
-    with open(cfg_path, 'w') as f:
-        yaml.dump({'assets_dir': os.path.join(root, 'assets')}, f)
-    print('Created', cfg_path)
-else:
-    print('Already exists', cfg_path)
-" 2>/dev/null || true
+cfg = get_default_path_dict()
+if os.path.exists(cfg_path):
+    with open(cfg_path) as f:
+        existing = yaml.safe_load(f) or {}
+    cfg.update({key: value for key, value in existing.items() if key in cfg})
+with open(cfg_path, 'w') as f:
+    yaml.safe_dump(cfg, f, sort_keys=True)
+print('Configured', cfg_path, 'with keys:', ', '.join(sorted(cfg)))
+"
 
 # -----------------------------------------------------------
 # 7. Download LIBERO-Plus assets (~6.4 GB)
