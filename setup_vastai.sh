@@ -90,22 +90,14 @@ apt-get install -y --no-install-recommends \
     wget \
     tmux
 
-# Python 3.12 via deadsnakes (CUDA base image ships 3.10)
-add-apt-repository -y ppa:deadsnakes/ppa
-apt-get update -qq
+# Python 3.12 is Ubuntu 24.04's native Python.  Do not install the removed
+# python3.12-distutils package or replace the OS-wide python3 alternative.
 apt-get install -y --no-install-recommends \
     python3.12 \
     python3.12-dev \
-    python3.12-venv \
-    python3.12-distutils
+    python3.12-venv
 
-# Make python3.12 the default python3
-update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.12 10
-update-alternatives --install /usr/bin/python  python  /usr/bin/python3.12 10
-python3.12 -m ensurepip --upgrade
-python3.12 -m pip install --upgrade pip wheel setuptools
-
-echo "Python: $(python3 --version)"
+echo "Python: $(python3.12 --version)"
 echo "DONE system packages"
 
 # -----------------------------------------------------------
