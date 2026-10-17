@@ -1,9 +1,8 @@
 """Frozen Stage 3 New — high-power replication of the Stage 3 / Stage 3B matrix.
 
-36 completely fresh rollout seeds (46-81) per unique cell -- reduced from the
-originally planned 64 (46-109) to fit the machine's remaining compute-time
-budget. Margin of error ~0.33 at 36 seeds vs ~0.25 at 64 seeds vs ~0.69 at
-the original 8-seed Stage 3/3B design.
+64 completely fresh rollout seeds (46-109) per unique cell. The conservative
+worst-case 95% interaction half-width is approximately 0.25, compared with
+approximately 0.69 for the original 8-seed Stage 3/3B design.
 Seeds 14-21 (old Stage 3/3B block) must never appear here.
 """
 
@@ -14,7 +13,7 @@ from typing import Mapping, Sequence
 
 HORIZONS = (20, 25, 30)
 ADDED_DELAYS_MS = (0, 200)
-SEEDS = tuple(range(46, 82))  # 36 fresh seeds
+SEEDS = tuple(range(46, 110))  # 64 fresh seeds
 METHOD = "rtc"
 STAGE_LABEL = "stage3_new"
 

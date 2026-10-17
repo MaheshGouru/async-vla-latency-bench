@@ -622,8 +622,8 @@ execution_method
 Fresh seed block:
 
 ```text
-46..81 inclusive
-n = 36
+46..109 inclusive
+n = 64
 ```
 
 For every candidate and horizon:

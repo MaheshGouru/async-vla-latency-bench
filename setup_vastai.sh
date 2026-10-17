@@ -10,7 +10,7 @@
 #   export HF_TOKEN="hf_..."       # HuggingFace token (read-only is enough)
 #
 # Usage:
-#   bash setup_vastai.sh 2>&1 | tee ~/setup_vastai.log
+#   bash setup_vastai.sh 2>&1 | tee /workspace/setup_vastai.log
 # ============================================================
 set -euo pipefail
 
@@ -21,20 +21,42 @@ LEROBOT_COMMIT="2aba372b4e217cc47db28e0f836859b20d1456c9"
 LIBERO_PLUS_SHA="4976dc3"
 MODEL_REVISION="8e174154ef5f6c60a8da12ae99c303d8963138c1"
 REPO_URL="https://github.com/MaheshGouru/async-vla-latency-bench.git"
-REPO_BRANCH="stage3-new-36-seeds"
+REPO_BRANCH="stage3-new-64-seeds"
 LIBERO_PLUS_URL="https://github.com/sylvestf/LIBERO-plus.git"
 
-REPO="$HOME/async-vla-latency-bench"
-VENV_ID="$HOME/venv-stage1-id"
-VENV_OOD="$HOME/venv-stage1-ood"
-LIBERO_PLUS="$HOME/LIBERO-plus"
+WORKSPACE="${VAST_WORKSPACE:-/workspace}"
+export VAST_WORKSPACE="$WORKSPACE"
+REPO="$WORKSPACE/async-vla-latency-bench"
+VENV_ID="$WORKSPACE/venv-stage1-id"
+VENV_OOD="$WORKSPACE/venv-stage1-ood"
+LIBERO_PLUS="$WORKSPACE/LIBERO-plus"
 ASSETS_TARGET="$LIBERO_PLUS/libero/libero/assets"
+export HF_HOME="$WORKSPACE/huggingface"
 
 # -----------------------------------------------------------
 # Guards
 # -----------------------------------------------------------
 if [ -z "${HF_TOKEN:-}" ]; then
     echo "ERROR: HF_TOKEN is not set. Run: export HF_TOKEN='hf_...'"
+    exit 1
+fi
+
+mkdir -p "$WORKSPACE"
+
+mapfile -t GPU_ROWS < <(nvidia-smi --query-gpu=name,memory.total --format=csv,noheader,nounits)
+if [ "${#GPU_ROWS[@]}" -ne 1 ]; then
+    echo "ERROR: expected exactly one GPU; found ${#GPU_ROWS[@]}"
+    printf '  %s\n' "${GPU_ROWS[@]}"
+    exit 1
+fi
+GPU_NAME=$(printf '%s' "${GPU_ROWS[0]}" | cut -d, -f1 | xargs)
+GPU_MEMORY=$(printf '%s' "${GPU_ROWS[0]}" | cut -d, -f2 | xargs)
+if [ "$GPU_NAME" != "NVIDIA A100-SXM4-40GB" ]; then
+    echo "ERROR: expected NVIDIA A100-SXM4-40GB; found $GPU_NAME"
+    exit 1
+fi
+if [ "$GPU_MEMORY" -lt 40000 ] || [ "$GPU_MEMORY" -gt 42000 ]; then
+    echo "ERROR: expected approximately 40 GB VRAM; found ${GPU_MEMORY} MiB"
     exit 1
 fi
 
@@ -186,19 +208,18 @@ echo ">>> [7/8] Downloading LIBERO-Plus assets (~6.4 GB)..."
 if [ -d "$ASSETS_TARGET" ] && [ "$(ls -A "$ASSETS_TARGET" 2>/dev/null)" ]; then
     echo "Assets already installed at $ASSETS_TARGET; skipping download."
 else
-    DOWNLOAD_DIR="$HOME/libero-plus-download"
-    EXTRACT_DIR="$HOME/libero-plus-assets-extracted"
+    DOWNLOAD_DIR="$WORKSPACE/libero-plus-download"
+    EXTRACT_DIR="$WORKSPACE/libero-plus-assets-extracted"
     mkdir -p "$DOWNLOAD_DIR" "$EXTRACT_DIR"
 
     HF_TOKEN="$HF_TOKEN" "$VENV_OOD/bin/python" - <<'PYEOF'
 from huggingface_hub import hf_hub_download
-from pathlib import Path
 import os
 path = hf_hub_download(
     repo_id="Sylvest/LIBERO-plus",
     repo_type="dataset",
     filename="assets.zip",
-    local_dir=str(Path.home() / "libero-plus-download"),
+    local_dir=os.path.join(os.environ["VAST_WORKSPACE"], "libero-plus-download"),
     token=os.environ["HF_TOKEN"],
 )
 print("Downloaded:", path)
@@ -277,11 +298,12 @@ echo "  LIBERO-Plus:  $LIBERO_PLUS  (SHA: $PLUS_FINAL_SHA)"
 echo "  venv-id:      $VENV_ID"
 echo "  venv-ood:     $VENV_OOD"
 echo "  Assets:       $ASSETS_TARGET ($ASSET_COUNT files)"
+echo "  Workspace:    $WORKSPACE"
 echo ""
 echo "Next steps:"
-echo "  1. Start Jupyter: jupyter lab --ip=0.0.0.0 --no-browser --port=8888"
-echo "  2. Open notebooks/stage3_new_jupyter/ in order (01 -> 05)"
-echo "  3. After notebook 05, download ~/stage3_new_results.tar.gz"
+echo "  1. Launch: tmux new -s stage3new"
+echo "  2. Run: export HF_TOKEN='hf_...'; bash $REPO/run_stage3_new.sh"
+echo "  3. Detach with Ctrl-b d and monitor $WORKSPACE/stage3_new/run.log"
 echo ""
 echo "GPU check:"
 nvidia-smi --query-gpu=index,name,memory.used,memory.total,utilization.gpu \
