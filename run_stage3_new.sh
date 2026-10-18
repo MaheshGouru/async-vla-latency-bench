@@ -187,24 +187,25 @@ from pathlib import Path
 
 api   = HfApi()
 token = os.environ["HF_TOKEN"]
+user = api.whoami(token=token)["name"]
+repo_id = f"{user}/stage3-new-results"
 
 try:
-    api.create_repo("stage3-new-results", repo_type="dataset", private=True, token=token)
-    print("Created repo: stage3-new-results")
+    api.create_repo(repo_id, repo_type="dataset", private=True, token=token, exist_ok=True)
+    print(f"Ready: {repo_id}")
 except Exception:
-    print("Repo already exists: stage3-new-results")
+    print(f"Repo already exists: {repo_id}")
 
 archive = Path(os.environ.get("VAST_WORKSPACE", "/workspace")) / "stage3_new_results.tar.gz"
 print(f"Uploading {archive.stat().st_size / 1e9:.2f} GB...")
 api.upload_file(
     path_or_fileobj=str(archive),
     path_in_repo="stage3_new_results.tar.gz",
-    repo_id="stage3-new-results",
+    repo_id=repo_id,
     repo_type="dataset",
     token=token,
 )
-user = api.whoami(token=token)["name"]
-print(f"Upload complete: https://huggingface.co/datasets/{user}/stage3-new-results")
+print(f"Upload complete: https://huggingface.co/datasets/{repo_id}")
 PYEOF
 
 echo "COMPLETE. Results are under $WORKSPACE/stage3_new and the archive is $WORKSPACE/stage3_new_results.tar.gz"
