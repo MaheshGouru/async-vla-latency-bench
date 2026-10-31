@@ -1,4 +1,9 @@
-# Paper package
+# When Delay Meets Distribution Shift: Evaluating Asynchronous Vision-Language-Action Policies
+
+This paper was accepted to the NeurIPS 2026 RoboPAD workshop. See the
+[workshop listing](https://neurips.cc/virtual/2026/loc/paris/162917).
+
+## Paper package
 
 This directory contains the current paper source, figures, and compiled PDF for
 the asynchronous VLA delay/distribution-shift study.
