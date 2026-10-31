@@ -1,10 +1,10 @@
-# Stage 4 — Results and Interpretation
+# Cross-Policy OpenVLA-OFT Diagnostic — Results and Interpretation
 
 ## Status
 
 **COMPLETE**
 
-This document is the post-run record for Stage 4.
+This document is the post-run record for Cross-Policy OpenVLA-OFT Diagnostic.
 
 The frozen pre-run specification remains unchanged in:
 
@@ -18,19 +18,19 @@ Do not modify that file retroactively.
 
 ## 1. Purpose of this results document
 
-Stage 4 evaluated OpenVLA-OFT as a second-policy external-validity diagnostic using its native/default 8-action chunk under naive asynchronous execution.
+Cross-Policy OpenVLA-OFT Diagnostic evaluated OpenVLA-OFT as a second-policy external-validity diagnostic using its native/default 8-action chunk under naive asynchronous execution.
 
 After completing the experiment, we recognized that unlike π0.5, OpenVLA-OFT had **not** undergone an ID-only temporal-coverage calibration before the OOD × delay test.
 
 Therefore:
 
-- Stage 4 remains valid as a **native/default-8 diagnostic**.
-- Stage 4 should **not** be presented as the final calibrated second-policy comparison.
-- Stage 5 is the prospective follow-up that first audits/calibrates OpenVLA-OFT temporal coverage and then conditionally reruns the OOD × delay diagnostic.
+- Cross-Policy OpenVLA-OFT Diagnostic remains valid as a **native/default-8 diagnostic**.
+- Cross-Policy OpenVLA-OFT Diagnostic should **not** be presented as the final calibrated second-policy comparison.
+- OpenVLA-OFT Temporal-Coverage Calibration is the prospective follow-up that first audits/calibrates OpenVLA-OFT temporal coverage and then conditionally reruns the OOD × delay diagnostic.
 
 ---
 
-## 2. Frozen Stage 4 setup
+## 2. Frozen Cross-Policy OpenVLA-OFT Diagnostic setup
 
 ```text
 policy_family = OpenVLA-OFT
@@ -118,7 +118,7 @@ ID Native = 1/8
 OOD Native = 0/8
 ```
 
-Therefore the Stage 4 interaction is not a meaningful test of whether OOD amplifies delay on this task. The policy lacks enough baseline performance to provide interaction headroom.
+Therefore the Cross-Policy OpenVLA-OFT Diagnostic interaction is not a meaningful test of whether OOD amplifies delay on this task. The policy lacks enough baseline performance to provide interaction headroom.
 
 This is a **floor-effect limitation**, not evidence that OOD reduces latency sensitivity.
 
@@ -126,7 +126,7 @@ This is a **floor-effect limitation**, not evidence that OOD reduces latency sen
 
 ## 5. Temporal-coverage finding
 
-Stage 4 also exposed a strong mismatch between OpenVLA-OFT's native 8-action chunk and the logical asynchronous delay regime.
+Cross-Policy OpenVLA-OFT Diagnostic also exposed a strong mismatch between OpenVLA-OFT's native 8-action chunk and the logical asynchronous delay regime.
 
 Observed request latency was approximately:
 
@@ -144,15 +144,15 @@ so native request latency already consumes roughly 2–3 control steps. With +20
 
 Substantial queue underruns / hold actions were observed at +200 ms, especially on the longer task.
 
-This is consistent with the broader paper result from Stage 2:
+This is consistent with the broader paper result from Confirmatory Horizon–Delay Operating Envelope:
 
 > latency robustness depends strongly on temporal action coverage relative to inference delay.
 
-However, Stage 4 alone cannot establish that 8 is the correct OpenVLA-OFT operating point because no OpenVLA-specific coverage calibration preceded it.
+However, Cross-Policy OpenVLA-OFT Diagnostic alone cannot establish that 8 is the correct OpenVLA-OFT operating point because no OpenVLA-specific coverage calibration preceded it.
 
 ---
 
-## 6. Why Stage 5 is required
+## 6. Why OpenVLA-OFT Temporal-Coverage Calibration is required
 
 π0.5 received explicit ID-only temporal-coverage calibration before the main OOD analysis.
 
@@ -161,12 +161,12 @@ OpenVLA-OFT did not.
 The correct prospective follow-up is therefore:
 
 ```text
-Stage 5A:
+OpenVLA-OFT Temporal-Coverage Calibration Phase A:
   verify whether OpenVLA-OFT single-inference action coverage is tunable
   calibrate temporal coverage on ID only if legitimate
 
-Stage 5B:
-  if Stage 5A yields a legitimate calibrated operating point,
+OpenVLA-OFT Temporal-Coverage Calibration Phase B:
+  if OpenVLA-OFT Temporal-Coverage Calibration Phase A yields a legitimate calibrated operating point,
   rerun the frozen two-task Objects-Layout × Native/+200 ms diagnostic
   using fresh seeds
 ```
@@ -179,7 +179,7 @@ Do not fabricate longer chunks by repeating, stretching, or concatenating action
 
 ## 7. Paper-facing status
 
-Until Stage 5 is complete, Stage 4 should be described as:
+Until OpenVLA-OFT Temporal-Coverage Calibration is complete, Cross-Policy OpenVLA-OFT Diagnostic should be described as:
 
 > **a preliminary second-policy diagnostic at OpenVLA-OFT's native/default 8-action coverage**
 
@@ -187,7 +187,7 @@ and not as:
 
 > a calibrated policy-to-policy comparison.
 
-The strongest Stage 4-supported conclusion is:
+The strongest Cross-Policy OpenVLA-OFT Diagnostic-supported conclusion is:
 
 > OpenVLA-OFT did not reproduce the localized negative π0.5 interaction in the tested diagnostic subset, but interpretation is limited by uncalibrated 8-action temporal coverage and a severe floor effect on the stove–moka task.
 

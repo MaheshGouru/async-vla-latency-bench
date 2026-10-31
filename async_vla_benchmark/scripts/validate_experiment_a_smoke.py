@@ -14,5 +14,5 @@ def main():
    if not path.exists(): errors.append(f"{row['run_id']}: missing {folder}")
  report={"status":"pass" if not errors else "fail","episodes":len(rows),"seed":999,"analysis_seeds_used":False,"errors":errors}; (a.output_dir/"experiment_a_smoke_validation.json").write_text(json.dumps(report,indent=2)+"\n")
  if errors: print(*(f"ERROR: {e}" for e in errors),sep="\n"); return 1
- print("PASS: 8 seed-999 Experiment A smoke episodes; no analysis seeds used"); return 0
+ print("PASS: 8 seed-999 Object-Layout Generalization smoke episodes; no analysis seeds used"); return 0
 if __name__=="__main__": raise SystemExit(main())

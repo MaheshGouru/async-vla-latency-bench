@@ -1,6 +1,7 @@
 # Metrics and Logging Specification
 
-This file defines canonical terms for Stages 0–4.
+This file defines canonical terms for the latency-calibration, exploratory,
+operating-envelope, held-out-confirmation, and cross-policy study phases.
 
 ## 1. Time bases
 
@@ -48,7 +49,7 @@ total_logical_latency_ms =
   added_delay_ms
 ```
 
-Stage 0 tests:
+Latency Calibration and Instrumentation tests:
 
 ```text
 0, 100, 200, 300, 400 ms
@@ -56,25 +57,25 @@ Stage 0 tests:
 
 The original `500–700 ms` extension was dropped after the ID-only run provided
 sufficient non-saturated calibration evidence by `400 ms`. This revision was
-made before Stage 1 OOD outcomes.
+made before Exploratory OOD–Delay Screening OOD outcomes.
 
-Stage 1 uses:
+Exploratory OOD–Delay Screening uses:
 
 ```text
 Low  = Native          = added_delay_ms = 0
 High = Native + d*     = added_delay_ms = selected_high_delay_ms
 ```
 
-Stage 2 local sensitivity uses the explicitly labeled added-delay values:
+Confirmatory Horizon–Delay Operating Envelope local sensitivity uses the explicitly labeled added-delay values:
 
 ```text
 Native (0), 100, 200, 300 ms
 ```
 
 Native is a measured-latency condition with `added_delay_ms=0`, not an ideal or
-zero-request-latency condition. It is required at every Stage 2 horizon.
+zero-request-latency condition. It is required at every Confirmatory Horizon–Delay Operating Envelope horizon.
 
-Stage 3 returns to the frozen Stage 1 comparison:
+Held-Out OOD–Delay Horizon Confirmation returns to the frozen Exploratory OOD–Delay Screening comparison:
 
 ```text
 Low  = Native
@@ -317,11 +318,11 @@ Fail validation when:
 - environment fingerprint is missing;
 - checkpoint revision is missing;
 - method is missing;
-- Stage 1 uses a high delay different from `selected_high_delay.json`.
+- Exploratory OOD–Delay Screening uses a high delay different from `selected_high_delay.json`.
 
 ## 14. Statistical reporting
 
-### Exploratory Stage 1
+### Exploratory Exploratory OOD–Delay Screening
 
 Always report:
 
@@ -333,13 +334,13 @@ Always report:
 
 Do not describe a 5-seed exploratory cell as statistically significant without an appropriate prespecified analysis and uncertainty estimate.
 
-### Post-hoc sensitivity Stage 2
+### Post-hoc sensitivity Confirmatory Horizon–Delay Operating Envelope
 
 Report the complete frozen local grid, raw counts, uncertainty, and normalized
-coverage diagnostics. Do not call Stage 2 confirmatory and do not use it to
-retroactively redefine the Stage 1 operating point.
+coverage diagnostics. Do not call Confirmatory Horizon–Delay Operating Envelope confirmatory and do not use it to
+retroactively redefine the Exploratory OOD–Delay Screening operating point.
 
-### Confirmatory Stage 3
+### Confirmatory Held-Out OOD–Delay Horizon Confirmation
 
 Report:
 
@@ -384,7 +385,7 @@ Failure labels are descriptive and should not be treated as ground-truth model c
 
 ## 16. Horizon × latency fields
 
-Stages 2 and 3 add:
+The operating-envelope and held-out-confirmation phases add:
 
 ```text
 configured_n_action_steps
@@ -433,7 +434,7 @@ Do not interpret interactions at severe baseline floors.
 
 ## 18. Experimental-status labels
 
-Every post-Stage-1 result must include:
+Every post-Exploratory OOD–Delay Screening result must include:
 
 ```text
 analysis_status ∈ {
@@ -445,13 +446,13 @@ analysis_status ∈ {
 }
 ```
 
-Stage 2 local operating-point analysis is `posthoc_sensitivity`.
+Confirmatory Horizon–Delay Operating Envelope local operating-point analysis is `posthoc_sensitivity`.
 Sensor noise is `posthoc_replication`.
 
 
-## 19. Stage 2 baseline-normalized sensitivity
+## 19. Confirmatory Horizon–Delay Operating Envelope baseline-normalized sensitivity
 
-Because Stage 2 contains Native at every tested `n_action_steps`, report:
+Because Confirmatory Horizon–Delay Operating Envelope contains Native at every tested `n_action_steps`, report:
 
 ```text
 native_success(h) = S(h, Native)
@@ -464,12 +465,12 @@ delay_drop_300(h) = S(h,+300) - S(h,Native)
 This separates the main effect of configured action coverage from the incremental
 effect of added delay.
 
-Use the same Stage 2 seeds `[5,6,7,8,9]` in every cell.
+Use the same Confirmatory Horizon–Delay Operating Envelope seeds `[5,6,7,8,9]` in every cell.
 
 
 ## 20. Episode identity and cross-condition pairing
 
-All post-Stage-1 manifests must log:
+All post-Exploratory OOD–Delay Screening manifests must log:
 
 ```text
 task_key
@@ -489,7 +490,7 @@ difficulty_level
 
 For ID rows, perturbation-specific identifiers are null.
 
-### Stage 2 pairing key
+### Confirmatory Horizon–Delay Operating Envelope pairing key
 
 ```text
 (task_key, seed)
@@ -497,7 +498,7 @@ For ID rows, perturbation-specific identifiers are null.
 
 All horizon × delay cells must share the same initialization identity.
 
-### Stage 3 pairing key
+### Held-Out OOD–Delay Horizon Confirmation pairing key
 
 ```text
 (task_key, variant_name, seed, scene)
@@ -510,9 +511,9 @@ Do not interpret seed equality alone as proof of identical initialization. Valid
 or fingerprint the reset state.
 
 
-## Stage 3C initialization-audit fields
+## Initialization-State Audit fields
 
-Stage 3C contains reset-only records. Log at minimum:
+Initialization-State Audit contains reset-only records. Log at minimum:
 
 ```text
 task_key
@@ -526,12 +527,12 @@ fingerprint_schema_version
 stage3c_spec_hash
 ```
 
-No success, action-age, RTC, or policy-inference metrics belong to Stage 3C.
+No success, action-age, RTC, or policy-inference metrics belong to Initialization-State Audit.
 
 
-## 21. Stage 4 second-policy fields
+## 21. Cross-Policy OpenVLA-OFT Diagnostic second-policy fields
 
-Stage 4 uses OpenVLA-OFT and naive asynchronous execution rather than RTC. Log:
+Cross-Policy OpenVLA-OFT Diagnostic uses OpenVLA-OFT and naive asynchronous execution rather than RTC. Log:
 
 ```text
 policy_family
@@ -555,7 +556,7 @@ hold_action_steps
 success
 ```
 
-Frozen Stage-4 values:
+Frozen Cross-Policy OpenVLA-OFT Diagnostic values:
 
 ```text
 policy_family = openvla_oft
@@ -568,7 +569,7 @@ seeds = 38..45
 
 Do not emit RTC guidance fields as if they were meaningful for OpenVLA-OFT. They must be null/not-applicable.
 
-Primary Stage-4 interaction per task:
+Primary Cross-Policy OpenVLA-OFT Diagnostic interaction per task:
 
 ```text
 I_task =
@@ -580,9 +581,9 @@ I_task =
 Report all four raw `successes/8` cells and an eight-seed paired-bootstrap interval.
 
 
-## 22. Stage 5 coverage-calibration fields
+## 22. OpenVLA-OFT Temporal-Coverage Calibration coverage-calibration fields
 
-In addition to Stage-4 fields, record:
+In addition to Cross-Policy OpenVLA-OFT Diagnostic fields, record:
 
 ```text
 model_native_output_horizon
@@ -594,13 +595,13 @@ coverage_candidate_set_hash
 coverage_selection_status
 ```
 
-Stage 5A must contain ID scenes only and seeds `46..50`. Stage 5B, if run, uses the frozen Stage-5A coverage and fresh seeds `51..58`.
+OpenVLA-OFT Temporal-Coverage Calibration Phase A must contain ID scenes only and seeds `46..50`. OpenVLA-OFT Temporal-Coverage Calibration Phase B, if run, uses the frozen OpenVLA-OFT Temporal-Coverage Calibration Phase A coverage and fresh seeds `51..58`.
 
-## Stage 3 New — high-power replication metrics
+## High-Power OOD–Delay Replication — high-power replication metrics
 
 Primary success metric remains binary episode success.
 
-Required Stage 3 New analysis identity:
+Required High-Power OOD–Delay Replication analysis identity:
 
 ```text
 stage = stage_3_new_high_power_replication
@@ -661,5 +662,5 @@ The same physical shared-ID row may participate in several candidate-level
 contrasts. This reuse must remain explicit; it does not create additional
 independent episode observations.
 
-Old Stage 3/3B rows may appear in a historical comparison plot but must not be
-included in the primary Stage 3 New point estimates or confidence intervals.
+Old Held-Out OOD–Delay Horizon Confirmation and Held-Out Object-Layout Cross-Task Replication rows may appear in a historical comparison plot but must not be
+included in the primary High-Power OOD–Delay Replication point estimates or confidence intervals.

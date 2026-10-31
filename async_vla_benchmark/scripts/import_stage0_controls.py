@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Import the 24 accepted Stage 0 seed-0/1 controls into Stage 1 analysis."""
+"""Import the 24 accepted Latency Calibration and Instrumentation seed-0/1 controls into Exploratory OOD–Delay Screening analysis."""
 
 import argparse
 import csv
@@ -23,10 +23,10 @@ def main() -> int:
     for plan in manifest:
         source_id = plan["source_run_id"]
         if source_id not in source_rows:
-            raise FileNotFoundError(f"missing Stage 0 result {source_id}")
+            raise FileNotFoundError(f"missing Latency Calibration and Instrumentation result {source_id}")
         source = source_rows[source_id]
         if source.get("status") != "ok":
-            raise ValueError(f"Stage 0 source is not ok: {source_id}")
+            raise ValueError(f"Latency Calibration and Instrumentation source is not ok: {source_id}")
         for folder, suffix in (("episodes", ".json"), ("requests", ".parquet"), ("actions", ".parquet")):
             src = args.stage0_dir / folder / f"{source_id}{suffix}"
             dst = args.stage1_dir / "stage0_reuse" / folder / src.name
@@ -42,7 +42,7 @@ def main() -> int:
             )},
             "success": source["success"], "episode_steps": source["episode_steps"],
             "completion_fraction": source["completion_fraction"], "failure_mode": "success" if source["success"] == "1" else "other",
-            "failure_notes": "Imported from Stage 0; immutable runtime identity unavailable",
+            "failure_notes": "Imported from Latency Calibration and Instrumentation; immutable runtime identity unavailable",
             "request_latency_mean_ms": source["request_latency_mean_ms"], "request_latency_p50_ms": source["request_latency_p50_ms"],
             "request_latency_p95_ms": source["request_latency_p95_ms"], "action_age_mean_ms": source["action_age_mean_ms"],
             "action_age_p50_ms": source["action_age_p50_ms"], "action_age_p95_ms": source["action_age_p95_ms"],
@@ -56,7 +56,7 @@ def main() -> int:
             "gpu_peak_memory_mb": "", "source": "stage0_reuse_unverified_identity", "status": "ok_with_provenance_limitation",
             "invalid_reason": "",
             # Never make the imported episode look as if it ran under the new
-            # Stage 1 revisions. Those Stage 0 identities are genuinely unknown.
+            # Exploratory OOD–Delay Screening revisions. Those Latency Calibration and Instrumentation identities are genuinely unknown.
             "git_sha": "", "lerobot_git_sha": "", "libero_plus_git_sha": "",
             "model_revision": "", "environment_fingerprint": "",
         })
@@ -64,7 +64,7 @@ def main() -> int:
     existing = {r["run_id"]: r for r in read_csv(result_path)} if result_path.exists() else {}
     existing.update({r["run_id"]: r for r in output_rows})
     write_csv(result_path, [existing[key] for key in sorted(existing)])
-    print(f"imported 24 Stage 0 controls into {result_path}")
+    print(f"imported 24 Latency Calibration and Instrumentation controls into {result_path}")
     return 0
 
 

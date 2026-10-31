@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Recompute Stage 0 diagnostics without startup/hold contamination."""
+"""Recompute Latency Calibration and Instrumentation diagnostics without startup/hold contamination."""
 
 from __future__ import annotations
 
@@ -50,7 +50,7 @@ def main() -> int:
     figures = output / "figures"; figures.mkdir()
     original = pd.read_csv(source / "latency_calibration_episode_results.csv")
     if len(original) != 180 or original.run_id.nunique() != 180:
-        raise ValueError("expected 180 unique Stage 0 results")
+        raise ValueError("expected 180 unique Latency Calibration and Instrumentation results")
 
     corrected, request_events, action_events = [], [], []
     for row in original.to_dict("records"):
@@ -175,7 +175,7 @@ def main() -> int:
 
     selected=json.loads((source/"selected_high_delay.json").read_text()); shutil.copy2(source/"selected_high_delay.json",output/"selected_high_delay_unchanged.json")
     reused=corrected_df[(corrected_df.seed.isin([0,1]))&(corrected_df.added_delay_ms.isin([0,200]))]
-    findings=f"""# Stage 0 Reanalysis Findings
+    findings=f"""# Latency Calibration and Instrumentation Reanalysis Findings
 
 ## Scope and frozen outcomes
 
@@ -200,7 +200,7 @@ def main() -> int:
 - Policy actions analyzed for freshness: **{len(actions_all):,}**.
 - Hold actions excluded from policy action age and reported separately: **{int(corrected_df.hold_count.sum()):,}**.
 - Episodes containing holds: **{int((corrected_df.hold_count>0).sum())}**.
-- Stage 1 reuse subset: **{len(reused)} episodes**; episodes with holds in that subset: **{int((reused.hold_count>0).sum())}**.
+- Exploratory OOD–Delay Screening reuse subset: **{len(reused)} episodes**; episodes with holds in that subset: **{int((reused.hold_count>0).sum())}**.
 
 ## Effect of the correction
 
@@ -212,7 +212,7 @@ See `metric_change_summary.csv` for exact original-versus-corrected averages. Th
 - `table_a_per_task_calibration.csv` through `table_d_freshness.csv`: regenerated tables.
 - `metric_change_summary.csv`: audit of numerical changes.
 - `figures/`: four required calibration plots plus separate startup and hold diagnostics.
-- `selected_high_delay_unchanged.json`: verbatim frozen Stage 0 delay artifact.
+- `selected_high_delay_unchanged.json`: verbatim frozen Latency Calibration and Instrumentation delay artifact.
 
 ## Interpretation limitation
 

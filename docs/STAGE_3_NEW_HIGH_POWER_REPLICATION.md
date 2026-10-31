@@ -1,4 +1,4 @@
-# Stage 3 New — High-Power Replication of the Stage 3 / Stage 3B Matrix
+# High-Power OOD–Delay Replication — High-Power Replication of the Held-Out OOD–Delay Horizon Confirmation / Held-Out Object-Layout Cross-Task Replication Matrix
 
 ## 0. Status
 
@@ -15,8 +15,8 @@ STAGE_3_NEW_HIGH_POWER_REPLICATION.md
 
 This is the final planned π0.5 experiment before paper freeze.
 
-It is a **fresh, high-replication rerun** of the union of the completed Stage 3
-and Stage 3B task × perturbation × horizon conditions.
+It is a **fresh, high-replication rerun** of the union of the completed Held-Out OOD–Delay Horizon Confirmation
+and Held-Out Object-Layout Cross-Task Replication task × perturbation × horizon conditions.
 
 It is **not**:
 
@@ -35,7 +35,7 @@ The final replication target is **64 completely fresh seeds per unique cell**, c
 
 ## 1. Motivation
 
-The completed Stage 3 / Stage 3B interaction estimates used only eight rollout
+The completed Held-Out OOD–Delay Horizon Confirmation / Held-Out Object-Layout Cross-Task Replication interaction estimates used only eight rollout
 seeds per cell. With binary success outcomes, an interaction
 
 ```text
@@ -63,25 +63,25 @@ n = 64  -> SE(I) <= 0.125 -> ~95% half-width <= 0.25
 The previous qualitative conclusion that OOD × delay interactions were sparse
 and heterogeneous may therefore be sensitive to small-sample rollout noise.
 
-Stage 3 New directly addresses that weakness by rerunning the **same scientific
+High-Power OOD–Delay Replication directly addresses that weakness by rerunning the **same scientific
 conditions** with:
 
 ```text
 64 completely fresh rollout seeds per unique cell
 ```
 
-The old Stage 3 / 3B rows remain historical discovery/low-replication evidence
-and are not included in the primary Stage 3 New estimates.
+The old Held-Out OOD–Delay Horizon Confirmation and Held-Out Object-Layout Cross-Task Replication rows remain historical discovery/low-replication evidence
+and are not included in the primary High-Power OOD–Delay Replication estimates.
 
 ---
 
-## 2. What changes relative to Stage 3 / Stage 3B
+## 2. What changes relative to Held-Out OOD–Delay Horizon Confirmation / Held-Out Object-Layout Cross-Task Replication
 
 ### Unchanged
 
 ```text
 policy family             = pi0.5
-checkpoint                 = same exact checkpoint/revision used in Stages 1–3B
+checkpoint                 = same exact checkpoint/revision used in earlier primary-policy stages
 execution method           = RTC
 control rate               = 20 Hz
 control period             = 50 ms
@@ -89,18 +89,18 @@ added delay                = {0, 200} ms
 delay labels               = {Native, Native +200 ms}
 configured action coverage = {20, 25, 30}
 LIBERO episode index       = 0
-OOD variants               = exact frozen Stage-1 variants used in Stage 3 / 3B
+OOD variants               = exact frozen Exploratory OOD–Delay Screening variants used in Held-Out OOD–Delay Horizon Confirmation and Held-Out Object-Layout Cross-Task Replication
 interaction definition     = same difference-in-differences I
 ```
 
 ### Changed
 
 ```text
-old Stage 3 / 3B seeds     = 14..21  (8 seeds)
-Stage 3 New seeds          = 46..109  (64 completely fresh seeds)
+old Held-Out OOD–Delay Horizon Confirmation and Held-Out Object-Layout Cross-Task Replication seeds     = 14..21  (8 seeds)
+High-Power OOD–Delay Replication seeds          = 46..109  (64 completely fresh seeds)
 ```
 
-No old Stage 3 / Stage 3B success rows are pooled into the primary Stage 3 New
+No old Held-Out OOD–Delay Horizon Confirmation / Held-Out Object-Layout Cross-Task Replication success rows are pooled into the primary High-Power OOD–Delay Replication
 analysis.
 
 ---
@@ -125,9 +125,9 @@ same frozen condition.
 
 ## 4. Exact candidate matrix
 
-Stage 3 New reruns the **union of unique Stage 3 and Stage 3B conditions**.
+High-Power OOD–Delay Replication reruns the **union of unique Held-Out OOD–Delay Horizon Confirmation and Held-Out Object-Layout Cross-Task Replication conditions**.
 
-### 4.1 Stage-3 candidates
+### 4.1 Held-Out OOD–Delay Horizon Confirmation candidates
 
 These four conditions must all be rerun. The sensor-noise row remains explicitly
 labeled post-hoc; increasing replication does not make its original selection
@@ -135,23 +135,23 @@ prespecified.
 
 | `candidate_key` | Original status | Task | Perturbation | `classification_id` | `api_task_index` | difficulty | Exact frozen `variant_name` |
 |---|---|---|---|---:|---:|---:|---|
-| `long_stove_object_layout` | Stage-3 prespecified | `long_stove_moka` | `object_layout` | `1941` | `1940` | `2` | `KITCHEN_SCENE3_turn_on_the_stove_and_put_the_moka_pot_on_it_add_25` |
-| `goal_robot_initial_state` | Stage-3 prespecified | `goal_drawer` | `robot_initial_state` | `285` | `284` | `2` | `open_the_middle_drawer_of_the_cabinet_view_0_0_100_0_0_initstate_71` |
-| `goal_light_conditions` | Stage-3 prespecified | `goal_drawer` | `light_conditions` | `2313` | `2312` | `2` | `open_the_middle_drawer_of_the_cabinet_light_1` |
-| `goal_sensor_noise_posthoc` | Stage-3 secondary post-hoc | `goal_drawer` | `sensor_noise` | `1509` | `1508` | `2` | `open_the_middle_drawer_of_the_cabinet_view_0_0_100_0_0_initstate_0_noise_1` |
+| `long_stove_object_layout` | Held-Out OOD–Delay Horizon Confirmation prespecified | `long_stove_moka` | `object_layout` | `1941` | `1940` | `2` | `KITCHEN_SCENE3_turn_on_the_stove_and_put_the_moka_pot_on_it_add_25` |
+| `goal_robot_initial_state` | Held-Out OOD–Delay Horizon Confirmation prespecified | `goal_drawer` | `robot_initial_state` | `285` | `284` | `2` | `open_the_middle_drawer_of_the_cabinet_view_0_0_100_0_0_initstate_71` |
+| `goal_light_conditions` | Held-Out OOD–Delay Horizon Confirmation prespecified | `goal_drawer` | `light_conditions` | `2313` | `2312` | `2` | `open_the_middle_drawer_of_the_cabinet_light_1` |
+| `goal_sensor_noise_posthoc` | Held-Out OOD–Delay Horizon Confirmation secondary post-hoc | `goal_drawer` | `sensor_noise` | `1509` | `1508` | `2` | `open_the_middle_drawer_of_the_cabinet_view_0_0_100_0_0_initstate_0_noise_1` |
 
-### 4.2 Stage-3B cross-task object-layout additions
+### 4.2 Held-Out Object-Layout Cross-Task Replication cross-task object-layout additions
 
 These two rows complete the three-task object-layout comparison. The
-`long_stove_moka × object_layout` row above is the overlap between Stage 3 and
-Stage 3B and must be executed **once**, not duplicated.
+`long_stove_moka × object_layout` row above is the overlap between Held-Out OOD–Delay Horizon Confirmation and
+Held-Out Object-Layout Cross-Task Replication and must be executed **once**, not duplicated.
 
 | `candidate_key` | Original status | Task | Perturbation | `classification_id` | `api_task_index` | difficulty | Exact frozen `variant_name` |
 |---|---|---|---|---:|---:|---:|---|
-| `spatial_object_layout` | Stage-3B targeted follow-up | `spatial_transport` | `object_layout` | `1773` | `1772` | `3` | `pick_up_the_black_bowl_from_table_center_and_place_it_on_the_plate_add_15` |
-| `goal_object_layout` | Stage-3B targeted follow-up | `goal_drawer` | `object_layout` | `1891` | `1890` | `2` | `open_the_middle_drawer_of_the_cabinet_add_13` |
+| `spatial_object_layout` | Held-Out Object-Layout Cross-Task Replication follow-up | `spatial_transport` | `object_layout` | `1773` | `1772` | `3` | `pick_up_the_black_bowl_from_table_center_and_place_it_on_the_plate_add_15` |
+| `goal_object_layout` | Held-Out Object-Layout Cross-Task Replication follow-up | `goal_drawer` | `object_layout` | `1891` | `1890` | `2` | `open_the_middle_drawer_of_the_cabinet_add_13` |
 
-Therefore Stage 3 New contains exactly:
+Therefore High-Power OOD–Delay Replication contains exactly:
 
 ```text
 6 unique task × perturbation candidate pairs
@@ -268,9 +268,9 @@ Use:
 libero_episode_index = 0
 ```
 
-for every Stage 3 New rollout.
+for every High-Power OOD–Delay Replication rollout.
 
-Stage 3C established that the selected LIBERO-Plus OOD variants do not expose
+Initialization-State Audit established that the selected LIBERO-Plus OOD variants do not expose
 multiple distinct environment initializations through this interface. Therefore:
 
 > `seed` is a rollout/policy stochasticity seed, not an environment-initialization
@@ -331,7 +331,7 @@ This reuse must be explicit in analysis provenance.
 
 ## 9. Primary statistical analysis
 
-The point of Stage 3 New is **precision**, not significance fishing.
+The point of High-Power OOD–Delay Replication is **precision**, not significance fishing.
 
 ### 9.1 Per-cell reporting
 
@@ -385,7 +385,7 @@ delay contrast = Native versus +200 ms
 ```
 
 The `h=20` and `h=30` rows remain the symmetric local-horizon robustness check.
-Do not choose the horizon after inspecting Stage 3 New results.
+Do not choose the horizon after inspecting High-Power OOD–Delay Replication results.
 
 ### 9.4 Cross-task object-layout heterogeneity
 
@@ -410,9 +410,9 @@ dependence in the bootstrap.
 Do not infer task heterogeneity merely because one CI excludes zero and another
 does not; examine the **difference between interaction estimates directly**.
 
-### 9.5 Stage-3 candidate replication
+### 9.5 Held-Out OOD–Delay Horizon Confirmation candidate replication
 
-Report all four Stage-3 candidate interactions, including the post-hoc
+Report all four Held-Out OOD–Delay Horizon Confirmation candidate interactions, including the post-hoc
 sensor-noise candidate.
 
 Never relabel sensor noise as prespecified.
@@ -424,12 +424,12 @@ uninteresting.
 
 ## 10. Interpretation rules frozen before the run
 
-Stage 3 New is allowed to **falsify** the current paper language.
+High-Power OOD–Delay Replication is allowed to **falsify** the current paper language.
 
 ### Outcome A — prior pattern survives with substantially tighter uncertainty
 
 If `long_stove_moka × object_layout` remains materially negative while the
-object-layout effects on the other two tasks and the other Stage-3 candidates
+object-layout effects on the other two tasks and the other Held-Out OOD–Delay Horizon Confirmation candidates
 remain substantially closer to zero/non-negative, then the task-localized
 interaction interpretation is strengthened.
 
@@ -463,17 +463,17 @@ task/perturbation effect.
 
 | Experiment | Primary purpose | Replication | What changed |
 |---|---|---:|---|
-| Stage 1 | broad exploratory OOD screen | 5 seeds/cell | many tasks/perturbations; low replication |
-| Stage 2 | temporal-coverage × delay operating envelope | 5 seeds/cell | ID-only mechanism study |
-| Stage 3 | confirm selected Stage-1 candidates across nearby horizons | 8 seeds/cell | fresh rollouts, 4 candidate pairs |
-| Stage 3B | test object-layout signal across the other Stage-1 tasks | 8 seeds/cell | targeted cross-task follow-up |
-| Experiments A/B | layout/task generalization | 8 seeds/cell | additional layouts / second multi-stage task |
-| **Stage 3 New** | **re-estimate the Stage 3/3B interaction matrix with high precision** | **64 completely fresh seeds/cell** | **no new scientific factor; only much larger replication** |
+| Exploratory OOD–Delay Screening | broad exploratory OOD screen | 5 seeds/cell | many tasks/perturbations; low replication |
+| Confirmatory Horizon–Delay Operating Envelope | temporal-coverage × delay operating envelope | 5 seeds/cell | ID-only mechanism study |
+| Held-Out OOD–Delay Horizon Confirmation | confirm selected Exploratory OOD–Delay Screening candidates across nearby horizons | 8 seeds/cell | fresh rollouts, 4 candidate pairs |
+| Held-Out Object-Layout Cross-Task Replication | test object-layout signal across the other Exploratory OOD–Delay Screening tasks | 8 seeds/cell | targeted cross-task follow-up |
+| Object-Layout and Multi-Stage Task Generalization | layout/task generalization | 8 seeds/cell | additional layouts / second multi-stage task |
+| **High-Power OOD–Delay Replication** | **re-estimate the Held-Out OOD–Delay Horizon Confirmation and Held-Out Object-Layout Cross-Task Replication interaction matrix with high precision** | **64 completely fresh seeds/cell** | **no new scientific factor; only much larger replication** |
 
 The key methodological sentence for the paper is:
 
 > “Because the initial confirmatory matrices used eight stochastic rollouts per
-> cell, we repeated the complete Stage 3/3B condition set using 64 entirely
+> cell, we repeated the complete Held-Out OOD–Delay Horizon Confirmation and Held-Out Object-Layout Cross-Task Replication condition set using 64 entirely
 > fresh rollout seeds per unique cell while holding tasks, variants, horizons,
 > delay, policy, and execution semantics fixed.”
 
@@ -557,7 +557,7 @@ stage3_new_object_layout_cross_task.png
 stage3_new_low_n_vs_high_n_interactions.png
 ```
 
-The low-n versus high-n plot may display Stage 3/3B estimates for historical
+The low-n versus high-n plot may display Held-Out OOD–Delay Horizon Confirmation and Held-Out Object-Layout Cross-Task Replication estimates for historical
 comparison, but the new primary estimates must use only seeds `46..109`.
 
 ---
@@ -603,7 +603,7 @@ Reject analysis if:
 - a seed is silently replaced;
 - Native and +200 cells do not satisfy the reset-pairing audit;
 - duplicate physical rows are counted as independent episodes;
-- old Stage 3 / 3B episode rows are mixed into the primary Stage 3 New dataset.
+- old Held-Out OOD–Delay Horizon Confirmation and Held-Out Object-Layout Cross-Task Replication episode rows are mixed into the primary High-Power OOD–Delay Replication dataset.
 
 ---
 
@@ -627,7 +627,7 @@ If the compute window ends before completion:
 
 1. preserve the partial archive;
 2. do not select a favorable subset of candidate pairs or horizons;
-3. report Stage 3 New as incomplete unless the entire predeclared primary
+3. report High-Power OOD–Delay Replication as incomplete unless the entire predeclared primary
    `h=25` matrix has been completed for all six candidates and any reduced
    analysis is explicitly labeled as such.
 
@@ -639,11 +639,11 @@ The preferred outcome is the full frozen matrix.
 
 No additional OpenVLA policy experiments are planned.
 
-Stage 4 remains historical provenance as an already completed preliminary
+Cross-Policy OpenVLA-OFT Diagnostic remains historical provenance as an already completed preliminary
 second-policy diagnostic.
 
-Stage 5 is canceled before execution.
+OpenVLA-OFT Temporal-Coverage Calibration is canceled before execution.
 
-Stage 3 New supersedes Stage 5 as the active final experiment because the
+High-Power OOD–Delay Replication supersedes OpenVLA-OFT Temporal-Coverage Calibration as the active final experiment because the
 highest-value remaining issue is uncertainty in the existing π0.5 interaction
 estimates, not additional policy breadth.

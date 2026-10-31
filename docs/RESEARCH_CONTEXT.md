@@ -6,7 +6,7 @@
 
 ## Current empirical situation
 
-Stage 1 did not support a general claim that LIBERO-Plus OOD shifts amplify
+Exploratory OOD–Delay Screening did not support a general claim that LIBERO-Plus OOD shifts amplify
 sensitivity to +200 ms delay.
 
 ```text
@@ -46,7 +46,7 @@ lerobot/pi05_libero_finetuned
 moojink/openvla-7b-oft-finetuned-libero-spatial-object-goal-10
 ```
 
-Stage 4 uses OpenVLA-OFT under policy-compatible naive asynchronous execution; it is not an RTC replication.
+Cross-Policy OpenVLA-OFT Diagnostic uses OpenVLA-OFT under policy-compatible naive asynchronous execution; it is not an RTC replication.
 
 ## Core methods
 
@@ -81,7 +81,7 @@ These labels are our analysis taxonomy.
 LIBERO-Plus perturbation families are official benchmark categories; the four
 mechanism groups are ours.
 
-## Completed Stage 1 findings
+## Completed Exploratory OOD–Delay Screening findings
 
 Broad result:
 > No broad evidence that OOD amplifies +200 ms delay at the 25-action operating point.
@@ -98,26 +98,26 @@ Secondary post-hoc signal:
 Goal drawer × Sensor noise × RTC
 ```
 
-## Completed post-Stage-1 findings
+## Completed post-Exploratory OOD–Delay Screening findings
 
-### Stage 2
+### Confirmatory Horizon–Delay Operating Envelope
 
-At `+200 ms`, pooled ID success is `14/15` at each of `n_action_steps={20,25,30}`, versus `6/15` at 10 actions. The 10-action regime also exhibits 1385 queue-underrun/hold steps at +200 ms, while horizons 20, 25, and 30 have zero. Therefore the frozen `25/+200` Stage-1 operating point is locally stable rather than a knife-edge optimum.
+At `+200 ms`, pooled ID success is `14/15` at each of `n_action_steps={20,25,30}`, versus `6/15` at 10 actions. The 10-action regime also exhibits 1385 queue-underrun/hold steps at +200 ms, while horizons 20, 25, and 30 have zero. Therefore the frozen `25/+200` Exploratory OOD–Delay Screening operating point is locally stable rather than a knife-edge optimum.
 
-### Stage 3
+### Held-Out OOD–Delay Horizon Confirmation
 
-Most Stage-1 localized negative interactions do not replicate on held-out seeds. The surviving candidate is `long_stove_moka × object_layout`, whose interaction remains negative across the frozen horizon neighborhood: `I_20=-0.125`, `I_25=-0.250`, `I_30=-0.125`. The additional delay penalty is modest relative to the large OOD main effect.
+Most Exploratory OOD–Delay Screening localized negative interactions do not replicate on held-out seeds. The surviving candidate is `long_stove_moka × object_layout`, whose interaction remains negative across the frozen horizon neighborhood: `I_20=-0.125`, `I_25=-0.250`, `I_30=-0.125`. The additional delay penalty is modest relative to the large OOD main effect.
 
-### Stage 3B
+### Held-Out Object-Layout Cross-Task Replication
 
-Stage 3B completed the cross-task object-layout replication. `spatial_transport` has `I={0,0,0}` at horizons `{20,25,30}` and OOD success is 8/8 -> 8/8 at every horizon. `goal_drawer` has `I={+0.125,+0.125,0}` with OOD 8/8 -> 8/8 throughout. `long_stove_moka` remains the only negative task with `I={-0.125,-0.250,-0.125}`. Thus the object-layout × delay effect is task-dependent rather than family-wide in the evaluated set.
+Held-Out Object-Layout Cross-Task Replication completed the cross-task object-layout replication. `spatial_transport` has `I={0,0,0}` at horizons `{20,25,30}` and OOD success is 8/8 -> 8/8 at every horizon. `goal_drawer` has `I={+0.125,+0.125,0}` with OOD 8/8 -> 8/8 throughout. `long_stove_moka` remains the only negative task with `I={-0.125,-0.250,-0.125}`. Thus the object-layout × delay effect is task-dependent rather than family-wide in the evaluated set.
 
-### Stage 3C
+### Initialization-State Audit
 
 The reset-only audit failed closed: for every frozen OOD object-layout variant, requested initialization indices `1..7` resolved to `0`, yielding only one distinct OOD initialization state. Cross-initialization generalization is therefore not evaluable for these variants.
 
 
-### Experiment A
+### Object-Layout Generalization
 
 Within `long_stove_moka`, three new deterministic object-layout variants produced:
 
@@ -127,9 +127,9 @@ negative in 2/3 variants
 mean I = -0.125
 ```
 
-The original Stage-3 layout was also negative (`I_25=-0.250`). Thus the signal is not a single-layout artifact, but it is heterogeneous across layouts.
+The original Held-Out OOD–Delay Horizon Confirmation layout was also negative (`I_25=-0.250`). Thus the signal is not a single-layout artifact, but it is heterogeneous across layouts.
 
-### Experiment B
+### Multi-Stage Task Generalization
 
 On `LIVING_ROOM_SCENE2_put_both_the_alphabet_soup_and_the_tomato_sauce_in_the_basket`, three object-layout variants produced:
 
@@ -153,7 +153,7 @@ outcomes better than milliseconds alone.
 
 ### H3 — OOD boundary shift
 Selected OOD perturbations can move the horizon–latency boundary even though the
-aggregate Stage 1 interaction at 25 actions is near zero.
+aggregate Exploratory OOD–Delay Screening interaction at 25 actions is near zero.
 
 ### H4 — Method dependence
 The horizon/latency relationship differs between RTC and a naive asynchronous queue.
@@ -162,18 +162,18 @@ The horizon/latency relationship differs between RTC and a naive asynchronous qu
 
 Completed:
 
-1. Stage 2 — RTC local operating-point sensitivity
-2. Stage 3 — low-replication OOD × horizon confirmation
-3. Stage 3B — low-replication cross-task object-layout replication
-4. Stage 3C — initialization audit; failed closed
-5. Experiment A — within-task layout generalization
-6. Experiment B — second multi-stage task generalization
-7. Stage 4 — preliminary OpenVLA-OFT native-8 diagnostic
+1. Confirmatory Horizon–Delay Operating Envelope — RTC local operating-point sensitivity
+2. Held-Out OOD–Delay Horizon Confirmation — low-replication OOD × horizon confirmation
+3. Held-Out Object-Layout Cross-Task Replication — low-replication cross-task object-layout replication
+4. Initialization-State Audit — initialization audit; failed closed
+5. Object-Layout Generalization — within-task layout generalization
+6. Multi-Stage Task Generalization — second multi-stage task generalization
+7. Cross-Policy OpenVLA-OFT Diagnostic — preliminary OpenVLA-OFT native-8 diagnostic
 
 Canceled before execution:
 
 ```text
-Stage 5 — OpenVLA-OFT temporal-coverage calibration/final replication
+OpenVLA-OFT Temporal-Coverage Calibration — OpenVLA-OFT temporal-coverage calibration/final replication
 ```
 
 Active final experiment:
@@ -182,27 +182,27 @@ Active final experiment:
 STAGE_3_NEW_HIGH_POWER_REPLICATION.md
 ```
 
-Stage 3 New directly addresses the main remaining statistical limitation:
+High-Power OOD–Delay Replication directly addresses the main remaining statistical limitation:
 
 ```text
-same π0.5 + RTC scientific conditions as the union of Stage 3 and Stage 3B
+same π0.5 + RTC scientific conditions as the union of Held-Out OOD–Delay Horizon Confirmation and Held-Out Object-Layout Cross-Task Replication
 6 exact frozen task × perturbation pairs
 horizons = {20,25,30}
 delay = {Native,+200 ms}
 fresh seeds = 46..109
 64 seeds per unique cell
-old Stage 3/3B rows excluded from primary estimates
+old Held-Out OOD–Delay Horizon Confirmation and Held-Out Object-Layout Cross-Task Replication rows excluded from primary estimates
 3,456 new physical episodes using shared ID controls
 ```
 
-Until Stage 3 New is complete, the paper's claim that OOD × delay interactions
+Until High-Power OOD–Delay Replication is complete, the paper's claim that OOD × delay interactions
 are sparse/task-dependent/layout-dependent is **provisional** because the
-original Stage 3/3B interaction estimates used only eight rollout seeds per cell.
+original Held-Out OOD–Delay Horizon Confirmation and Held-Out Object-Layout Cross-Task Replication interaction estimates used only eight rollout seeds per cell.
 
 ## Explicit non-claims
 
 Do not claim:
-- broad OOD amplification from Stage 1;
+- broad OOD amplification from Exploratory OOD–Delay Screening;
 - a universal RTC threshold;
 - that `n_action_steps` equals RTC formal execution horizon `s` unless audited;
 - a new async algorithm;
@@ -210,12 +210,12 @@ Do not claim:
 - universal superiority of any execution method;
 - monotonic degradation with atomic manipulation turn count;
 - cross-policy generalization from the completed preliminary OpenVLA diagnostic;
-- that the low-n Stage 3/3B heterogeneity pattern is robust until Stage 3 New is complete.
+- that the low-n Held-Out OOD–Delay Horizon Confirmation and Held-Out Object-Layout Cross-Task Replication heterogeneity pattern is robust until High-Power OOD–Delay Replication is complete.
 
 
-## Frozen post-Stage-1 sensitivity design
+## Frozen post-Exploratory OOD–Delay Screening sensitivity design
 
-Stage 2:
+Confirmatory Horizon–Delay Operating Envelope:
 
 ```text
 RTC
@@ -227,7 +227,7 @@ seeds = 5,6,7,8,9
 Native at every horizon distinguishes an action-coverage main effect from
 sensitivity to injected delay.
 
-Stage 3:
+Held-Out OOD–Delay Horizon Confirmation:
 
 ```text
 n_action_steps = 20,25,30
@@ -235,11 +235,11 @@ delay = Native,+200 ms
 seeds = 14..21
 ```
 
-The Stage 3 horizon set is frozen before Stage 2 and is not selected after
-inspecting Stage 2.
+The Held-Out OOD–Delay Horizon Confirmation horizon set is frozen before Confirmatory Horizon–Delay Operating Envelope and is not selected after
+inspecting Confirmatory Horizon–Delay Operating Envelope.
 
 
-Stage 3B:
+Held-Out Object-Layout Cross-Task Replication:
 
 ```text
 RTC
@@ -252,13 +252,13 @@ initialization_index_or_id = libero_episode_index:0
 new episodes = 144 (96 OOD + 48 spatial ID)
 ```
 
-This is a post-Stage-3 targeted cross-task replication. It determines whether
+This is a post-Held-Out OOD–Delay Horizon Confirmation targeted cross-task replication. It determines whether
 the object-layout interaction is a family-level tendency across task demands or
 a localized long-task result.
 
 
 
-Stage 3C — reset-only initialization audit:
+Initialization-State Audit — reset-only initialization audit:
 
 ```text
 3 tasks × ID/OOD × initialization indices 0..7 × 3 clean resets
@@ -269,8 +269,8 @@ Stage 3C — reset-only initialization audit:
 
 The final compute budget is allocated to `STAGE_3_NEW_HIGH_POWER_REPLICATION.md`.
 
-The experiment reruns all four Stage-3 candidates (including the sensor-noise
-post-hoc condition) plus the two unique Stage-3B object-layout additions. The
+The experiment reruns all four Held-Out OOD–Delay Horizon Confirmation candidates (including the sensor-noise
+post-hoc condition) plus the two unique Held-Out Object-Layout Cross-Task Replication object-layout additions. The
 overlapping `long_stove_moka × object_layout` condition is run only once.
 
 The only intended scientific change is replication:
@@ -280,4 +280,4 @@ old: 8 seeds/cell
 new: 36 entirely fresh seeds/cell
 ```
 
-OpenVLA Stage 5 is canceled.
+OpenVLA OpenVLA-OFT Temporal-Coverage Calibration is canceled.

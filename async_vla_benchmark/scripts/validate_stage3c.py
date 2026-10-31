@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fail-closed Stage 3C gate and frozen Stage 3D handoff writer."""
+"""Fail-closed Initialization-State Audit gate and frozen Held-Out OOD–Delay Horizon Confirmation handoff writer."""
 import argparse
 import hashlib
 import json
@@ -130,9 +130,9 @@ def main():
     print(f"audit={len(rows)} validated={len(certified) if passed else 0} errors={len(errors)}")
     if errors:
         print(*(f"ERROR: {error}" for error in errors), sep="\n")
-        print("Stage 3C validation failed closed; Stage 3D must not dispatch")
+        print("Initialization-State Audit validation failed closed; Held-Out OOD–Delay Horizon Confirmation must not dispatch")
         return 1
-    print("Stage 3C validation passed: 144 resets, 48 certified initializations, no policy inference")
+    print("Initialization-State Audit validation passed: 144 resets, 48 certified initializations, no policy inference")
     return 0
 
 

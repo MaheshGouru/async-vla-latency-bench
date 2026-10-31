@@ -1,4 +1,4 @@
-# Stage 1 frozen OOD x delay screen. Use the standard image for new ID rows and
+# Exploratory OOD–Delay Screening frozen OOD x delay screen. Use the standard image for new ID rows and
 # Dockerfile.modal.libero_plus for OOD rows; the two LIBERO packages conflict.
 repository: huggingface/lerobot
 repository_revision: "2aba372b4e217cc47db28e0f836859b20d1456c9"

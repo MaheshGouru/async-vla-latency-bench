@@ -1,10 +1,10 @@
-# Experiment A — Within-Task Object-Layout Variant Generalization
+# Object-Layout Generalization — Within-Task Object-Layout Variant Generalization
 
 ## 0. Status and scientific purpose
 
 **Status: ACTIVE / REQUIRED NEXT EXPERIMENT.**
 
-Stage 3B showed that the negative object-layout × delay interaction did **not** generalize across the two simpler task-demand categories:
+Held-Out Object-Layout Cross-Task Replication showed that the negative object-layout × delay interaction did **not** generalize across the two simpler task-demand categories:
 
 ```text
 spatial_transport: I = 0 at h=20,25,30
@@ -16,7 +16,7 @@ Therefore the active question is:
 
 > Does the negative object-layout × delay interaction on `long_stove_moka` persist across multiple independently selected object-layout variants of that same multi-stage task?
 
-This is a **post-Stage-3B targeted generalization experiment**, not preregistered confirmation.
+This is a **post-Held-Out Object-Layout Cross-Task Replication generalization experiment**, not preregistered confirmation.
 
 ## 1. Frozen task
 
@@ -28,7 +28,7 @@ This is a **post-Stage-3B targeted generalization experiment**, not preregistere
 | base task id | `2` |
 | exact base task name | `KITCHEN_SCENE3_turn_on_the_stove_and_put_the_moka_pot_on_it` |
 
-Do not add `spatial_transport` or `goal_drawer`; Stage 3B already produced non-negative object-layout interactions for their frozen variants.
+Do not add `spatial_transport` or `goal_drawer`; Held-Out Object-Layout Cross-Task Replication already produced non-negative object-layout interactions for their frozen variants.
 
 ## 2. Frozen perturbation
 
@@ -83,7 +83,7 @@ variant_name
 
 ## 4. Implementation/provenance requirements
 
-Experiment A must be implemented as a distinct experiment label and must not masquerade as `stage3b`. Reuse the audited Stage-3 execution engine, but use dedicated Experiment-A manifest, runner/label, validator, and analysis entry points.
+Object-Layout Generalization must be implemented as a distinct experiment label and must not masquerade as `stage3b`. Reuse the audited Held-Out OOD–Delay Horizon Confirmation execution engine, but use dedicated Object-Layout Generalization manifest, runner/label, validator, and analysis entry points.
 
 Required provenance artifacts:
 
@@ -120,7 +120,7 @@ Before using analysis seeds, run an isolated end-to-end smoke test with `seed=99
 ## 5. Exact execution configuration
 
 ```text
-policy/checkpoint          = identical checkpoint + revision used in Stage 3/3B
+policy/checkpoint          = identical checkpoint + revision used in Held-Out OOD–Delay Horizon Confirmation and Held-Out Object-Layout Cross-Task Replication
 method                     = RTC
 configured_n_action_steps  = 25
 control_rate_hz            = 20
@@ -141,7 +141,7 @@ No seed substitution, adaptive extra seeds, or replacement of genuine task failu
 
 ## 7. Initialization and pairing
 
-Use exactly `libero_episode_index:0`. Stage 3C showed that the relevant object-layout OOD interface exposes only one distinct initialization state; do not attempt indices 1–7.
+Use exactly `libero_episode_index:0`. Initialization-State Audit showed that the relevant object-layout OOD interface exposes only one distinct initialization state; do not attempt indices 1–7.
 
 For each fixed `(scene_condition, exact_variant_or_ID, rollout_seed)`, Native and +200 must share the same requested/resolved initialization and `initial_state_fingerprint`. Do not require ID and OOD fingerprints to match because object layout changes geometry.
 
@@ -215,7 +215,7 @@ I_variant =
 
 Report raw `successes/8` for all four cells and paired-seed bootstrap CIs, resampling the eight seed clusters and carrying all four cells together.
 
-Keep the completed Stage-3 `_add_25` result separate:
+Keep the completed Held-Out OOD–Delay Horizon Confirmation `_add_25` result separate:
 
 ```text
 h=25: I=-0.250; OOD 3/8 -> 2/8
@@ -223,9 +223,9 @@ h=25: I=-0.250; OOD 3/8 -> 2/8
 
 Do not pool old and new seed blocks as if they were one randomized experiment.
 
-## 11. Frozen gate for Experiment B
+## 11. Frozen gate for Multi-Stage Task Generalization
 
-Experiment B dispatches only if:
+Multi-Stage Task Generalization dispatches only if:
 
 ```text
 at least 2 of 3 new variants have I_variant < 0
@@ -233,12 +233,12 @@ AND mean(I_variant across the 3 new variants) < 0
 AND there is no unresolved validation/provenance failure
 ```
 
-Do not relax this rule after seeing Experiment-A outcomes.
+Do not relax this rule after seeing Object-Layout Generalization outcomes.
 
 
 ## Completion addendum — 2026-08-22
 
-Experiment A completed with 64/64 valid analysis episodes.
+Object-Layout Generalization completed with 64/64 valid analysis episodes.
 
 ```text
 c1950 / level3_sample1: I = -0.375
@@ -248,4 +248,4 @@ mean I = -0.125
 negative in 2/3 new variants
 ```
 
-The frozen gate to Experiment B passed.
+The frozen gate to Multi-Stage Task Generalization passed.

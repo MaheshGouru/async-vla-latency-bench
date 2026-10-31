@@ -18,11 +18,11 @@ def main():
     if {int(r["configured_n_action_steps"]) for r in manifest}!=set(HORIZONS): errors.append("wrong horizons")
     if {int(r["added_delay_ms"]) for r in manifest}!=set(ADDED_DELAYS_MS): errors.append("wrong delays")
     if {int(r["seed"]) for r in manifest}!=set(SEEDS): errors.append("wrong seeds")
-    if any(r["execution_method"]!="rtc" for r in manifest): errors.append("Stage 3 must be RTC-only")
+    if any(r["execution_method"]!="rtc" for r in manifest): errors.append("Held-Out OOD–Delay Horizon Confirmation must be RTC-only")
     if sum(r["scene"]=="id" for r in manifest)!=96 or sum(r["scene"]=="ood" for r in manifest)!=192: errors.append("wrong ID/OOD counts")
     expected_variants={(str(v["classification_id"]),str(v["api_task_index"]),v["variant_name"],str(v["difficulty_level"])) for v in OOD_VARIANTS}
     actual_variants={(r["classification_id"],r["api_task_index"],r["variant_name"],r["difficulty_level"]) for r in manifest if r["scene"]=="ood"}
-    if actual_variants!=expected_variants: errors.append("exact frozen OOD variants do not match Stage 1 identities")
+    if actual_variants!=expected_variants: errors.append("exact frozen OOD variants do not match Exploratory OOD–Delay Screening identities")
     groups=defaultdict(list)
     for r in manifest: groups[(r["task_key"],r["variant_name"],r["seed"],r["scene"])].append(r)
     if len(groups)!=48: errors.append(f"expected 48 pairing groups, got {len(groups)}")
@@ -65,7 +65,7 @@ def main():
     print(f"manifest=288 results={len(results)} missing={len(missing)} invalid={len(invalid)}")
     if errors:
         print(*(f"ERROR: {e}" for e in errors),sep="\n"); return 1
-    print("Stage 3 validation passed"); return 0
+    print("Held-Out OOD–Delay Horizon Confirmation validation passed"); return 0
 
 
 if __name__=="__main__": raise SystemExit(main())

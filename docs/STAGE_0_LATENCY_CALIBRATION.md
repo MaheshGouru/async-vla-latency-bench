@@ -1,4 +1,4 @@
-# Stage 0 — ID-Only Latency Calibration
+# Latency Calibration and Instrumentation — ID-Only Latency Calibration
 
 > **Current protocol (D016):** The completed revised calibration uses
 > `n_action_steps=25`, seeds `0, 1, 10, 11, 12, 13`, and added delays
@@ -9,7 +9,7 @@
 
 Yes: this calibration is part of the paper.
 
-It belongs in **Methods / Experimental Setup**, with the full calibration curve optionally placed in the appendix. Its purpose is to choose the Stage 1 high-latency condition **without looking at any OOD results**.
+It belongs in **Methods / Experimental Setup**, with the full calibration curve optionally placed in the appendix. Its purpose is to choose the Exploratory OOD–Delay Screening high-latency condition **without looking at any OOD results**.
 
 Recommended paper wording:
 
@@ -19,11 +19,11 @@ This prevents the high-delay setting from being chosen after seeing which OOD co
 
 ---
 
-## 1. Relationship to Stage 1
+## 1. Relationship to Exploratory OOD–Delay Screening
 
-**Stage 1 DOES test OOD under latency.**
+**Exploratory OOD–Delay Screening DOES test OOD under latency.**
 
-For every selected LIBERO-Plus OOD variant, Stage 1 runs:
+For every selected LIBERO-Plus OOD variant, Exploratory OOD–Delay Screening runs:
 
 ```text
 OOD + Native
@@ -39,7 +39,7 @@ RTC
 
 and all five exploratory seeds.
 
-Therefore the Stage 1 OOD factorial is:
+Therefore the Exploratory OOD–Delay Screening OOD factorial is:
 
 ```text
 3 task groups
@@ -50,9 +50,9 @@ Therefore the Stage 1 OOD factorial is:
 = 420 OOD episodes
 ```
 
-The purpose of Stage 0 is only to determine what `d*` should be.
+The purpose of Latency Calibration and Instrumentation is only to determine what `d*` should be.
 
-Stage 1 then asks:
+Exploratory OOD–Delay Screening then asks:
 
 > **Which kinds of distribution shift reduce a VLA policy’s tolerance to inference delay, and under which behavioral demands?**
 
@@ -74,13 +74,13 @@ naive_async
 rtc
 ```
 
-Do not use LIBERO-Plus/OOD environments during Stage 0.
+Do not use LIBERO-Plus/OOD environments during Latency Calibration and Instrumentation.
 
 ---
 
 ## 3. Exact ID tasks
 
-Use the same three standard-LIBERO base tasks that Stage 1 will perturb.
+Use the same three standard-LIBERO base tasks that Exploratory OOD–Delay Screening will perturb.
 
 | Task-demand group | Suite | Zero-based task ID | Exact task |
 |---|---|---:|---|
@@ -120,7 +120,7 @@ Important:
 
 ## 5. Seeds and total budget
 
-Use the six fixed Stage 0 seeds:
+Use the six fixed Latency Calibration and Instrumentation seeds:
 
 ```text
 0, 1, 10, 11, 12, 13
@@ -140,16 +140,16 @@ There are 30 unique task × method × delay condition blocks, each with six
 seeds.
 
 The Native and selected-`d*` episodes for seeds `0` and `1` may provide 24
-of the Stage 1 shared ID controls when every configuration and provenance field
-matches. Stage 1 independently uses seeds `0–4` and therefore runs the 36
+of the Exploratory OOD–Delay Screening shared ID controls when every configuration and provenance field
+matches. Exploratory OOD–Delay Screening independently uses seeds `0–4` and therefore runs the 36
 missing ID controls for seeds `2`, `3`, and `4`.
 
 Therefore:
 
 ```text
-Stage 0 unique episodes        = 180
-Stage 1 OOD episodes           = 420
-Stage 1 additional ID controls = 36
+Latency Calibration and Instrumentation unique episodes        = 180
+Exploratory OOD–Delay Screening OOD episodes           = 420
+Exploratory OOD–Delay Screening additional ID controls = 36
 --------------------------------------
 Total unique episodes          = 636
 ```
@@ -355,7 +355,7 @@ with:
 }
 ```
 
-Then Stage 1 reads this file rather than hard-coding its own delay.
+Then Exploratory OOD–Delay Screening reads this file rather than hard-coding its own delay.
 
 ---
 
@@ -512,7 +512,7 @@ Use:
 
 > “To avoid tuning latency against OOD outcomes, we select the high-delay condition using only standard LIBERO tasks. We evaluate 0, 100, 200, 300, and 400 ms of added delay under both Naive async and RTC, then freeze the smallest delay that produces at least a 20 percentage-point reduction in pooled success on viable ID conditions while retaining at least 25% success.”
 
-### Stage 1 transition
+### Exploratory OOD–Delay Screening transition
 
 Use:
 
@@ -553,7 +553,7 @@ LATENCY_CALIBRATION_OBSERVATIONS.md
 
 ---
 
-## 14. Frozen Stage 0 summary
+## 14. Frozen Latency Calibration and Instrumentation summary
 
 ```text
 DATA:

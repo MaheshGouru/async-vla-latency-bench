@@ -1,4 +1,4 @@
-# Stage 0 — ID-only latency calibration (docs/STAGE_0_LATENCY_CALIBRATION.md).
+# Latency Calibration and Instrumentation — ID-only latency calibration (docs/STAGE_0_LATENCY_CALIBRATION.md).
 #
 # Standard LIBERO only. LIBERO-Plus must not be installed in the image that runs
 # this config: the two forks both claim the top-level `libero` package (K007).
@@ -20,7 +20,7 @@ max_parallel_tasks: 1
 output_dir: async_vla_benchmark/outputs/stage0
 selected_tasks_file: async_vla_benchmark/outputs/stage0/summaries/selected_tasks.json
 
-# Seeds 0 and 1 stay the pair Stage 1 reuses as its 24 ID controls (STAGE_0
+# Seeds 0 and 1 stay the pair Exploratory OOD–Delay Screening reuses as its 24 ID controls (STAGE_0
 # section 5). The extras skip 2-9, which STAGE_2 section 4 reserves as held-out
 # confirmatory seeds. Six rather than two because viability is a `>= 1/2` test:
 # at two seeds it turns on a single episode. See benchmark/stage0.py SEEDS.
@@ -33,7 +33,7 @@ observation_height: 224
 init_states: true
 num_steps_wait: 10
 
-# The three base tasks Stage 1 perturbs (D004). task_ids are the exact zero-based
+# The three base tasks Exploratory OOD–Delay Screening perturbs (D004). task_ids are the exact zero-based
 # indices asserted in benchmark/stage0.py; run_stage0.py verifies the resolved
 # task *name* before running anything.
 task_candidates:
@@ -56,7 +56,7 @@ latency_profiles:
   native_plus_300: {use_measured_native_latency: true, added_latency_ms: 300}
   native_plus_400: {use_measured_native_latency: true, added_latency_ms: 400}
 
-# No horizon sweep in Stage 0; every episode runs at n_action_steps=25.
+# No horizon sweep in Latency Calibration and Instrumentation; every episode runs at n_action_steps=25.
 execution_horizons: [25]
 
 rtc:

@@ -24,12 +24,12 @@ def main():
     gate_hash = validate_experiment_a_gate(args.experiment_a_gate)
     validation = json.loads(args.validation.read_text())
     if validation.get("status") != "pass" or validation.get("experiment_a_dispatch_gate_sha256") != gate_hash:
-        raise ValueError("Experiment B analysis requires a passing gate-bound validation record")
+        raise ValueError("Multi-Stage Task Generalization analysis requires a passing gate-bound validation record")
     rows = read_csv(args.results); variants = read_csv(args.variants); validate_frozen_variants(variants)
     if len(rows) != 64 or len({row["run_id"] for row in rows}) != 64 or any(not row.get("status", "").startswith("ok") for row in rows):
-        raise ValueError("Experiment B analysis requires 64 unique valid rows")
+        raise ValueError("Multi-Stage Task Generalization analysis requires 64 unique valid rows")
     if {row.get("analysis_status") for row in rows} != {ANALYSIS_STATUS}:
-        raise ValueError("Experiment B analysis-status provenance mismatch")
+        raise ValueError("Multi-Stage Task Generalization analysis-status provenance mismatch")
     args.output_dir.mkdir(parents=True, exist_ok=True); four_cell = []; interactions = []
     write_csv(args.output_dir / "experiment_b_unique_episode_accounting.csv", sorted(rows, key=lambda row: row["run_id"]))
 
@@ -76,10 +76,10 @@ def main():
     fig, axis = plt.subplots(figsize=(7, 4))
     axis.bar([f"c{row['classification_id']}" for row in interactions], [float(row["interaction_I_variant"]) for row in interactions])
     axis.axhline(0, color="black", linewidth=1)
-    axis.set(ylabel="OOD × delay interaction", title="Experiment B: cross-task layout variants")
+    axis.set(ylabel="OOD × delay interaction", title="Multi-Stage Task Generalization: cross-task layout variants")
     fig.tight_layout(); fig.savefig(args.output_dir / "experiment_b_interaction_by_variant.png", dpi=180); plt.close(fig)
     lines = [
-        "# Experiment B Observations", "",
+        "# Multi-Stage Task Generalization Observations", "",
         f"- Negative interactions: {summary['negative_variants']}/3.",
         f"- Mean interaction: {summary['mean_interaction']:+.3f}.",
         "- These results concern the frozen additional multi-stage task only; no task substitution or adaptive expansion was performed.", "",
@@ -87,7 +87,7 @@ def main():
     for row in interactions:
         lines.append(f"- c{row['classification_id']}: I={float(row['interaction_I_variant']):+.3f}, paired bootstrap 95% CI [{float(row['paired_bootstrap95_low']):+.3f}, {float(row['paired_bootstrap95_high']):+.3f}].")
     (args.output_dir / "EXPERIMENT_B_OBSERVATIONS.md").write_text("\n".join(lines) + "\n")
-    print("PASS: complete Experiment B cross-task analysis generated")
+    print("PASS: complete Multi-Stage Task Generalization cross-task analysis generated")
     return 0
 
 

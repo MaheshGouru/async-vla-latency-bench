@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run Experiment A through the audited Stage 3 execution engine."""
+"""Run Object-Layout Generalization through the audited Held-Out OOD–Delay Horizon Confirmation execution engine."""
 import sys
 from async_vla_benchmark.scripts.run_stage3 import main
 if __name__=="__main__":

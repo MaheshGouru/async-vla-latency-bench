@@ -1,4 +1,4 @@
-"""Frozen targeted Stage 3B object-layout cross-task replication."""
+"""Frozen targeted Held-Out Object-Layout Cross-Task Replication object-layout cross-task replication."""
 from __future__ import annotations
 from dataclasses import asdict
 from typing import Mapping, Sequence
@@ -38,13 +38,13 @@ def stage3b_manifest(provenance:Mapping[str,str]):
  validate_manifest(rows); return rows
 
 def validate_manifest(rows:Sequence[Stage3Plan]):
- if len(rows)!=144 or len({r.run_id for r in rows})!=144: raise ValueError("Stage 3B must contain 144 unique new episodes")
- if sum(r.scene=="ood" for r in rows)!=96 or sum(r.scene=="id" for r in rows)!=48: raise ValueError("Stage 3B new accounting must be 96 OOD + 48 ID")
+ if len(rows)!=144 or len({r.run_id for r in rows})!=144: raise ValueError("Held-Out Object-Layout Cross-Task Replication must contain 144 unique new episodes")
+ if sum(r.scene=="ood" for r in rows)!=96 or sum(r.scene=="id" for r in rows)!=48: raise ValueError("Held-Out Object-Layout Cross-Task Replication new accounting must be 96 OOD + 48 ID")
  if any(r.task_key=="goal_drawer" and r.scene=="id" for r in rows): raise ValueError("goal ID must be reused, not rerun")
  if any(r.task_key=="long_stove_moka" for r in rows): raise ValueError("long task must not be rerun")
- if {r.configured_n_action_steps for r in rows}!=set(HORIZONS) or {r.added_delay_ms for r in rows}!=set(ADDED_DELAYS_MS) or {r.seed for r in rows}!=set(SEEDS): raise ValueError("wrong Stage 3B matrix")
+ if {r.configured_n_action_steps for r in rows}!=set(HORIZONS) or {r.added_delay_ms for r in rows}!=set(ADDED_DELAYS_MS) or {r.seed for r in rows}!=set(SEEDS): raise ValueError("wrong Held-Out Object-Layout Cross-Task Replication matrix")
  actual={(r.task_key,r.classification_id,r.api_task_index,r.variant_name,r.difficulty_level) for r in rows if r.scene=="ood"}
  expected={(k,str(v["classification_id"]),v["api_task_index"],v["variant_name"],str(v["difficulty_level"])) for k,v in VARIANTS.items()}
- if actual!=expected: raise ValueError("frozen Stage 3B variant identity changed")
+ if actual!=expected: raise ValueError("frozen Held-Out Object-Layout Cross-Task Replication variant identity changed")
 
 def as_rows(rows): return [asdict(r) for r in rows]

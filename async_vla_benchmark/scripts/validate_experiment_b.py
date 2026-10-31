@@ -86,7 +86,7 @@ def main():
     print(f"manifest={len(rows)} results={len(results)} missing={len(missing)} invalid={len(invalid)} variants={len(variants)} gate=pass")
     if errors:
         print(*(f"ERROR: {error}" for error in sorted(set(errors))), sep="\n"); return 1
-    print("Experiment B validation passed"); return 0
+    print("Multi-Stage Task Generalization validation passed"); return 0
 
 
 if __name__ == "__main__":

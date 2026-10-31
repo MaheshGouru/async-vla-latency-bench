@@ -1,6 +1,6 @@
-# Stage 4 — OpenVLA-OFT second-policy diagnostic
+# Cross-Policy OpenVLA-OFT Diagnostic — OpenVLA-OFT second-policy diagnostic
 
-Run notebooks `01` through `05` in order on one physical NVIDIA A100. Stage 4
+Run notebooks `01` through `05` in order on one physical NVIDIA A100. Cross-Policy OpenVLA-OFT Diagnostic
 is the frozen 64-episode OpenVLA-OFT diagnostic in
 `docs/STAGE_4_SECOND_POLICY_OPENVLA_OFT.md`; it is naive asynchronous execution,
 not RTC.

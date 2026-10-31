@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Analyze temporal coverage and queue mechanisms in Stage 3 New.
+"""Analyze temporal coverage and queue mechanisms in High-Power OOD–Delay Replication.
 
 This is a descriptive, CPU-only post-processing script.  It consumes the
-episode-level CSV emitted by ``analyze_stage3_new.py``/the Stage 3 New runner
+episode-level CSV emitted by ``analyze_stage3_new.py``/the High-Power OOD–Delay Replication runner
 and writes condition summaries, four-cell mechanism deltas, and RTC action
 composition summaries.  It does not rerun policy inference and does not claim
 causal mediation.
@@ -80,15 +80,15 @@ def _validate(frame: pd.DataFrame) -> None:
         raise ValueError(f"Missing required episode columns: {', '.join(missing)}")
     if len(frame) != 3456:
         raise ValueError(
-            f"Expected 3,456 valid Stage 3 New rows; found {len(frame)}. "
+            f"Expected 3,456 valid High-Power OOD–Delay Replication rows; found {len(frame)}. "
             "Use the complete 64-seed archive or pass a separately validated file."
         )
     if set(frame["seed"].dropna().astype(int)) != set(range(46, 110)):
-        raise ValueError("Stage 3 New must contain exactly seeds 46..109")
+        raise ValueError("High-Power OOD–Delay Replication must contain exactly seeds 46..109")
     if set(frame["configured_n_action_steps"].dropna().astype(int)) != {20, 25, 30}:
-        raise ValueError("Unexpected Stage 3 New horizon set")
+        raise ValueError("Unexpected High-Power OOD–Delay Replication horizon set")
     if set(frame["added_delay_ms"].dropna().astype(int)) != {0, 200}:
-        raise ValueError("Unexpected Stage 3 New delay set")
+        raise ValueError("Unexpected High-Power OOD–Delay Replication delay set")
     if frame["run_id"].duplicated().any() if "run_id" in frame.columns else False:
         raise ValueError("Duplicate run_id values would bias the summary")
 
@@ -211,7 +211,7 @@ def analyze(results: Path, output_dir: Path) -> None:
     ).reset_index()
     composition.to_csv(output_dir / "stage3_new_rtc_action_composition.csv", index=False)
 
-    report = f"""# Stage 3 New mechanism analysis
+    report = f"""# High-Power OOD–Delay Replication mechanism analysis
 
 Input: `{results}`
 
@@ -241,7 +241,7 @@ def main() -> int:
     parser.add_argument("--output-dir", type=Path, required=True)
     args = parser.parse_args()
     analyze(args.results, args.output_dir)
-    print(f"Wrote Stage 3 New mechanism outputs to {args.output_dir}")
+    print(f"Wrote High-Power OOD–Delay Replication mechanism outputs to {args.output_dir}")
     return 0
 
 

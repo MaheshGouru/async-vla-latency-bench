@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ============================================================
-# Stage 3 New — cloud instance bootstrap script
+# High-Power OOD–Delay Replication — cloud instance bootstrap script
 #
 # Tested on Lambda Labs A100 40GB (ubuntu user, passwordless sudo).
 # Also works on vast.ai (root user — sudo is a no-op for root).
@@ -36,7 +36,7 @@ if [ -z "${HF_TOKEN:-}" ]; then
 fi
 
 echo "========================================================"
-echo "Stage 3 New — instance setup"
+echo "High-Power OOD–Delay Replication — instance setup"
 echo "========================================================"
 
 # -----------------------------------------------------------
@@ -263,8 +263,8 @@ echo "Assets: $ASSET_COUNT files in $ASSETS_TARGET"
 echo ""
 echo ">>> [8/8] Registering Jupyter kernels and checking imports..."
 
-"$VENV_ID/bin/python" -m ipykernel install --user --name stage1-id --display-name "Stage1-ID (py3.12)"
-"$VENV_OOD/bin/python" -m ipykernel install --user --name stage1-ood --display-name "Stage1-OOD (py3.12)"
+"$VENV_ID/bin/python" -m ipykernel install --user --name stage1-id --display-name "Exploratory-OOD-Delay-ID (py3.12)"
+"$VENV_OOD/bin/python" -m ipykernel install --user --name stage1-ood --display-name "Exploratory-OOD-Delay-OOD (py3.12)"
 
 export MUJOCO_GL=egl PYOPENGL_PLATFORM=egl MPLBACKEND=Agg
 

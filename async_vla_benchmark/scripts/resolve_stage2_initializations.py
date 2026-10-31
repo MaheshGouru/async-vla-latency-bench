@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Freeze and validate the 15 unique Stage 2 task×seed reset identities."""
+"""Freeze and validate the 15 unique Confirmatory Horizon–Delay Operating Envelope task×seed reset identities."""
 
 import argparse
 from collections import defaultdict
@@ -21,7 +21,7 @@ def main() -> int:
     cfg = load_config(args.config)
     rows = read_csv(args.manifest)
     if len(rows) != 360:
-        raise ValueError(f"expected 360 Stage 2 rows, got {len(rows)}")
+        raise ValueError(f"expected 360 Confirmatory Horizon–Delay Operating Envelope rows, got {len(rows)}")
     _configure_libero_home("id")
     identities = {}
     for task_key, suite, task_id, seed in sorted({
@@ -73,7 +73,7 @@ def main() -> int:
         ))
         counts[key] += 1
     if set(counts.values()) != {24} or any(len(value) != 1 for value in groups.values()):
-        raise ValueError("Stage 2 pairing invariant failed before dispatch")
+        raise ValueError("Confirmatory Horizon–Delay Operating Envelope pairing invariant failed before dispatch")
     write_csv(args.manifest, rows)
     print("PASS: resolved 15 reset identities; all 24 cells per task×seed are paired")
     return 0

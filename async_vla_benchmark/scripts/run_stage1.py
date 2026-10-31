@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Execute new Stage 1 rows from the frozen manifest (never Stage 0 reuse rows)."""
+"""Execute new Exploratory OOD–Delay Screening rows from the frozen manifest (never Latency Calibration and Instrumentation reuse rows)."""
 
 from __future__ import annotations
 
@@ -49,7 +49,7 @@ def _gpu() -> tuple[str, float | str]:
 
 
 def _environment_fingerprint() -> str:
-    """Compact, stable runtime identity attached to every new Stage 1 row."""
+    """Compact, stable runtime identity attached to every new Exploratory OOD–Delay Screening row."""
     import importlib.metadata
     packages = {}
     for name in ("torch", "lerobot", "mujoco", "robosuite", "libero"):
@@ -155,7 +155,7 @@ def main() -> int:
     args = parser.parse_args()
     cfg = load_config(args.config)
     if cfg.policy_n_action_steps != 25:
-        raise ValueError("Stage 1 requires policy_n_action_steps=25")
+        raise ValueError("Exploratory OOD–Delay Screening requires policy_n_action_steps=25")
     _configure_libero_home(args.scene)
     if args.scene == "ood":
         # See resolve_stage1_variants: native library order matters when the

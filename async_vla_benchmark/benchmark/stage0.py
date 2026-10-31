@@ -1,4 +1,4 @@
-"""Stage 0 — ID-only latency calibration: manifest and `d*` selection rule.
+"""Latency Calibration and Instrumentation — ID-only latency calibration: manifest and `d*` selection rule.
 
 Everything in this module is pure (no GPU, no LeRobot import) so the selection
 rule can be unit-tested without a container. `scripts/run_stage0.py` produces the
@@ -28,11 +28,11 @@ from typing import Iterable, Sequence
 #: only re-measure queue starvation, which is what the H=10 calibration did.
 ADDED_DELAYS_MS: tuple[int, ...] = (0, 100, 200, 300, 400)
 
-#: Stage 0 calibrates the same two methods the Stage 1 factorial compares.
+#: Latency Calibration and Instrumentation calibrates the same two methods the Exploratory OOD–Delay Screening factorial compares.
 #: Blocking/ideal are historical context only (D003) and are not run here.
 EXECUTION_METHODS: tuple[str, ...] = ("naive_async", "rtc")
 
-#: Six fixed exploratory seeds. 0 and 1 stay first and are still the pair Stage 1
+#: Six fixed exploratory seeds. 0 and 1 stay first and are still the pair Exploratory OOD–Delay Screening
 #: reuses as its ID controls (STAGE_0 section 5). The extras skip 2-9, which
 #: STAGE_2 section 4 reserves as held-out confirmatory seeds -- calibrating `d*`
 #: on one of those would compromise the held-out claim downstream.
@@ -44,7 +44,7 @@ EXECUTION_METHODS: tuple[str, ...] = ("naive_async", "rtc")
 #: rather than merely scattering it.
 SEEDS: tuple[int, ...] = (0, 1, 10, 11, 12, 13)
 
-#: n_action_steps=25 (D002 as amended 2026-08-11); Stage 0 runs no horizon sweep.
+#: n_action_steps=25 (D002 as amended 2026-08-11); Latency Calibration and Instrumentation runs no horizon sweep.
 #:
 #: At 20 Hz a chunk covers `H x 50 ms` of robot time, which is the total latency
 #: the queue can absorb before it underruns. H=10 gave a 500 ms budget against
@@ -57,7 +57,7 @@ FIXED_HORIZON: int = 25
 #: halved default spends half the latency budget draining before the request goes
 #: out, which reinstates exactly the underrun H=25 exists to remove. Applied
 #: identically to naive_async and RTC so the paired comparison stays fair (K009).
-#: Days 1-3 keeps the section 16 default; this override is Stage 0 only.
+#: Days 1-3 keeps the section 16 default; this override is Latency Calibration and Instrumentation only.
 REQUEST_THRESHOLD_ACTIONS: int = FIXED_HORIZON
 
 # Selection thresholds (STAGE_0 section 8.3).
@@ -77,7 +77,7 @@ class TaskSpec:
     expected_task_name: str
 
 
-#: The three base tasks Stage 1 will perturb (STAGE_0 section 3 / D004).
+#: The three base tasks Exploratory OOD–Delay Screening will perturb (STAGE_0 section 3 / D004).
 #: `expected_task_name` is asserted against the live suite before any episode
 #: runs -- LIBERO's task API is zero-indexed and index != name is a real failure
 #: mode that would silently invalidate every downstream number.
@@ -346,7 +346,7 @@ def select_high_delay(rows: Iterable[CalibrationRow]) -> SelectionResult:
         notes.append(
             f"only {len(viable)} viable task x method cell(s); "
             f"section 8.3 requires at least {MIN_VIABLE_CELLS}. "
-            "d* below is not trustworthy -- investigate the harness before Stage 1."
+            "d* below is not trustworthy -- investigate the harness before Exploratory OOD–Delay Screening."
         )
 
     if not candidates:
@@ -372,7 +372,7 @@ def select_high_delay(rows: Iterable[CalibrationRow]) -> SelectionResult:
     # Taken literally that makes CALIBRATION_WEAK unreachable: a perfectly flat
     # curve retains 100% everywhere, so fallback 1 always claims it first and a
     # curve where delay does nothing would be reported as a clean selection.
-    # That is the single most important case to flag -- it means Stage 1 cannot
+    # That is the single most important case to flag -- it means Exploratory OOD–Delay Screening cannot
     # resolve an interaction at all. We keep the spec's *selection* order intact
     # and derive the flags from the data instead, so d* is unchanged but a flat
     # or floored curve is always labelled.
@@ -383,13 +383,13 @@ def select_high_delay(rows: Iterable[CalibrationRow]) -> SelectionResult:
         notes.append(
             f"largest pooled drop across all delay levels is {best_drop:.3f} "
             f"(< {SATURATED_FALLBACK_DROP}); CALIBRATION_WEAK. Delay barely moves "
-            "this policy at these levels, so a Stage 1 interaction is unlikely "
+            "this policy at these levels, so a Exploratory OOD–Delay Screening interaction is unlikely "
             "to be resolvable."
         )
     if curve_saturated:
         notes.append(
             f"no delay level retained >= {MIN_REMAINING_SUCCESS} pooled success; "
-            "CALIBRATION_SATURATED. d* sits on a floor and Stage 1 OOD cells will "
+            "CALIBRATION_SATURATED. d* sits on a floor and Exploratory OOD–Delay Screening OOD cells will "
             "likely be uninterpretable (K005)."
         )
 

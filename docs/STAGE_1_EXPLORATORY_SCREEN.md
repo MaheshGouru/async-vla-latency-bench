@@ -1,4 +1,4 @@
-# Stage 1 — Broad Exploratory Screen: OOD × Inference Delay in π0.5 on LIBERO-Plus
+# Exploratory OOD–Delay Screening — Broad Exploratory Screen: OOD × Inference Delay in π0.5 on LIBERO-Plus
 
 ## 0. Purpose
 
@@ -6,11 +6,11 @@
 
 > **Which kinds of distribution shift become especially harmful under inference delay, and does that depend on the behavioral demands of the manipulation task?**
 
-Stage 1 is an **exploratory screen**, not the final confirmatory experiment. It evaluates all seven official LIBERO-Plus perturbation families on three preselected base tasks chosen to represent three different task-demand groups.
+Exploratory OOD–Delay Screening is an **exploratory screen**, not the final confirmatory experiment. It evaluates all seven official LIBERO-Plus perturbation families on three preselected base tasks chosen to represent three different task-demand groups.
 
 The screen is intentionally broad and low-replication. Its purpose is to identify candidate **OOD × delay interactions** for higher-replication follow-up.
 
-Do **not** select or change tasks, perturbation variants, delay settings, metrics, or selection criteria after looking at Stage 1 outcomes.
+Do **not** select or change tasks, perturbation variants, delay settings, metrics, or selection criteria after looking at Exploratory OOD–Delay Screening outcomes.
 
 ---
 
@@ -57,7 +57,7 @@ revised, frozen evaluation setting is:
 policy.n_action_steps = 25
 ```
 
-Keep `n_action_steps=25` for Stage 1.
+Keep `n_action_steps=25` for Exploratory OOD–Delay Screening.
 
 ### Execution methods
 
@@ -68,7 +68,7 @@ naive_async
 rtc
 ```
 
-Do not include blocking execution in the Stage 1 factorial. Blocking/ideal runs may be retained as historical reference but are not part of the primary Stage 1 interaction analysis.
+Do not include blocking execution in the Exploratory OOD–Delay Screening factorial. Blocking/ideal runs may be retained as historical reference but are not part of the primary Exploratory OOD–Delay Screening interaction analysis.
 
 ---
 
@@ -118,7 +118,7 @@ for all three base tasks.
 
 ### Relationship to earlier experiments
 
-These are the **Stage 1 screening tasks defined here**. Do not silently substitute earlier preliminary task IDs. If historical runs used another task index, keep those runs separate and label them as prior/preliminary data.
+These are the **Exploratory OOD–Delay Screening screening tasks defined here**. Do not silently substitute earlier preliminary task IDs. If historical runs used another task index, keep those runs separate and label them as prior/preliminary data.
 
 ---
 
@@ -161,7 +161,7 @@ Immediately clarify:
 
 ## 5. Exactly which LIBERO-Plus variant to run
 
-LIBERO-Plus contains many variants of each base task within each perturbation family. Stage 1 uses **one preselected OOD variant per `(base task, perturbation family)`**, giving 21 OOD task variants.
+LIBERO-Plus contains many variants of each base task within each perturbation family. Exploratory OOD–Delay Screening uses **one preselected OOD variant per `(base task, perturbation family)`**, giving 21 OOD task variants.
 
 ### Do not hand-pick variants
 
@@ -195,7 +195,7 @@ For each of the 3 base tasks and each of the 7 official perturbation categories:
 5. If no level-2 entry exists:
    - select the entry minimizing `abs(difficulty_level - 2)`;
    - break ties using the smallest official `id`.
-6. Freeze the resulting 21 variants **before any Stage 1 policy outcomes are inspected**.
+6. Freeze the resulting 21 variants **before any Exploratory OOD–Delay Screening policy outcomes are inspected**.
 7. Save the resolved mapping to:
 
 ```text
@@ -204,7 +204,7 @@ stage1_resolved_variants.csv
 
 ### Why level 2?
 
-Stage 1 is intended to test nontrivial but non-extreme OOD shifts. Selecting the first deterministic moderate-difficulty variant avoids choosing variants based on π0.5 outcomes.
+Exploratory OOD–Delay Screening is intended to test nontrivial but non-extreme OOD shifts. Selecting the first deterministic moderate-difficulty variant avoids choosing variants based on π0.5 outcomes.
 
 ### LIBERO-Plus ID convention
 
@@ -234,7 +234,7 @@ api_task_index = names.index(variant_name)
 assert plus_suite.get_task(api_task_index).name == variant_name
 ```
 
-The **exact task name is the canonical identifier** for Stage 1.
+The **exact task name is the canonical identifier** for Exploratory OOD–Delay Screening.
 
 ### Resolver script
 
@@ -355,7 +355,7 @@ with open("stage1_resolved_variants.csv", "w", newline="") as f:
     writer.writerows(rows)
 
 assert len(rows) == 21
-print("Wrote 21 frozen Stage-1 OOD variants.")
+print("Wrote 21 frozen Exploratory OOD–Delay Screening OOD variants.")
 ```
 
 ### Mandatory provenance
@@ -372,14 +372,14 @@ Do not start the screen until `stage1_resolved_variants.csv` and these revisions
 
 ---
 
-## 5A. Dependency on Stage 0 latency calibration
+## 5A. Dependency on Latency Calibration and Instrumentation latency calibration
 
-Before Stage 1, run [`STAGE_0_LATENCY_CALIBRATION.md`](STAGE_0_LATENCY_CALIBRATION.md).
+Before Exploratory OOD–Delay Screening, run [`STAGE_0_LATENCY_CALIBRATION.md`](STAGE_0_LATENCY_CALIBRATION.md).
 
-Stage 0 uses **ID only** to select one frozen high-delay value `d*` from the
+Latency Calibration and Instrumentation uses **ID only** to select one frozen high-delay value `d*` from the
 accepted `+100`, `+200`, `+300`, and `+400 ms` calibration candidates.
 
-Stage 1 then **does test OOD under latency**: every one of the 21 selected LIBERO-Plus OOD variants is evaluated at both **Native** and **Native + d*** under both **Naive async** and **RTC**.
+Exploratory OOD–Delay Screening then **does test OOD under latency**: every one of the 21 selected LIBERO-Plus OOD variants is evaluated at both **Native** and **Native + d*** under both **Naive async** and **RTC**.
 
 The selected value must be loaded from:
 
@@ -426,7 +426,7 @@ Test candidate added delays:
 
 using the three standard LIBERO base tasks and both execution methods.
 
-Choose **one common `d*` for the entire Stage 1 screen** satisfying, as closely as possible:
+Choose **one common `d*` for the entire Exploratory OOD–Delay Screening screen** satisfying, as closely as possible:
 
 1. delay causes visible degradation relative to native;
 2. performance is not driven to floor across most task/method cells;
@@ -443,7 +443,7 @@ HIGH_DELAY_MS = d*
 is frozen.
 
 Do **not**:
-- use a delay outside the accepted Stage 0 calibration grid;
+- use a delay outside the accepted Latency Calibration and Instrumentation calibration grid;
 - choose a different high delay for RTC and naive async;
 - choose a different high delay for each task;
 - recalibrate using OOD outcomes.
@@ -452,7 +452,7 @@ Log both wall-clock delay in milliseconds and effective logical delay in control
 
 ---
 
-## 7. Stage 1 factorial
+## 7. Exploratory OOD–Delay Screening factorial
 
 ### Factors
 
@@ -512,8 +512,8 @@ The same ID condition is reused across all seven perturbations:
 = 60 ID episodes
 ```
 
-Stage 0 provides the 24 low/high ID controls for seeds `0` and `1` when all
-configuration and provenance fields match. Stage 1 must add the corresponding
+Latency Calibration and Instrumentation provides the 24 low/high ID controls for seeds `0` and `1` when all
+configuration and provenance fields match. Exploratory OOD–Delay Screening must add the corresponding
 36 ID controls for seeds `2`, `3`, and `4`:
 
 ```text
@@ -521,17 +521,17 @@ configuration and provenance fields match. Stage 1 must add the corresponding
 = 36 new ID episodes
 ```
 
-### Total Stage 1 budget
+### Total Exploratory OOD–Delay Screening budget
 
 ```text
 420 OOD + 60 ID = 480 episodes
 ```
 
-Expected new execution after valid Stage 0 reuse:
+Expected new execution after valid Latency Calibration and Instrumentation reuse:
 
 ```text
 420 new OOD + 36 new ID = 456 new episodes
-24 reused Stage 0 ID + 456 new = 480 analysis episodes
+24 reused Latency Calibration and Instrumentation ID + 456 new = 480 analysis episodes
 ```
 
 Do **not** rerun ID separately for each perturbation family.
@@ -539,7 +539,7 @@ Do **not** rerun ID separately for each perturbation family.
 ---
 
 ## 7A. Complete experiment table
-This section enumerates the **entire Stage 1 run plan** using the same display terminology as the analysis taxonomy.
+This section enumerates the **entire Exploratory OOD–Delay Screening run plan** using the same display terminology as the analysis taxonomy.
 
 - **96 unique condition blocks**
 - **5 fixed seeds per condition** (`0`, `1`, `2`, `3`, `4`)
@@ -886,7 +886,7 @@ Do not infer internal model reasoning from the video.
 
 ---
 
-## 11. Primary Stage 1 statistic
+## 11. Primary Exploratory OOD–Delay Screening statistic
 
 For each task × perturbation × execution method, compute success rate in four cells:
 
@@ -930,7 +930,7 @@ I > 0
 
 means delay is less damaging under that OOD condition; treat this cautiously, especially with only five exploratory seeds.
 
-### Stage 1 wording
+### Exploratory OOD–Delay Screening wording
 
 Do not describe a five-seed exploratory cell as statistically significant without an appropriate prespecified analysis and uncertainty estimate.
 
@@ -981,7 +981,7 @@ Columns:
 | task group | perturbation | mechanism group | method | ID-low | ID-high | OOD-low | OOD-high | `I` |
 |---|---|---|---|---:|---:|---:|---:|---:|
 
-This is the **main quick-read Stage 1 table**.
+This is the **main quick-read Exploratory OOD–Delay Screening table**.
 
 ---
 
@@ -1163,10 +1163,10 @@ Use only as explanatory evidence for temporal freshness.
 
 ## 14. Automatic observation sheet
 
-After Stage 1, produce a compact Markdown report with these headings exactly.
+After Exploratory OOD–Delay Screening, produce a compact Markdown report with these headings exactly.
 
 ```markdown
-# Stage 1 Observations
+# Exploratory OOD–Delay Screening Observations
 
 ## 1. Coverage
 - Completed:
@@ -1254,7 +1254,7 @@ After Stage 1, produce a compact Markdown report with these headings exactly.
 
 ## 15. Predefined rule for choosing confirmatory conditions
 
-This rule must be frozen **before Stage 1 results are examined**.
+This rule must be frozen **before Exploratory OOD–Delay Screening results are examined**.
 
 ### Eligibility
 
@@ -1292,11 +1292,11 @@ This determines which task × perturbation combinations receive additional seeds
 
 The confirmation stage uses **new seeds**.
 
-Do not simply count the original five Stage 1 seeds as if the hypothesis had been specified before seeing them. Report Stage 1 as exploratory and the additional seeds as confirmatory.
+Do not simply count the original five Exploratory OOD–Delay Screening seeds as if the hypothesis had been specified before seeing them. Report Exploratory OOD–Delay Screening as exploratory and the additional seeds as confirmatory.
 
 ---
 
-## 16. What counts as an interesting Stage 1 result
+## 16. What counts as an interesting Exploratory OOD–Delay Screening result
 
 ### Strong candidate result
 
@@ -1339,11 +1339,11 @@ Use:
 
 > “We test whether distribution shift changes the marginal effect of inference delay, rather than merely measuring the independent degradation caused by OOD inputs and latency.”
 
-### Stage 1 status
+### Exploratory OOD–Delay Screening status
 
 Use:
 
-> “Stage 1 is a low-budget exploratory sweep used to identify candidate interactions. We report the complete sweep, including null results, and evaluate selected candidate effects on additional held-out seeds.”
+> “Exploratory OOD–Delay Screening is a low-budget exploratory sweep used to identify candidate interactions. We report the complete sweep, including null results, and evaluate selected candidate effects on additional held-out seeds.”
 
 ### Avoid
 
@@ -1363,7 +1363,7 @@ candidate interactions selected using a frozen criterion.
 
 ---
 
-## 18. Minimum artifact checklist before Stage 1 is considered complete
+## 18. Minimum artifact checklist before Exploratory OOD–Delay Screening is considered complete
 
 Required files:
 
@@ -1451,7 +1451,7 @@ Primary benchmark/model sources used to define this specification:
 
 ---
 
-## 20. Frozen Stage 1 design summary
+## 20. Frozen Exploratory OOD–Delay Screening design summary
 
 ```text
 POLICY:
@@ -1523,9 +1523,9 @@ STAGE:
 
 ---
 
-## Stage 1 outcome addendum — 2026-08-16
+## Exploratory OOD–Delay Screening outcome addendum — 2026-08-16
 
-Stage 1 is complete.
+Exploratory OOD–Delay Screening is complete.
 
 ```text
 ID:  low 60.0%, high 56.7%

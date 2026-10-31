@@ -1,4 +1,4 @@
-"""Frozen Experiment A within-task object-layout variant generalization."""
+"""Frozen Object-Layout Generalization: within-task object-layout variant generalization."""
 from __future__ import annotations
 from dataclasses import asdict
 from typing import Mapping, Sequence
@@ -38,7 +38,7 @@ def select_variant_entries(entries, api_names):
 
 def validate_frozen_variants(variants: Sequence[Mapping[str, str]]) -> None:
     if len(variants) != 3 or len({v["classification_id"] for v in variants}) != 3:
-        raise ValueError("Experiment A requires exactly three unique frozen variants")
+        raise ValueError("Object-Layout Generalization requires exactly three unique frozen variants")
     for row in variants:
         expected = {
             "task_key": TASK_KEY, "suite": SUITE, "base_task_id": str(BASE_TASK_ID),
@@ -47,7 +47,7 @@ def validate_frozen_variants(variants: Sequence[Mapping[str, str]]) -> None:
             "mechanism_group": "trajectory_adaptation",
         }
         if any(row.get(key) != value for key, value in expected.items()):
-            raise ValueError(f"invalid Experiment A frozen variant row: {row}")
+            raise ValueError(f"invalid Object-Layout Generalization frozen variant row: {row}")
         if int(row["classification_id"]) == EXCLUDED_CLASSIFICATION_ID or row["variant_name"] == EXCLUDED_VARIANT_NAME:
             raise ValueError("previously evaluated _add_25 variant was not excluded")
         if not row["variant_name"].startswith(BASE_TASK_NAME):
@@ -110,13 +110,13 @@ def experiment_a_manifest(variants, provenance, frozen_hash):
 
 def validate_manifest(rows, variants, frozen_hash):
     if len(rows) != 64 or len({r["run_id"] for r in rows}) != 64:
-        raise ValueError("Experiment A manifest must contain 64 unique episodes")
+        raise ValueError("Object-Layout Generalization manifest must contain 64 unique episodes")
     if sum(r["scene"] == "id" for r in rows) != 16 or sum(r["scene"] == "ood" for r in rows) != 48:
-        raise ValueError("Experiment A accounting must be 16 ID + 48 OOD")
+        raise ValueError("Object-Layout Generalization accounting must be 16 ID + 48 OOD")
     if {int(r["seed"]) for r in rows} != set(SEEDS) or {int(r["added_delay_ms"]) for r in rows} != set(DELAYS):
-        raise ValueError("Experiment A seeds or delays changed")
+        raise ValueError("Object-Layout Generalization seeds or delays changed")
     if {int(r["configured_n_action_steps"]) for r in rows} != {HORIZON} or {r["execution_method"] for r in rows} != {"rtc"}:
-        raise ValueError("Experiment A method/horizon changed")
+        raise ValueError("Object-Layout Generalization method/horizon changed")
     if {r["frozen_variant_csv_sha256"] for r in rows} != {frozen_hash}:
         raise ValueError("manifest does not consume one frozen variant artifact")
     expected={(v["classification_id"],v["api_task_index"],v["difficulty_level"],v["variant_name"]) for v in variants}

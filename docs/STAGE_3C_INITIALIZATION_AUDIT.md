@@ -1,20 +1,20 @@
-# Stage 3C — Initialization Diversity and Determinism Audit
+# Initialization-State Audit — Initialization Diversity and Determinism Audit
 
 ## 0. Status and purpose
 
 validation stage. It does **not** run the policy and does **not** produce success
 rates.
 
-Stages 3 and 3B used `libero_episode_index:0`, so their rollout seeds quantify
-policy/rollout stochasticity at one benchmark reset. Stage 3C establishes whether
+the held-out confirmation and object-layout replication phases used `libero_episode_index:0`, so their rollout seeds quantify
+policy/rollout stochasticity at one benchmark reset. Initialization-State Audit establishes whether
 
-Stage 3C asks:
+Initialization-State Audit asks:
 
 > Do initialization indices `{0..7}` correspond to eight reproducible and distinct
 > simulator reset states for the ID task and its exact frozen object-layout OOD
 > variant?
 
-Stage 0 and Stage 1 files remain unchanged. Stage 3B is already completed and is
+Latency Calibration and Instrumentation and Exploratory OOD–Delay Screening files remain unchanged. Held-Out Object-Layout Cross-Task Replication is already completed and is
 not rerun or relabeled.
 
 ## 1. Task/scene scope
@@ -31,7 +31,7 @@ For each task audit two scene conditions:
 
 ```text
 ID  = standard LIBERO base task
-OOD = exact frozen Stage 1 object-layout variant
+OOD = exact frozen Exploratory OOD–Delay Screening object-layout variant
 ```
 
 Exact OOD identities:
@@ -44,7 +44,7 @@ Exact OOD identities:
 
 Before resetting, assert literal equality of task, suite, base task id, perturbation
 key, classification id, API index, difficulty, and exact variant name against the
-frozen Stage 1 variant artifact. Do not resolve a new variant.
+frozen Exploratory OOD–Delay Screening variant artifact. Do not resolve a new variant.
 
 ## 2. Initialization indices
 
@@ -54,7 +54,7 @@ Audit exactly:
 INITIALIZATION_INDICES = [0,1,2,3,4,5,6,7]
 ```
 
-Do not choose indices based on success outcomes; Stage 3C has no policy outcomes.
+Do not choose indices based on success outcomes; Initialization-State Audit has no policy outcomes.
 Do not silently wrap, clamp, modulo, or fall back to index 0.
 
 For every reset, log both:
@@ -66,9 +66,9 @@ resolved_initialization_index_or_id
 
 and assert the requested index is the one actually resolved by the benchmark.
 
-### 2.1 Seed/RNG semantics for Stage 3C
+### 2.1 Seed/RNG semantics for Initialization-State Audit
 
-Stage 3C has **no policy/rollout seeds** because no policy inference is executed.
+Initialization-State Audit has **no policy/rollout seeds** because no policy inference is executed.
 `initialization_index` is the scientific reset-state axis. If the environment
 constructor requires an RNG seed, use exactly:
 
@@ -104,7 +104,7 @@ Total reset-only audit operations:
 ```
 
 Use the same canonical MuJoCo reset-state fingerprint implementation validated in
-Stage 3. It must exclude simulator time and unstable serialization while including
+Held-Out OOD–Delay Horizon Confirmation. It must exclude simulator time and unstable serialization while including
 scientifically relevant reset state.
 
 ### 3.1 Within-index determinism gate
@@ -116,7 +116,7 @@ number of repeated resets = 3
 number of unique fingerprints = 1
 ```
 
-Any task/scene/index with more than one fingerprint fails Stage 3C.
+Any task/scene/index with more than one fingerprint fails Initialization-State Audit.
 
 ### 3.2 Across-index distinctness gate
 
@@ -128,7 +128,7 @@ must contain:
 ```
 
 If two requested indices resolve to the same scientifically relevant reset state,
-Stage 3C fails for that task/scene. Do not replace an index with 8, 9, or another
+Initialization-State Audit fails for that task/scene. Do not replace an index with 8, 9, or another
 index after seeing the audit.
 
 ### 3.3 ID ↔ OOD fingerprints
@@ -138,7 +138,7 @@ be equal. Object layout intentionally changes scene geometry. Pairing is by the
 benchmark initialization index and all non-treatment runtime factors, not by
 identical geometry.
 
-## 4. Stage 3C output artifact
+## 4. Initialization-State Audit output artifact
 
 Write:
 
@@ -170,11 +170,11 @@ env_construction_seed
 `task × scene × initialization_index` (48 rows) and may be written only if every
 required gate passes.
 
-Record SHA-256 hashes for the Stage 3C spec and both CSV artifacts.
+Record SHA-256 hashes for the Initialization-State Audit spec and both CSV artifacts.
 
-## 6. What Stage 3C does not establish
+## 6. What Initialization-State Audit does not establish
 
-Stage 3C establishes only that the initialization axis is usable and reproducible.
+Initialization-State Audit establishes only that the initialization axis is usable and reproducible.
 It does not establish robustness, an OOD × delay interaction, or generalization.
 
 ## Executed outcome — 2026-08-16

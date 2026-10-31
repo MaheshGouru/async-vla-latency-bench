@@ -1,25 +1,25 @@
-# Stage 2 — Local Operating-Point Sensitivity
+# Confirmatory Horizon–Delay Operating Envelope — Local Operating-Point Sensitivity
 
 ## 0. Purpose
 
 **Highest-priority next experiment.**
 
-Stage 0 and Stage 1 are complete and must not be retroactively changed.
+Latency Calibration and Instrumentation and Exploratory OOD–Delay Screening are complete and must not be retroactively changed.
 
-The frozen Stage 1 operating point was:
+The frozen Exploratory OOD–Delay Screening operating point was:
 
 ```text
 RTC n_action_steps = 25
 high added delay = +200 ms
 ```
 
-Stage 2 does **not** search for a new optimum. Its purpose is narrower:
+Confirmatory Horizon–Delay Operating Envelope does **not** search for a new optimum. Its purpose is narrower:
 
 > **Is the already-used `(25 actions, +200 ms)` operating point locally stable, or
 > is it a knife-edge configuration whose conclusions would change under small,
 > reasonable changes to action coverage or delay?**
 
-The Stage 1 results remain analyzed at 25/+200 regardless of Stage 2 outcome.
+The Exploratory OOD–Delay Screening results remain analyzed at 25/+200 regardless of Confirmatory Horizon–Delay Operating Envelope outcome.
 
 ## 1. Why these action-coverage values?
 
@@ -31,7 +31,7 @@ n_action_steps ∈ {10, 15, 20, 25, 30, 35}
 
 Rationale:
 
-- `25` is the frozen Stage 1 configuration.
+- `25` is the frozen Exploratory OOD–Delay Screening configuration.
 - `20` and `30` are the nearest ±5-action perturbations around 25.
 - `15` and `35` extend the local window to ±10 actions and test whether the trend
   persists rather than depending only on the nearest neighbors.
@@ -42,7 +42,7 @@ Rationale:
 - Values below 10 are not required because 10 already supplies the known
   short-coverage failure anchor.
 
-Do not call 25 the "best" or "optimal" horizon. Call it the **calibrated Stage 1
+Do not call 25 the "best" or "optimal" horizon. Call it the **calibrated Exploratory OOD–Delay Screening
 operating point**.
 
 ## 2. Why these delay values?
@@ -55,11 +55,11 @@ added_delay_ms ∈ {0, 100, 200, 300}
 
 Rationale:
 
-- `200 ms` is the frozen Stage 1 high-delay condition.
+- `200 ms` is the frozen Exploratory OOD–Delay Screening high-delay condition.
 - `100 ms` is a one-step local perturbation below it.
 - `300 ms` is a one-step local perturbation above it.
 - `0 ms` / Native is included as a **same-seed baseline at every tested
-  `n_action_steps`**. Completed Stage 0/1 do not provide Native controls for all
+  `n_action_steps`**. Completed Latency Calibration and Instrumentation/1 do not provide Native controls for all
   of `15,20,30,35`, so omitting Native would confound:
   - a horizon being intrinsically weak even without added delay; and
   - that horizon being specifically more sensitive to injected delay.
@@ -82,10 +82,10 @@ tasks =
 primary method = RTC
 ```
 
-Run RTC only in the required Stage 2 matrix. Naive async is not needed to defend
+Run RTC only in the required Confirmatory Horizon–Delay Operating Envelope matrix. Naive async is not needed to defend
 the RTC operating point and would substantially increase compute.
 
-## 4. Frozen Stage 2 seeds
+## 4. Frozen Confirmatory Horizon–Delay Operating Envelope seeds
 
 Use exactly:
 
@@ -95,11 +95,11 @@ SEEDS = [5, 6, 7, 8, 9]
 
 Why these seeds:
 
-- Stage 1 used `[0,1,2,3,4]`.
-- Revised Stage 0 additionally used `[10,11,12,13]` together with `0,1`.
-- `[5,6,7,8,9]` are therefore a clean five-seed set not used by completed Stage 0
-  or Stage 1.
-- The same five seeds must be used in **every Stage 2 condition**.
+- Exploratory OOD–Delay Screening used `[0,1,2,3,4]`.
+- Revised Latency Calibration and Instrumentation additionally used `[10,11,12,13]` together with `0,1`.
+- `[5,6,7,8,9]` are therefore a clean five-seed set not used by completed Latency Calibration and Instrumentation
+  or Exploratory OOD–Delay Screening.
+- The same five seeds must be used in **every Confirmatory Horizon–Delay Operating Envelope condition**.
 - Do not replace individual failed seeds or choose seed values by task/horizon.
 - A rerun of an invalid episode must reuse the same seed and be marked as a
   replacement, not a new replicate.
@@ -122,7 +122,7 @@ assert sorted(set(row["seed"] for row in stage2_rows)) == SEEDS
 = 360 episodes
 ```
 
-This is the complete required Stage 2 matrix.
+This is the complete required Confirmatory Horizon–Delay Operating Envelope matrix.
 
 The additional 90 Native episodes are required to separate the **main effect of
 action coverage** from **sensitivity to added delay** at each action-coverage
@@ -130,21 +130,21 @@ setting.
 
 ## 5A. Episode-level pairing
 
-The completed Stage 0 result table used seeds:
+The completed Latency Calibration and Instrumentation result table used seeds:
 
 ```text
 [0,1,10,11,12,13]
 ```
 
-Stage 2 intentionally uses the independent block:
+Confirmatory Horizon–Delay Operating Envelope intentionally uses the independent block:
 
 ```text
 [5,6,7,8,9]
 ```
 
-Do not reuse Stage 0 rows as Stage 2 replicates.
+Do not reuse Latency Calibration and Instrumentation rows as Confirmatory Horizon–Delay Operating Envelope replicates.
 
-For every fixed `(task_key, seed)`, all 24 Stage 2 configurations:
+For every fixed `(task_key, seed)`, all 24 Confirmatory Horizon–Delay Operating Envelope configurations:
 
 ```text
 6 n_action_steps × 4 delays
@@ -164,8 +164,8 @@ initialization_index_or_id
 initial_state_fingerprint
 ```
 
-The sensitivity comparison is paired **within Stage 2**, not by recycling Stage
-0/1 episode seeds.
+The sensitivity comparison is paired **within Confirmatory Horizon–Delay Operating Envelope**, not by recycling
+latency-calibration or exploratory-screen episode seeds.
 
 See `EPISODE_MATCHING_AND_VARIANT_FREEZE.md`.
 
@@ -263,7 +263,7 @@ For every `n_action_steps = h`, compute:
 This distinguishes the **horizon main effect** `S(h,Native)` from the incremental
 effect of added delay `S(h,+d) - S(h,Native)`.
 
-This separation is required for defending both parts of the Stage 1 operating
+This separation is required for defending both parts of the Exploratory OOD–Delay Screening operating
 point: `n_action_steps=25` and `d*=+200 ms`.
 
 ### D. Diagnostic 10-action anchor
@@ -271,7 +271,7 @@ point: `n_action_steps=25` and `d*=+200 ms`.
 Use `10` only to show whether the previously observed brittle regime persists
 under the same current runner/configuration.
 
-Do not use the 10-action result to reselect Stage 1 parameters.
+Do not use the 10-action result to reselect Exploratory OOD–Delay Screening parameters.
 
 ### E. Descriptive normalized coverage
 
@@ -285,9 +285,9 @@ as secondary analysis.
 
 Do not claim this ratio is a universal law.
 
-## 9. Decision rule after Stage 2
+## 9. Decision rule after Confirmatory Horizon–Delay Operating Envelope
 
-Stage 1 remains unchanged regardless of the result.
+Exploratory OOD–Delay Screening remains unchanged regardless of the result.
 
 Classify the frozen 25/+200 point as:
 
@@ -306,8 +306,8 @@ when small neighboring changes produce large qualitative reversals.
 when success continues to improve strongly and monotonically through 30 and 35
 at +200 ms.
 
-If the last case occurs, report it as a limitation of Stage 1. Do **not** rerun the
-entire Stage 1 screen at a retrospectively better horizon and present that as the
+If the last case occurs, report it as a limitation of Exploratory OOD–Delay Screening. Do **not** rerun the
+entire Exploratory OOD–Delay Screening screen at a retrospectively better horizon and present that as the
 original experiment.
 
 ## 10. Required outputs
@@ -334,7 +334,7 @@ STAGE_2_LOCAL_SENSITIVITY_OBSERVATIONS.md
 
 If stable:
 
-> "The Stage 1 operating point was selected using ID-only calibration before OOD
+> "The Exploratory OOD–Delay Screening operating point was selected using ID-only calibration before OOD
 > evaluation. A subsequent local sensitivity analysis over 10–35 configured
 > actions and ±100 ms around the selected +200 ms delay showed that the chosen
 > 25/+200 setting lies within a stable operating region rather than at an isolated
@@ -343,5 +343,5 @@ If stable:
 If sensitive:
 
 > "A post-hoc local sensitivity analysis showed substantial dependence on action
-> coverage around the Stage 1 operating point; we therefore treat the Stage 1
+> coverage around the Exploratory OOD–Delay Screening operating point; we therefore treat the Exploratory OOD–Delay Screening
 > results as specific to the frozen 25-action configuration."

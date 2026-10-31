@@ -18,7 +18,7 @@ def harmonize_columns(rows):
 def main():
  p=argparse.ArgumentParser(); p.add_argument("--stage3b-results",type=Path,required=True); p.add_argument("--stage3-results",type=Path,required=True); p.add_argument("--output-dir",type=Path,required=True); a=p.parse_args()
  new=read_csv(a.stage3b_results); old=read_csv(a.stage3_results)
- if len(new)!=144 or any(not r.get("status","").startswith("ok") for r in new): raise ValueError("Stage 3B results must be 144 complete valid rows")
+ if len(new)!=144 or any(not r.get("status","").startswith("ok") for r in new): raise ValueError("Held-Out Object-Layout Cross-Task Replication results must be 144 complete valid rows")
  goal_id=[r for r in old if r["task_key"]=="goal_drawer" and r["scene_condition"]=="id"]
  long=[r for r in old if r["task_key"]=="long_stove_moka" and (r["scene_condition"]=="id" or r["perturbation_key"]=="object_layout")]
  two=new+goal_id; three=two+long
@@ -41,9 +41,9 @@ def main():
  fig,ax=plt.subplots(figsize=(7,5))
  for task in ("spatial_transport","goal_drawer","long_stove_moka"):
   sub=[r for r in interactions if r["task_key"]==task]; ax.plot(HORIZONS,[r["interaction_I_h"] for r in sub],marker="o",label=task)
- ax.axhline(0,color="black",linewidth=1); ax.set(xlabel="Configured action coverage",ylabel="OOD × delay interaction I_h",title="Stage 3B object-layout cross-task replication"); ax.legend(); fig.tight_layout(); fig.savefig(a.output_dir/"stage3b_object_layout_cross_task.png",dpi=180); plt.close(fig)
- lines=["# Stage 3B Object-Layout Observations","","Stage 3B is a targeted post-Stage-3 cross-task replication, not preregistered confirmation.",""]
+ ax.axhline(0,color="black",linewidth=1); ax.set(xlabel="Configured action coverage",ylabel="OOD × delay interaction I_h",title="Held-Out Object-Layout Cross-Task Replication object-layout cross-task replication"); ax.legend(); fig.tight_layout(); fig.savefig(a.output_dir/"stage3b_object_layout_cross_task.png",dpi=180); plt.close(fig)
+ lines=["# Held-Out Object-Layout Cross-Task Replication Object-Layout Observations","","Held-Out Object-Layout Cross-Task Replication is a targeted post-Stage-3 cross-task replication, not preregistered confirmation.",""]
  for r in interactions: lines.append(f"- {r['task_key']} h={r['configured_n_action_steps']}: I={r['interaction_I_h']:+.3f}, paired bootstrap 95% CI [{r['paired_bootstrap95_low']:+.3f}, {r['paired_bootstrap95_high']:+.3f}].")
  (a.output_dir/"STAGE_3B_OBJECT_LAYOUT_OBSERVATIONS.md").write_text("\n".join(lines)+"\n")
- print("PASS: complete Stage 3B two-task and three-task analysis generated"); return 0
+ print("PASS: complete Held-Out Object-Layout Cross-Task Replication two-task and three-task analysis generated"); return 0
 if __name__=="__main__": raise SystemExit(main())

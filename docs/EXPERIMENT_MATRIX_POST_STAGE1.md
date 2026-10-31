@@ -1,18 +1,18 @@
-# Experiment Matrix — After Completed Stage 1
+# Experiment Matrix — After Completed Exploratory OOD–Delay Screening
 
 ## Seed allocation
 
 ```text
-Stage 1 completed exploratory:  [0,1,2,3,4]
-Stage 2 local sensitivity:      [5,6,7,8,9]
-Stage 0 additional ID seeds:    [10,11,12,13]  (already completed)
-Stage 3 held-out confirmation:  [14,15,16,17,18,19,20,21]
-Stage 3B cross-task replication: [14,15,16,17,18,19,20,21]  (COMPLETE; same Stage 3 seed block)
-Stage 3C initialization audit:  no rollout seeds; reset-only
+Exploratory OOD–Delay Screening completed exploratory:  [0,1,2,3,4]
+Confirmatory Horizon–Delay Operating Envelope local sensitivity:      [5,6,7,8,9]
+Latency Calibration and Instrumentation additional ID seeds:    [10,11,12,13]  (already completed)
+Held-Out OOD–Delay Horizon Confirmation:  [14,15,16,17,18,19,20,21]
+Held-Out Object-Layout Cross-Task Replication: [14,15,16,17,18,19,20,21]  (COMPLETE; same Held-Out OOD–Delay Horizon Confirmation seed block)
+Initialization-State Audit:  no rollout seeds; reset-only
 ```
 
 
-## Stage 2 — required
+## Confirmatory Horizon–Delay Operating Envelope — required
 
 ```text
 RTC
@@ -27,14 +27,14 @@ delay = Native,100,200,300 ms
 Purpose: defend the already-used 25/+200 operating point against local
 configuration sensitivity.
 
-## Stage 3 — required after Stage 2
+## Held-Out OOD–Delay Horizon Confirmation — required after Confirmatory Horizon–Delay Operating Envelope
 
 ```text
 RTC
 frozen horizons = 20,25,30
-    20 = -5 around Stage 1
-    25 = Stage 1 reference
-    30 = +5 around Stage 1
+    20 = -5 around Exploratory OOD–Delay Screening
+    25 = Exploratory OOD–Delay Screening reference
+    30 = +5 around Exploratory OOD–Delay Screening
 
 delay = Native,+200 ms
 8 held-out seeds = 14..21
@@ -51,22 +51,22 @@ Post-hoc:
 Maximum with post-hoc sensor noise: **288 episodes**.
 Without sensor noise: **240 episodes**.
 
-Required Stage 2 + primary Stage 3:
+Required Confirmatory Horizon–Delay Operating Envelope + primary Held-Out OOD–Delay Horizon Confirmation:
 
 ```text
 360 + 240 = 600 episodes
 ```
 
-Including the Stage 3 post-hoc sensor-noise replication:
+Including the Held-Out OOD–Delay Horizon Confirmation post-hoc sensor-noise replication:
 
 ```text
 360 + 288 = 648 episodes
 ```
 
 
-## Stage 3B — targeted object-layout cross-task replication
+## Held-Out Object-Layout Cross-Task Replication — targeted object-layout cross-task replication
 
-Stage 3B is selected after Stage 3 and is therefore labeled targeted/post-Stage-3,
+Held-Out Object-Layout Cross-Task Replication is selected after Held-Out OOD–Delay Horizon Confirmation and is therefore labeled targeted/post-Held-Out OOD–Delay Horizon Confirmation,
 not preregistered confirmation.
 
 ```text
@@ -80,7 +80,7 @@ initialization_index_or_id = libero_episode_index:0
 
 Exact new OOD variants:
 
-| Task | `classification_id` | `api_task_index` | difficulty | Exact Stage 1 `variant_name` |
+| Task | `classification_id` | `api_task_index` | difficulty | Exact Exploratory OOD–Delay Screening `variant_name` |
 |---|---:|---:|---:|---|
 | `spatial_transport` | `1773` | `1772` | `3` | `pick_up_the_black_bowl_from_table_center_and_place_it_on_the_plate_add_15` |
 | `goal_drawer` | `1891` | `1890` | `2` | `open_the_middle_drawer_of_the_cabinet_add_13` |
@@ -90,14 +90,14 @@ Accounting:
 ```text
 new OOD: 2 × 3 × 2 × 8 = 96
 new spatial ID: 1 × 3 × 2 × 8 = 48
-reused Stage 3 goal ID: 48 existing rows
+reused Held-Out OOD–Delay Horizon Confirmation goal ID: 48 existing rows
 new execution total = 144 episodes
 ```
 
 No new `long_stove_moka` episodes are run. The final three-task object-layout
-analysis reuses its completed Stage 3 ID/OOD rows.
+analysis reuses its completed Held-Out OOD–Delay Horizon Confirmation ID/OOD rows.
 
-## Stage 3C — initialization diversity/determinism audit
+## Initialization-State Audit — initialization diversity/determinism audit
 
 Reset-only gate over all three object-layout task pairs:
 
@@ -117,18 +117,18 @@ across indices within each task/scene. Freeze and hash
 
 ## Episode matching
 
-### Stage 2
+### Confirmatory Horizon–Delay Operating Envelope
 
-Use new seeds `[5..9]`. Do not reuse Stage 0/1 episodes.
+Use new seeds `[5..9]`. Do not reuse Latency Calibration and Instrumentation/1 episodes.
 
 For each `(task_key, seed)`, pair every horizon × delay cell on the same
 initialization identity.
 
-### Stage 3
+### Held-Out OOD–Delay Horizon Confirmation
 
-Use new seeds `[14..21]`, but freeze the exact Stage 1 OOD variants:
+Use new seeds `[14..21]`, but freeze the exact Exploratory OOD–Delay Screening OOD variants:
 
-| Follow-up status | Task | Perturbation | `classification_id` | `api_task_index` | Exact Stage 1 `variant_name` |
+| Follow-up status | Task | Perturbation | `classification_id` | `api_task_index` | Exact Exploratory OOD–Delay Screening `variant_name` |
 |---|---|---|---:|---:|---|
 | Prespecified confirmatory | `long_stove_moka` | `object_layout` | `1941` | `1940` | `KITCHEN_SCENE3_turn_on_the_stove_and_put_the_moka_pot_on_it_add_25` |
 | Prespecified confirmatory | `goal_drawer` | `robot_initial_state` | `285` | `284` | `open_the_middle_drawer_of_the_cabinet_view_0_0_100_0_0_initstate_71` |
@@ -140,26 +140,26 @@ For every fixed task/variant/seed/scene, pair `{20,25,30}` ×
 permit.
 
 
-### Stage 3B
+### Held-Out Object-Layout Cross-Task Replication
 
-Use the same Stage 3 seeds `[14..21]`. For every newly executed
+Use the same Held-Out OOD–Delay Horizon Confirmation seeds `[14..21]`. For every newly executed
 `(task, scene, exact variant, seed)`, all `{20,25,30} × {Native,+200}` cells must
 use `libero_episode_index:0` and have one identical reset-state fingerprint.
 Fingerprints need not differ across seeds.
 
-For `goal_drawer`, reuse the exact 48 Stage 3 ID rows; do not rerun them. For
-`spatial_transport`, run 48 new ID controls because Stage 3 has no spatial ID
+For `goal_drawer`, reuse the exact 48 Held-Out OOD–Delay Horizon Confirmation ID rows; do not rerun them. For
+`spatial_transport`, run 48 new ID controls because Held-Out OOD–Delay Horizon Confirmation has no spatial ID
 rows. ID and object-layout OOD fingerprints are not required to match because
 layout geometry is the treatment; match every non-perturbed factor.
 
 
-### Stage 3C
+### Initialization-State Audit
 
 Reset-only: use initialization indices `[0..7]` for all three task pairs, with three clean reset/fingerprint repetitions per task × scene × index. Require exact requested/resolved index equality, 3/3 repeat determinism, and 8/8 distinct fingerprints. No rollout seeds or policy outcomes.
 
-## Post-Stage-3C active follow-up
+## Post-Initialization-State Audit active follow-up
 
-Stage 3B completed with:
+Held-Out Object-Layout Cross-Task Replication completed with:
 
 ```text
 spatial_transport: I={0,0,0} at h={20,25,30}
@@ -169,7 +169,7 @@ long_stove_moka:   I={-0.125,-0.250,-0.125}
 
 Thus the active follow-up is not a three-task family-wide layout sweep.
 
-### Experiment A — required
+### Object-Layout Generalization — required
 
 Authoritative spec: `EXPERIMENT_A_OBJECT_LAYOUT_VARIANT_GENERALIZATION.md`.
 
@@ -189,14 +189,14 @@ new OOD = 48
 total = 64
 ```
 
-### Experiment B — conditional
+### Multi-Stage Task Generalization — conditional
 
 Authoritative spec: `EXPERIMENT_B_ADDITIONAL_MULTI_STAGE_TASK_GENERALIZATION.md`.
 
 Dispatch gate:
 
 ```text
->=2/3 Experiment-A variants have I<0
+>=2/3 Object-Layout Generalization variants have I<0
 AND mean I<0
 AND validation/provenance clean
 ```
@@ -222,15 +222,15 @@ total = 64
 ## Completed-result snapshot
 
 ```text
-Stage 1: pooled I ≈ +1.4 pp -> no broad OOD amplification
-Stage 2: at +200 ms, h20=h25=h30=14/15 pooled; h10=6/15
-Stage 3: long_stove_moka × object_layout has I={-0.125,-0.250,-0.125}; other selected negative cells do not replicate
-Stage 3B: cross-task object-layout result is task-dependent: spatial 0; goal non-negative; stove/moka negative
-Stage 3C: failed closed; one distinct OOD initialization per frozen object-layout variant
+Exploratory OOD–Delay Screening: pooled I ≈ +1.4 pp -> no broad OOD amplification
+Confirmatory Horizon–Delay Operating Envelope: at +200 ms, h20=h25=h30=14/15 pooled; h10=6/15
+Held-Out OOD–Delay Horizon Confirmation: long_stove_moka × object_layout has I={-0.125,-0.250,-0.125}; other selected negative cells do not replicate
+Held-Out Object-Layout Cross-Task Replication: cross-task object-layout result is task-dependent: spatial 0; goal non-negative; stove/moka negative
+Initialization-State Audit: failed closed; one distinct OOD initialization per frozen object-layout variant
 ```
 
 
-## Stage 4 — second-policy diagnostic
+## Cross-Policy OpenVLA-OFT Diagnostic — second-policy diagnostic
 
 ```text
 policy = OpenVLA-OFT combined four-suite checkpoint
@@ -255,7 +255,7 @@ Smoke episodes:
 ```
 
 
-## Stage 4 completed snapshot
+## Cross-Policy OpenVLA-OFT Diagnostic completed snapshot
 
 ```text
 OpenVLA-OFT native/default coverage = 8
@@ -263,9 +263,9 @@ spatial_transport: I=+0.250; ID 8/8->6/8; OOD 8/8->8/8
 long_stove_moka:   I=+0.125; ID 1/8->0/8; OOD 0/8->0/8
 ```
 
-## Stage 5 — OpenVLA-OFT coverage calibration + conditional final replication
+## OpenVLA-OFT Temporal-Coverage Calibration — OpenVLA-OFT coverage calibration + conditional final replication
 
-Stage 5A0 is a capability audit. If multiple legitimate coverages are exposed from one inference, Stage 5A uses:
+OpenVLA-OFT Temporal-Coverage Calibration Phase A0 is a capability audit. If multiple legitimate coverages are exposed from one inference, OpenVLA-OFT Temporal-Coverage Calibration Phase A uses:
 
 ```text
 ID only
@@ -275,16 +275,16 @@ coverage candidates = supported values frozen before outcomes; preferred {8,12,1
 seeds = 46..50
 ```
 
-Stage 5B, if warranted:
+OpenVLA-OFT Temporal-Coverage Calibration Phase B, if warranted:
 
 ```text
 2 tasks × 2 scenes × 2 delays × 8 seeds = 64
 seeds = 51..58
-coverage = frozen Stage-5A operating point
-exact OOD variants = same as Stage 4
+coverage = frozen OpenVLA-OFT Temporal-Coverage Calibration Phase A operating point
+exact OOD variants = same as Cross-Policy OpenVLA-OFT Diagnostic
 ```
 
-## Stage 3 New — final high-power replication
+## High-Power OOD–Delay Replication — final high-power replication
 
 Authoritative spec:
 
@@ -297,7 +297,7 @@ Frozen matrix:
 ```text
 policy = π0.5
 method = RTC
-candidates = 6 unique Stage 3/3B task × perturbation pairs
+candidates = 6 unique Held-Out OOD–Delay Horizon Confirmation and Held-Out Object-Layout Cross-Task Replication task × perturbation pairs
 horizons = 20,25,30
 scene = ID/OOD
 delay = Native,+200 ms
@@ -313,4 +313,4 @@ ID:  3 × 3 × 2 × 64 = 1,152
 TOTAL = 3,456
 ```
 
-Stage 5 OpenVLA calibration is canceled before execution.
+OpenVLA-OFT Temporal-Coverage Calibration is canceled before execution.

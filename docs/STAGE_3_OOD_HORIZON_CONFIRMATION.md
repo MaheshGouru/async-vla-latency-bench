@@ -1,15 +1,15 @@
-# Stage 3 — Held-Out OOD Confirmation Around the Operating Regime
+# Held-Out OOD–Delay Horizon Confirmation — Held-Out OOD Confirmation Around the Operating Regime
 
 ## 0. Purpose
 
-Run only after Stage 2.
+Run only after Confirmatory Horizon–Delay Operating Envelope.
 
-Stage 3 tests whether the localized Stage 1 OOD interactions reproduce on held-out
+Held-Out OOD–Delay Horizon Confirmation tests whether the localized Exploratory OOD–Delay Screening OOD interactions reproduce on held-out
 seeds and whether the result is sensitive to reasonable action-coverage changes.
 
-Stage 0 and Stage 1 remain unchanged.
+Latency Calibration and Instrumentation and Exploratory OOD–Delay Screening remain unchanged.
 
-## 1. Frozen Stage 3 seeds
+## 1. Frozen Held-Out OOD–Delay Horizon Confirmation seeds
 
 Use exactly:
 
@@ -19,18 +19,18 @@ SEEDS = [14, 15, 16, 17, 18, 19, 20, 21]
 
 Why these seeds:
 
-- disjoint from Stage 1 `[0..4]`;
-- disjoint from Stage 2 `[5..9]`;
-- disjoint from revised Stage 0's additional `[10..13]`;
+- disjoint from Exploratory OOD–Delay Screening `[0..4]`;
+- disjoint from Confirmatory Horizon–Delay Operating Envelope `[5..9]`;
+- disjoint from revised Latency Calibration and Instrumentation's additional `[10..13]`;
 - eight held-out replicates provide substantially finer success resolution than
-  Stage 1's five exploratory seeds.
+  Exploratory OOD–Delay Screening's five exploratory seeds.
 
-Use the **same eight seeds for every Stage 3 condition**.
+Use the **same eight seeds for every Held-Out OOD–Delay Horizon Confirmation condition**.
 
 Do not:
 - swap a seed because it fails;
 - use different seeds for different perturbations;
-- count Stage 1 seeds as confirmatory replicates.
+- count Exploratory OOD–Delay Screening seeds as confirmatory replicates.
 
 Invalid episodes may be rerun only with the same seed.
 
@@ -43,7 +43,7 @@ assert sorted(set(row["seed"] for row in stage3_rows)) == SEEDS
 
 ## 2. Prespecified OOD candidates
 
-Carry all three tied Stage 1 family-level candidates:
+Carry all three tied Exploratory OOD–Delay Screening family-level candidates:
 
 ```text
 Long stove/moka × Object layout
@@ -53,7 +53,7 @@ Goal drawer × Lighting
 
 These are the primary held-out confirmations.
 
-The task/method resolution applies the frozen Stage 1 eligibility guard before
+The task/method resolution applies the frozen Exploratory OOD–Delay Screening eligibility guard before
 ranking localized cells: the supporting RTC subset must have ID-low success at
 or above 50%. This excludes negative interactions attributable only to Naive
 async floor cells. Under that guard, the listed task pairs are the eligible RTC
@@ -68,11 +68,11 @@ Goal drawer × Sensor noise
 Sensor noise must remain labeled post-hoc because it did not pass the original
 family-level selection rule.
 
-## 2A. Exact frozen Stage 1 variant identities
+## 2A. Exact frozen Exploratory OOD–Delay Screening variant identities
 
-The Stage 1 resolved-variant manifest freezes:
+The Exploratory OOD–Delay Screening resolved-variant manifest freezes:
 
-| Follow-up status | Task | Perturbation | `classification_id` | `api_task_index` | Exact Stage 1 `variant_name` |
+| Follow-up status | Task | Perturbation | `classification_id` | `api_task_index` | Exact Exploratory OOD–Delay Screening `variant_name` |
 |---|---|---|---:|---:|---|
 | Prespecified confirmatory | `long_stove_moka` | `object_layout` | `1941` | `1940` | `KITCHEN_SCENE3_turn_on_the_stove_and_put_the_moka_pot_on_it_add_25` |
 | Prespecified confirmatory | `goal_drawer` | `robot_initial_state` | `285` | `284` | `open_the_middle_drawer_of_the_cabinet_view_0_0_100_0_0_initstate_71` |
@@ -94,9 +94,9 @@ Do not substitute another variant from the same family.
 
 ### Episode pairing
 
-Stage 3 uses new held-out seeds `[14..21]`; it does **not** reuse Stage 1 seeds.
+Held-Out OOD–Delay Horizon Confirmation uses new held-out seeds `[14..21]`; it does **not** reuse Exploratory OOD–Delay Screening seeds.
 
-Within Stage 3, for a fixed task/variant/seed/scene, every:
+Within Held-Out OOD–Delay Horizon Confirmation, for a fixed task/variant/seed/scene, every:
 
 ```text
 n_action_steps = 20,25,30
@@ -112,16 +112,16 @@ See `EPISODE_MATCHING_AND_VARIANT_FREEZE.md`.
 
 ## 3. Delay
 
-Keep the completed Stage 1 comparison:
+Keep the completed Exploratory OOD–Delay Screening comparison:
 
 ```text
 Low = Native
 High = Native + 200 ms
 ```
 
-Do not recalibrate delay from Stage 2.
+Do not recalibrate delay from Confirmatory Horizon–Delay Operating Envelope.
 
-## 4. Frozen Stage 3 horizons
+## 4. Frozen Held-Out OOD–Delay Horizon Confirmation horizons
 
 Use exactly:
 
@@ -129,27 +129,27 @@ Use exactly:
 n_action_steps = {20, 25, 30}
 ```
 
-These values are frozen **before Stage 2 is run** and must not be changed after
-viewing Stage 2 outcomes.
+These values are frozen **before Confirmatory Horizon–Delay Operating Envelope is run** and must not be changed after
+viewing Confirmatory Horizon–Delay Operating Envelope outcomes.
 
 Rationale:
 
 ```text
-20 = -5 actions relative to Stage 1
-25 = exact Stage 1 reference configuration
-30 = +5 actions relative to Stage 1
+20 = -5 actions relative to Exploratory OOD–Delay Screening
+25 = exact Exploratory OOD–Delay Screening reference configuration
+30 = +5 actions relative to Exploratory OOD–Delay Screening
 ```
 
-This symmetric local neighborhood directly tests whether the Stage 1 OOD result at
+This symmetric local neighborhood directly tests whether the Exploratory OOD–Delay Screening OOD result at
 25 actions is robust to a small, reasonable action-coverage perturbation in either
 direction.
 
-Stage 2 may show that 20 or 30 performs poorly or that 35 performs better than 25.
-Do **not** replace the frozen Stage 3 values post-hoc. Such findings are themselves
+Confirmatory Horizon–Delay Operating Envelope may show that 20 or 30 performs poorly or that 35 performs better than 25.
+Do **not** replace the frozen Held-Out OOD–Delay Horizon Confirmation values post-hoc. Such findings are themselves
 evidence about configuration sensitivity.
 
-The farther Stage 2 anchors (`10,15,35`) are used to contextualize the operating
-region, not to select Stage 3 conditions after seeing results.
+The farther Confirmatory Horizon–Delay Operating Envelope anchors (`10,15,35`) are used to contextualize the operating
+region, not to select Held-Out OOD–Delay Horizon Confirmation conditions after seeing results.
 
 ## 5. Primary method
 
@@ -157,7 +157,7 @@ region, not to select Stage 3 conditions after seeing results.
 RTC
 ```
 
-Naive async is not required for Stage 3 because Stage 1 already established severe
+Naive async is not required for Held-Out OOD–Delay Horizon Confirmation because Exploratory OOD–Delay Screening already established severe
 floor effects and the primary question concerns the RTC operating regime.
 
 ## 6. Factorial design
@@ -220,10 +220,10 @@ Report:
 - bootstrap CI for `I_h` when feasible;
 - floor/ceiling diagnostics.
 
-Primary confirmation asks whether the Stage 1 direction is reproduced at
+Primary confirmation asks whether the Exploratory OOD–Delay Screening direction is reproduced at
 `h=25`.
 
-The 20- and 30-action conditions ask whether the localized Stage 1 interaction
+The 20- and 30-action conditions ask whether the localized Exploratory OOD–Delay Screening interaction
 at 25 actions is robust to a symmetric ±5-action perturbation.
 
 ## 9. Required outputs
@@ -251,7 +251,7 @@ Do not claim a general OOD × delay interaction unless the held-out data support
 
 A defensible result may instead be:
 
-> "The broad Stage 1 interaction was near null at the calibrated 25-action
+> "The broad Exploratory OOD–Delay Screening interaction was near null at the calibrated 25-action
 > operating point, while selected task–perturbation cells showed reproducible,
 > horizon-dependent degradation."
 

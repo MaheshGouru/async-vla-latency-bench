@@ -1,4 +1,4 @@
-# Stage 1 A100 Jupyter workflow
+# Exploratory OOD–Delay Screening A100 Jupyter workflow
 
 Run these notebooks in order. Do not use **Run All** across notebooks.
 
@@ -14,11 +14,11 @@ Run these notebooks in order. Do not use **Run All** across notebooks.
 8. `05_validate_analyze_export.ipynb`
 
 The default is one A100 and one serial benchmark process. This matches the
-Stage 0 latency-measurement practice and avoids cross-GPU latency confounding.
+Latency Calibration and Instrumentation latency-measurement practice and avoids cross-GPU latency confounding.
 Every long run is detached, resumable, and monitored from per-episode JSON
 artifacts rather than an aggregate CSV.
 
-Before notebook 2, place the complete Stage 0 result bundle at `~/stage0`.
+Before notebook 2, place the complete Latency Calibration and Instrumentation result bundle at `~/stage0`.
 Before leaving the temporary machine, download the archive produced by notebook
 5 and push all code changes. Do not put JupyterHub or Hugging Face credentials
 in this repository.

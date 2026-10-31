@@ -1,6 +1,6 @@
-# Vast.ai runbook for Stage 3 New
+# Vast.ai runbook for High-Power OOD–Delay Replication
 
-This runbook launches the frozen 64-seed Stage 3 New replication on one exact
+This runbook launches the frozen 64-seed High-Power OOD–Delay Replication replication on one exact
 `NVIDIA A100-SXM4-40GB`. Do not use an interruptible instance or mix GPU models.
 
 ## Vast.ai instance selection

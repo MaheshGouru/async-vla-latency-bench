@@ -1,26 +1,26 @@
-# Stage 4 — Second-Policy Replication with OpenVLA-OFT
+# Cross-Policy OpenVLA-OFT Diagnostic — Second-Policy Replication with OpenVLA-OFT
 
 ## 0. Status and scientific purpose
 
 **Status: NEW / RUN NEXT ONLY IF THERE IS TIME AFTER THE completed π0.5 experiments.**
 
-Stages 1–3B and Experiments A/B establish the current π0.5 result:
+earlier primary-policy stages and Object-Layout and Multi-Stage Task Generalization establish the current π0.5 result:
 
 - temporal action coverage strongly controls delay robustness;
 - there is no broad OOD × delay amplification;
 - the surviving `long_stove_moka × object_layout` interaction is task- and layout-dependent;
-- Experiment A reproduced a negative interaction in 2/3 new layouts (`mean I=-0.125`);
-- Experiment B reproduced a negative interaction in only 1/3 layouts on the second multi-stage task (`mean I=+0.167`).
+- Object-Layout Generalization reproduced a negative interaction in 2/3 new layouts (`mean I=-0.125`);
+- Multi-Stage Task Generalization reproduced a negative interaction in only 1/3 layouts on the second multi-stage task (`mean I=+0.167`).
 
 The largest remaining external-validity limitation is that all primary experiments use one VLA policy.
 
-Stage 4 asks one narrow question:
+Cross-Policy OpenVLA-OFT Diagnostic asks one narrow question:
 
 > Does the qualitative OOD × delay pattern appear under a second, architecturally different VLA policy executed asynchronously?
 
-Stage 4 is **not** an RTC replication. OpenVLA-OFT does not use the π0/π0.5 RTC guidance path. It is evaluated with the benchmark's naive asynchronous queue semantics and its native 8-action chunk.
+Cross-Policy OpenVLA-OFT Diagnostic is **not** an RTC replication. OpenVLA-OFT does not use the π0/π0.5 RTC guidance path. It is evaluated with the benchmark's naive asynchronous queue semantics and its native 8-action chunk.
 
-Do not describe Stage 4 as a controlled causal comparison of model architecture. Policy, native action coverage, and policy-compatible execution differ. It is a second-policy external-validity diagnostic.
+Do not describe Cross-Policy OpenVLA-OFT Diagnostic as a controlled causal comparison of model architecture. Policy, native action coverage, and policy-compatible execution differ. It is a second-policy external-validity diagnostic.
 
 ## 1. Frozen policy
 
@@ -87,10 +87,10 @@ base_task_name = KITCHEN_SCENE3_turn_on_the_stove_and_put_the_moka_pot_on_it
 
 Rationale:
 
-- `spatial_transport × object_layout` was null under π0.5 across Stage-3B horizons;
-- `long_stove_moka × object_layout` was negative under π0.5 across all Stage-3 horizons and was the only task with a consistently negative cross-task object-layout signal;
+- `spatial_transport × object_layout` was null under π0.5 across Held-Out Object-Layout Cross-Task Replication horizons;
+- `long_stove_moka × object_layout` was negative under π0.5 across all Held-Out OOD–Delay Horizon Confirmation horizons and was the only task with a consistently negative cross-task object-layout signal;
 - using one prior-null and one prior-negative task is the smallest diagnostic second-policy matrix;
-- do not add the Experiment-B task unless this Stage-4 matrix is already complete.
+- do not add the Multi-Stage Task Generalization task unless this Cross-Policy OpenVLA-OFT Diagnostic matrix is already complete.
 
 ## 3. Frozen perturbation and exact OOD variants
 
@@ -102,7 +102,7 @@ official_category = Objects Layout
 mechanism_group   = trajectory_adaptation
 ```
 
-Use the exact original frozen Stage-1/Stage-3B variants below. These variants were selected before the later Experiment-A/B outcomes, avoiding outcome-adaptive layout selection.
+Use the exact original frozen Exploratory OOD–Delay Screening/Held-Out Object-Layout Cross-Task Replication variants below. These variants were selected before the later Object-Layout and Multi-Stage Task Generalization outcomes, avoiding outcome-adaptive layout selection.
 
 | task | `classification_id` | `api_task_index` | difficulty | exact `variant_name` |
 |---|---:|---:|---:|---|
@@ -127,7 +127,7 @@ Do not select a different layout because OpenVLA-OFT performs better or worse on
 
 ## 4. Frozen execution method
 
-Stage 4 uses **naive asynchronous execution**, not RTC.
+Cross-Policy OpenVLA-OFT Diagnostic uses **naive asynchronous execution**, not RTC.
 
 ```text
 execution_method          = naive_async_openvla_oft
@@ -201,7 +201,7 @@ Use exactly:
 SEEDS = [38,39,40,41,42,43,44,45]
 ```
 
-These seeds have not been used in Stages 0–3B or Experiments A/B.
+These seeds have not been used in earlier primary-policy stages or Object-Layout and Multi-Stage Task Generalization.
 
 Use the same eight seeds in every task × scene × delay cell.
 
@@ -221,7 +221,7 @@ libero_episode_index = 0
 
 for ID and OOD.
 
-Stage 3C established that the frozen LIBERO-Plus object-layout variants expose only one distinct OOD initialization. Therefore do not attempt indices 1–7.
+Initialization-State Audit established that the frozen LIBERO-Plus object-layout variants expose only one distinct OOD initialization. Therefore do not attempt indices 1–7.
 
 For every fixed:
 
@@ -274,7 +274,7 @@ long_stove_moka OOD    = 16
 TOTAL                   = 64
 ```
 
-No π0.5 episode may be counted as a Stage-4 physical row.
+No π0.5 episode may be counted as a Cross-Policy OpenVLA-OFT Diagnostic physical row.
 
 ## 8. Smoke test outside the analysis manifest
 
@@ -431,7 +431,7 @@ success versus realized coverage ratio
 
 ## 12. Cross-policy interpretation
 
-The completed π0.5 reference pattern at the central Stage-3B horizon is:
+The completed π0.5 reference pattern at the central Held-Out Object-Layout Cross-Task Replication horizon is:
 
 ```text
 spatial_transport × object_layout: I_25 = 0.000
@@ -472,7 +472,7 @@ This directly bears on the paper's temporal-action-coverage result.
 
 ## 13. Prohibited adaptations
 
-After any Stage-4 outcome is observed, do not:
+After any Cross-Policy OpenVLA-OFT Diagnostic outcome is observed, do not:
 
 - change the two tasks;
 - change the exact OOD variants;
@@ -483,18 +483,18 @@ After any Stage-4 outcome is observed, do not:
 - add RTC-like guidance to OpenVLA-OFT;
 - discard difficult variants;
 - rerun genuine task failures with replacement seeds;
-- call the Stage-4 seeds distinct environment initializations.
+- call the Cross-Policy OpenVLA-OFT Diagnostic seeds distinct environment initializations.
 
-Any later modification is a separately labeled exploratory experiment and must not overwrite Stage 4.
+Any later modification is a separately labeled exploratory experiment and must not overwrite Cross-Policy OpenVLA-OFT Diagnostic.
 
 ## 14. Paper role
 
-Stage 4 is intentionally small.
+Cross-Policy OpenVLA-OFT Diagnostic is intentionally small.
 
 Its role is to address:
 
 > Are the paper's temporal-robustness observations specific to π0.5?
 
-It is **not** intended to repeat the seven-family Stage-1 screen or the full Stage-2 horizon × latency grid.
+It is **not** intended to repeat the seven-family Exploratory OOD–Delay Screening screen or the full Confirmatory Horizon–Delay Operating Envelope horizon × latency grid.
 
-If Stage 4 completes cleanly, the paper can truthfully say that the central evaluation was additionally tested on a second VLA policy. The exact strength of the cross-policy claim must follow the observed Stage-4 outcomes.
+If Cross-Policy OpenVLA-OFT Diagnostic completes cleanly, the paper can truthfully say that the central evaluation was additionally tested on a second VLA policy. The exact strength of the cross-policy claim must follow the observed Cross-Policy OpenVLA-OFT Diagnostic outcomes.

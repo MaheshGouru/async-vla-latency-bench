@@ -1,4 +1,4 @@
-"""Frozen Stage 2 local operating-point sensitivity design."""
+"""Frozen Confirmatory Horizon–Delay Operating Envelope local operating-point sensitivity design."""
 
 from __future__ import annotations
 
@@ -102,19 +102,19 @@ def stage2_manifest(provenance: Mapping[str, str]) -> list[Stage2Plan]:
 
 def validate_manifest(rows: Sequence[Stage2Plan]) -> None:
     if len(rows) != 360 or len({row.run_id for row in rows}) != 360:
-        raise ValueError("Stage 2 manifest must contain 360 unique episodes")
+        raise ValueError("Confirmatory Horizon–Delay Operating Envelope manifest must contain 360 unique episodes")
     if {row.configured_n_action_steps for row in rows} != set(HORIZONS):
-        raise ValueError("wrong Stage 2 horizon set")
+        raise ValueError("wrong Confirmatory Horizon–Delay Operating Envelope horizon set")
     if {row.added_delay_ms for row in rows} != set(ADDED_DELAYS_MS):
-        raise ValueError("wrong Stage 2 delay set")
+        raise ValueError("wrong Confirmatory Horizon–Delay Operating Envelope delay set")
     if {row.seed for row in rows} != set(SEEDS):
-        raise ValueError("wrong Stage 2 seed set")
+        raise ValueError("wrong Confirmatory Horizon–Delay Operating Envelope seed set")
     if any(row.execution_method != METHOD or row.scene_condition != "id" for row in rows):
-        raise ValueError("Stage 2 is RTC-only and ID-only")
+        raise ValueError("Confirmatory Horizon–Delay Operating Envelope is RTC-only and ID-only")
     if any(row.rtc_execution_horizon != row.configured_n_action_steps for row in rows):
         raise ValueError("RTC execution horizon must follow configured action coverage")
     if any(row.request_threshold_actions != row.configured_n_action_steps for row in rows):
-        raise ValueError("Stage 2 requests immediately when a response lands")
+        raise ValueError("Confirmatory Horizon–Delay Operating Envelope requests immediately when a response lands")
 
 
 def as_rows(rows: Sequence[Stage2Plan]) -> list[dict]:

@@ -1,36 +1,36 @@
-# Stage 3B — Targeted Cross-Task Object-Layout Replication
+# Held-Out Object-Layout Cross-Task Replication — Targeted Cross-Task Object-Layout Replication
 
 ## 0. Status and purpose
 
 ## Completion note
 
-**Stage 3B is COMPLETE.** This file is retained as the frozen conduct/specification
-record. Do not modify its experiment matrix or rerun it merely because Stage 3C
+**Held-Out Object-Layout Cross-Task Replication is COMPLETE.** This file is retained as the frozen conduct/specification
+record. Do not modify its experiment matrix or rerun it merely because Initialization-State Audit
 were added later.
 
 
 remaining compute.
 
-Stage 3B is a **post-Stage-3 targeted cross-task replication** prompted by the
-held-out Stage 3 result: `long_stove_moka × object_layout` showed a negative
+Held-Out Object-Layout Cross-Task Replication is a **post-Held-Out OOD–Delay Horizon Confirmation targeted cross-task replication** prompted by the
+held-out Held-Out OOD–Delay Horizon Confirmation result: `long_stove_moka × object_layout` showed a negative
 OOD × delay interaction with the same direction at all three frozen horizons,
-while the other prespecified Stage 3 perturbations did not reproduce a negative
+while the other prespecified Held-Out OOD–Delay Horizon Confirmation perturbations did not reproduce a negative
 interaction.
 
-Stage 3B asks one narrow question:
+Held-Out Object-Layout Cross-Task Replication asks one narrow question:
 
 > Does the object-layout × delay interaction generalize from the multi-stage
 > `long_stove_moka` task to the two other task-demand categories that were already
-> part of the Stage 1 benchmark?
+> part of the Exploratory OOD–Delay Screening benchmark?
 
 This experiment must **not** be described as preregistered or as part of the
-original Stage 3 confirmation. It is a targeted follow-up selected after viewing
-Stage 3 outcomes.
+original Held-Out OOD–Delay Horizon Confirmation confirmation. It is a targeted follow-up selected after viewing
+Held-Out OOD–Delay Horizon Confirmation outcomes.
 
-Stage 0 and Stage 1 files remain unchanged.
+Latency Calibration and Instrumentation and Exploratory OOD–Delay Screening files remain unchanged.
 
 
-## 0A. Historical handoff rule for post-Stage-3B follow-up
+## 0A. Historical handoff rule for post-Held-Out Object-Layout Cross-Task Replication follow-up
 
 
 ```text
@@ -41,8 +41,8 @@ Stage 0 and Stage 1 files remain unchanged.
 
 ## 1. Tasks
 
-Add object-layout OOD only for the two Stage 1 tasks that did not receive an
-object-layout follow-up in Stage 3:
+Add object-layout OOD only for the two Exploratory OOD–Delay Screening tasks that did not receive an
+object-layout follow-up in Held-Out OOD–Delay Horizon Confirmation:
 
 ```text
 spatial_transport   # single-stage transport
@@ -56,9 +56,9 @@ goal_drawer         # articulated/contact-rich
     base_task_name = open_the_middle_drawer_of_the_cabinet
 ```
 
-Do **not** add new arbitrary LIBERO tasks in Stage 3B.
+Do **not** add new arbitrary LIBERO tasks in Held-Out Object-Layout Cross-Task Replication.
 
-The third task-demand category is already supplied by the completed Stage 3
+The third task-demand category is already supplied by the completed Held-Out OOD–Delay Horizon Confirmation
 object-layout result:
 
 ```text
@@ -69,16 +69,16 @@ No new `long_stove_moka` episodes are required.
 
 ## 2. Exact frozen object-layout variants
 
-Use the exact object-layout variants resolved **before Stage 1 outcomes** in
+Use the exact object-layout variants resolved **before Exploratory OOD–Delay Screening outcomes** in
 `stage1_resolved_variants.csv`.
 
 | Task | Task-demand group | `classification_id` | `api_task_index` | `difficulty_level` | Exact `variant_name` |
 |---|---|---:|---:|---:|---|
 | `spatial_transport` | single-stage transport | `1773` | `1772` | `3` | `pick_up_the_black_bowl_from_table_center_and_place_it_on_the_plate_add_15` |
 | `goal_drawer` | articulated/contact-rich | `1891` | `1890` | `2` | `open_the_middle_drawer_of_the_cabinet_add_13` |
-| `long_stove_moka` | multi-stage/sequential; completed Stage 3 reference | `1941` | `1940` | `2` | `KITCHEN_SCENE3_turn_on_the_stove_and_put_the_moka_pot_on_it_add_25` |
+| `long_stove_moka` | multi-stage/sequential; completed Held-Out OOD–Delay Horizon Confirmation reference | `1941` | `1940` | `2` | `KITCHEN_SCENE3_turn_on_the_stove_and_put_the_moka_pot_on_it_add_25` |
 
-The first two rows are the only new OOD variants dispatched in Stage 3B. The
+The first two rows are the only new OOD variants dispatched in Held-Out Object-Layout Cross-Task Replication. The
 third row is included only to define the final three-task cross-task analysis.
 
 Before dispatch, assert literal equality of all of:
@@ -95,11 +95,11 @@ variant_name
 ```
 
 Also verify against the frozen `stage1_resolved_variants.csv` artifact. Do not
-re-run the Stage 1 resolver and do not choose another object-layout variant.
+re-run the Exploratory OOD–Delay Screening resolver and do not choose another object-layout variant.
 
 ## 3. Seeds
 
-Use exactly the **same held-out seed block as Stage 3**:
+Use exactly the **same held-out seed block as Held-Out OOD–Delay Horizon Confirmation**:
 
 ```text
 SEEDS = [14, 15, 16, 17, 18, 19, 20, 21]
@@ -107,28 +107,28 @@ SEEDS = [14, 15, 16, 17, 18, 19, 20, 21]
 
 Rationale:
 
-- Stage 3B is testing cross-task generalization under the same held-out rollout
-  seed block used for the original Stage 3 object-layout result;
+- Held-Out Object-Layout Cross-Task Replication is testing cross-task generalization under the same held-out rollout
+  seed block used for the original Held-Out OOD–Delay Horizon Confirmation object-layout result;
 - reusing these seeds permits exact reuse of the completed `goal_drawer` ID
-  controls from Stage 3;
-- the two new object-layout OOD task conditions were not evaluated in Stage 3.
+  controls from Held-Out OOD–Delay Horizon Confirmation;
+- the two new object-layout OOD task conditions were not evaluated in Held-Out OOD–Delay Horizon Confirmation.
 
 Important interpretation:
 
-> Stage 3B is a cross-task replication, **not an independent new-seed
-> replication of Stage 3**.
+> Held-Out Object-Layout Cross-Task Replication is a cross-task replication, **not an independent new-seed
+> replication of Held-Out OOD–Delay Horizon Confirmation**.
 
 Do not:
 
 - replace seeds after failures;
 - use different seed sets for `spatial_transport` and `goal_drawer`;
-- use Stage 2 seeds `[5..9]` to avoid running the required Stage 3B ID controls.
+- use Confirmatory Horizon–Delay Operating Envelope seeds `[5..9]` to avoid running the required Held-Out Object-Layout Cross-Task Replication ID controls.
 
 Infrastructure-corrupted episodes may be rerun only with the same seed.
 
 ## 4. Execution configuration
 
-Keep the completed Stage 3 execution regime unchanged:
+Keep the completed Held-Out OOD–Delay Horizon Confirmation execution regime unchanged:
 
 ```text
 method = RTC
@@ -136,13 +136,13 @@ n_action_steps = {20,25,30}
 delay = {Native, Native +200 ms}
 control_rate = 20 Hz
 control_period_ms = 50
-checkpoint = same exact π0.5 checkpoint/revision used in Stage 3
-RTC delay estimator = same request-specific causal implementation used in Stage 3
+checkpoint = same exact π0.5 checkpoint/revision used in Held-Out OOD–Delay Horizon Confirmation
+RTC delay estimator = same request-specific causal implementation used in Held-Out OOD–Delay Horizon Confirmation
 ```
 
-Stage 2 must not be used to select or change any Stage 3B horizon.
+Confirmatory Horizon–Delay Operating Envelope must not be used to select or change any Held-Out Object-Layout Cross-Task Replication horizon.
 
-The Stage 3B manifest must contain exactly:
+The Held-Out Object-Layout Cross-Task Replication manifest must contain exactly:
 
 ```text
 new OOD:
@@ -152,10 +152,10 @@ new OOD:
 new ID:
     spatial_transport only
 
-reused completed Stage 3 ID:
+reused completed Held-Out OOD–Delay Horizon Confirmation ID:
     goal_drawer only
 
-reused completed Stage 3 object-layout pair for final cross-task analysis:
+reused completed Held-Out OOD–Delay Horizon Confirmation object-layout pair for final cross-task analysis:
     long_stove_moka ID + object_layout
 ```
 
@@ -163,13 +163,13 @@ reused completed Stage 3 object-layout pair for final cross-task analysis:
 
 ### 5.1 Initialization index
 
-Use the same benchmark initialization protocol as Stages 2–3:
+Use the same benchmark initialization protocol as earlier horizon and OOD-confirmation stages:
 
 ```text
 initialization_index_or_id = libero_episode_index:0
 ```
 
-for every newly executed Stage 3B episode.
+for every newly executed Held-Out Object-Layout Cross-Task Replication episode.
 
 Do not cycle initialization indices by seed, horizon, or delay.
 
@@ -226,14 +226,14 @@ preprocessing
 hardware/runtime class where feasible
 ```
 
-The OOD geometry must remain exactly that encoded by the frozen Stage 1
+The OOD geometry must remain exactly that encoded by the frozen Exploratory OOD–Delay Screening
 object-layout variant.
 
-### 5.4 Reuse of completed Stage 3 goal ID controls
+### 5.4 Reuse of completed Held-Out OOD–Delay Horizon Confirmation goal ID controls
 
 For `goal_drawer`, do **not** rerun ID controls.
 
-Reuse the exact 48 completed Stage 3 ID rows:
+Reuse the exact 48 completed Held-Out OOD–Delay Horizon Confirmation ID rows:
 
 ```text
 1 task
@@ -256,13 +256,13 @@ request/action artifact references
 
 Do not copy them into new run IDs and do not count them twice in any aggregate.
 
-Before reuse, assert that all 48 expected Stage 3 goal-ID cells exist, are valid,
-and match the Stage 3B checkpoint/timing semantics.
+Before reuse, assert that all 48 expected Held-Out OOD–Delay Horizon Confirmation goal-ID cells exist, are valid,
+and match the Held-Out Object-Layout Cross-Task Replication checkpoint/timing semantics.
 
 ### 5.5 New spatial ID controls
 
-Stage 3 did not contain `spatial_transport` ID controls. Therefore Stage 3B must
-run them rather than borrowing Stage 2 or Stage 1 controls.
+Held-Out OOD–Delay Horizon Confirmation did not contain `spatial_transport` ID controls. Therefore Held-Out Object-Layout Cross-Task Replication must
+run them rather than borrowing Confirmatory Horizon–Delay Operating Envelope or Exploratory OOD–Delay Screening controls.
 
 Run exactly:
 
@@ -281,7 +281,7 @@ This is:
 3 × 2 × 8 = 48 new spatial ID episodes
 ```
 
-These are the only new ID episodes in Stage 3B.
+These are the only new ID episodes in Held-Out Object-Layout Cross-Task Replication.
 
 ## 6. New run count
 
@@ -307,18 +307,18 @@ Only `spatial_transport` needs new matching ID controls:
 = 48 new ID episodes
 ```
 
-### Total new Stage 3B execution
+### Total new Held-Out Object-Layout Cross-Task Replication execution
 
 ```text
 96 OOD + 48 ID = 144 new episodes
 ```
 
-Do not report Stage 3B as 96 new episodes. That would omit the required
+Do not report Held-Out Object-Layout Cross-Task Replication as 96 new episodes. That would omit the required
 same-seed spatial ID controls.
 
 ## 7. Analysis accounting
 
-For each task and horizon compute the same four-cell interaction used in Stage 3:
+For each task and horizon compute the same four-cell interaction used in Held-Out OOD–Delay Horizon Confirmation:
 
 ```text
 I_h(task) =
@@ -329,7 +329,7 @@ I_h(task) =
 
 Each success cell has exactly 8 rollout trials.
 
-### Stage 3B two-task analysis table
+### Held-Out Object-Layout Cross-Task Replication two-task analysis table
 
 The logical two-task analysis contains:
 
@@ -341,8 +341,8 @@ The logical two-task analysis contains:
 Composition:
 
 ```text
-144 newly executed Stage 3B rows
-48 reused Stage 3 goal-ID rows
+144 newly executed Held-Out Object-Layout Cross-Task Replication rows
+48 reused Held-Out OOD–Delay Horizon Confirmation goal-ID rows
 ```
 
 Deduplicate by original `run_id` before any pooled accounting.
@@ -352,9 +352,9 @@ Deduplicate by original `run_id` before any pooled accounting.
 For the final cross-task figure/table, combine:
 
 ```text
-spatial_transport   Stage 3B ID + Stage 3B object-layout OOD
-goal_drawer         Stage 3 reused ID + Stage 3B object-layout OOD
-long_stove_moka     Stage 3 ID + Stage 3 object-layout OOD
+spatial_transport   Held-Out Object-Layout Cross-Task Replication ID + Held-Out Object-Layout Cross-Task Replication object-layout OOD
+goal_drawer         Held-Out OOD–Delay Horizon Confirmation reused ID + Held-Out Object-Layout Cross-Task Replication object-layout OOD
+long_stove_moka     Held-Out OOD–Delay Horizon Confirmation ID + Held-Out OOD–Delay Horizon Confirmation object-layout OOD
 ```
 
 This yields a logical:
@@ -368,7 +368,7 @@ No episode may appear more than once in this 288-row table.
 
 ## 8. Statistics
 
-Primary Stage 3B quantities are **task-specific**, not a single pooled family
+Primary Held-Out Object-Layout Cross-Task Replication quantities are **task-specific**, not a single pooled family
 claim.
 
 For each of `spatial_transport` and `goal_drawer`, report at each horizon:
@@ -383,11 +383,11 @@ paired-seed bootstrap CI for I_h
 Wilson interval for each success rate
 ```
 
-Use the same seed-clustered pairing implementation as Stage 3. Resample the eight
+Use the same seed-clustered pairing implementation as Held-Out OOD–Delay Horizon Confirmation. Resample the eight
 seed clusters; never bootstrap individual episode rows independently.
 
 Then show the already completed `long_stove_moka` object-layout result alongside
-the two Stage 3B tasks.
+the two Held-Out Object-Layout Cross-Task Replication tasks.
 
 Do not elevate a pooled three-task average over the task-specific results. The
 scientific question is whether direction/effect generalizes across task demands.
@@ -412,8 +412,8 @@ If only `long_stove_moka` remains negative:
 > The replicated interaction is localized to the tested multi-stage task; the
 > data do not support a general object-layout family claim.
 
-Do not call Stage 3B confirmatory evidence for a family-wide hypothesis without
-explicitly noting that this follow-up was selected after seeing the Stage 3
+Do not call Held-Out Object-Layout Cross-Task Replication confirmatory evidence for a family-wide hypothesis without
+explicitly noting that this follow-up was selected after seeing the Held-Out OOD–Delay Horizon Confirmation
 object-layout result.
 
 ## 10. Required manifest gates
@@ -466,24 +466,24 @@ stage3b_object_layout_cross_task.png
 STAGE_3B_OBJECT_LAYOUT_OBSERVATIONS.md
 ```
 
-Record a Stage 3B specification hash and manifest hash per new result row.
-Preserve the original Stage 3 provenance fields on reused rows.
+Record a Held-Out Object-Layout Cross-Task Replication specification hash and manifest hash per new result row.
+Preserve the original Held-Out OOD–Delay Horizon Confirmation provenance fields on reused rows.
 
 ## 12. Stop rule
 
 Do not add additional tasks, object-layout variants, perturbation families, or
-seeds after inspecting Stage 3B outcomes as part of this stage.
+seeds after inspecting Held-Out Object-Layout Cross-Task Replication outcomes as part of this stage.
 
-Stage 3B ends after the frozen 144 new episodes and the predefined three-task
+Held-Out Object-Layout Cross-Task Replication ends after the frozen 144 new episodes and the predefined three-task
 analysis above. Any further expansion must be labeled as a separate exploratory
 stage.
 
 
 ---
 
-## Completed Stage 3B results
+## Completed Held-Out Object-Layout Cross-Task Replication results
 
-Stage 3B completed successfully under the frozen conduct above.
+Held-Out Object-Layout Cross-Task Replication completed successfully under the frozen conduct above.
 
 Archive provenance:
 

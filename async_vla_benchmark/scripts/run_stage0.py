@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Stage 0 — run the 96-episode ID-only latency calibration.
+"""Latency Calibration and Instrumentation — run the 96-episode ID-only latency calibration.
 
     # 1. environment/policy assertions only, no episodes
     python -m async_vla_benchmark.scripts.run_stage0 --config ... --preflight-only
@@ -232,7 +232,7 @@ def _load_policy(cfg: BenchmarkConfig):
 
 
 def preflight(cfg: BenchmarkConfig, check_policy: bool = True) -> int:
-    """Assert every precondition Stage 0 depends on. Returns a process exit code.
+    """Assert every precondition Latency Calibration and Instrumentation depends on. Returns a process exit code.
 
     Each of these has silently invalidated a benchmark before: a task index that
     resolves to a different task than intended, a policy whose chunk length does

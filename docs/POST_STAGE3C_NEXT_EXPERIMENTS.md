@@ -1,8 +1,8 @@
-# Post-Stage-3C Experiment Plan — Updated After Experiments A and B
+# Post-Initialization-State Audit Experiment Plan — Updated After Object-Layout and Multi-Stage Task Generalization
 
 ## Completed follow-ups
 
-### Experiment A — COMPLETE
+### Object-Layout Generalization — COMPLETE
 
 `long_stove_moka`, three new Objects-Layout variants, RTC, `n_action_steps=25`, Native/+200 ms, seeds `22..29`, initialization index 0, 64 valid analysis episodes.
 
@@ -16,7 +16,7 @@ mean I = -0.125
 
 Interpretation: the negative effect is not unique to the original layout, but is heterogeneous across layouts.
 
-### Experiment B — COMPLETE
+### Multi-Stage Task Generalization — COMPLETE
 
 `LIVING_ROOM_SCENE2_put_both_the_alphabet_soup_and_the_tomato_sauce_in_the_basket`, three Objects-Layout variants, RTC, `n_action_steps=25`, Native/+200 ms, seeds `30..37`, initialization index 0, 64 analysis episodes.
 
@@ -30,7 +30,7 @@ mean I = +0.167
 
 Interpretation: the negative `long_stove_moka` pattern does not consistently transfer to a second multi-stage task.
 
-## Stage 4 — COMPLETE preliminary/native-stack diagnostic
+## Cross-Policy OpenVLA-OFT Diagnostic — COMPLETE preliminary/native-stack diagnostic
 
 At OpenVLA-OFT coverage 8:
 
@@ -43,7 +43,7 @@ The long task is floor-limited, and coverage 8 was not calibrated for asynchrono
 
 ## Final active experiment
 
-### Stage 3 New — high-power Stage 3 / Stage 3B replication
+### High-Power OOD–Delay Replication — high-power Held-Out OOD–Delay Horizon Confirmation / Held-Out Object-Layout Cross-Task Replication replication
 
 Run exactly:
 
@@ -52,7 +52,7 @@ STAGE_3_NEW_HIGH_POWER_REPLICATION.md
 ```
 
 The experiment reruns the six unique task × perturbation pairs represented by
-Stage 3 and Stage 3B, including the Stage-3 post-hoc sensor-noise condition.
+Held-Out OOD–Delay Horizon Confirmation and Held-Out Object-Layout Cross-Task Replication, including the Held-Out OOD–Delay Horizon Confirmation post-hoc sensor-noise condition.
 
 ```text
 π0.5 + RTC
@@ -63,7 +63,7 @@ fresh seeds = 46..109
 3,456 new physical episodes with shared ID controls
 ```
 
-No old Stage 3/3B episode outcomes are pooled into the primary estimates.
+No old Held-Out OOD–Delay Horizon Confirmation and Held-Out Object-Layout Cross-Task Replication episode outcomes are pooled into the primary estimates.
 
-Stage 5 OpenVLA-OFT is canceled before execution. The remaining compute budget
+OpenVLA-OFT Temporal-Coverage Calibration is canceled before execution. The remaining compute budget
 is dedicated to reducing uncertainty in the existing interaction matrix.

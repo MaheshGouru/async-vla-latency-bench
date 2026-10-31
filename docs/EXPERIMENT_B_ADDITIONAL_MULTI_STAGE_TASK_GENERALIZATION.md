@@ -1,10 +1,10 @@
-# Experiment B — Additional Multi-Stage Task Object-Layout Generalization
+# Multi-Stage Task Generalization — Additional Multi-Stage Task Object-Layout Generalization
 
 ## 0. Status and frozen dispatch gate
 
 **Status: CONDITIONAL.**
 
-Run only if Experiment A satisfies its pre-frozen gate:
+Run only if Object-Layout Generalization satisfies its pre-frozen gate:
 
 ```text
 >=2/3 new long_stove_moka variants have I<0
@@ -38,7 +38,7 @@ mechanism_group   = trajectory_adaptation
 
 ## 3. Freeze exactly three object-layout variants
 
-Before any Experiment-B rollout outcome:
+Before any Multi-Stage Task Generalization rollout outcome:
 
 1. Load installed LIBERO-Plus `task_classification.json`.
 2. Keep entries with the exact base-task prefix and `category == "Objects Layout"`.
@@ -68,7 +68,7 @@ variant_name
 
 ## 4. Implementation/provenance requirements
 
-Experiment B must use a distinct `experiment_b` provenance label and dedicated frozen-variant CSV, manifest, validator, and analysis outputs. It must not be dispatched merely because its code exists; dispatch is controlled exclusively by the frozen Experiment-A gate above.
+Multi-Stage Task Generalization must use a distinct `experiment_b` provenance label and dedicated frozen-variant CSV, manifest, validator, and analysis outputs. It must not be dispatched merely because its code exists; dispatch is controlled exclusively by the frozen Object-Layout Generalization gate above.
 
 Required provenance artifacts:
 
@@ -88,7 +88,7 @@ Before analysis seeds, execute an isolated `seed=999` end-to-end smoke test. Smo
 ## 5. Exact execution configuration
 
 ```text
-policy/checkpoint          = identical checkpoint + revision used in Stage 3/3B/Experiment A
+policy/checkpoint          = identical checkpoint + revision used in Held-Out OOD–Delay Horizon Confirmation and Held-Out Object-Layout Cross-Task Replication/Object-Layout Generalization
 method                     = RTC
 configured_n_action_steps  = 25
 control_rate_hz            = 20
@@ -99,7 +99,7 @@ libero_episode_index       = 0
 rollout_seeds              = [30,31,32,33,34,35,36,37]
 ```
 
-Do not sweep horizons and do not reuse Experiment-A seeds.
+Do not sweep horizons and do not reuse Object-Layout Generalization seeds.
 
 ## 6. Exact seed semantics
 
@@ -175,7 +175,7 @@ Interpretation is pre-frozen:
 
 ## Completion addendum — 2026-08-22
 
-Experiment B completed.
+Multi-Stage Task Generalization completed.
 
 ```text
 per-variant I = -0.375, +0.250, +0.625

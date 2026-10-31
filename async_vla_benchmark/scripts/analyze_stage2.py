@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate the frozen Stage 2 tables, figures, and observations."""
+"""Generate the frozen Confirmatory Horizon–Delay Operating Envelope tables, figures, and observations."""
 
 import argparse
 import math
@@ -97,12 +97,12 @@ def main() -> int:
     for task in tasks:
         values = [float(next(r["success_rate"] for r in summary if r["task_key"] == task and int(r["configured_n_action_steps"]) == h and int(r["added_delay_ms"]) == 200)) for h in HORIZONS]
         ax.plot(HORIZONS, values, marker="o", label=task)
-    ax.axvline(25, color="black", linestyle="--", alpha=.5); ax.set(xlabel="Configured action coverage", ylabel="Success rate", ylim=(-.05, 1.05), title="Stage 2 horizon slice at +200 ms"); ax.legend(); fig.tight_layout(); fig.savefig(args.output_dir / "stage2_horizon_slice_200ms.png", dpi=180); plt.close(fig)
+    ax.axvline(25, color="black", linestyle="--", alpha=.5); ax.set(xlabel="Configured action coverage", ylabel="Success rate", ylim=(-.05, 1.05), title="Confirmatory Horizon–Delay Operating Envelope horizon slice at +200 ms"); ax.legend(); fig.tight_layout(); fig.savefig(args.output_dir / "stage2_horizon_slice_200ms.png", dpi=180); plt.close(fig)
     fig, ax = plt.subplots(figsize=(7, 5))
     for task in tasks:
         values = [float(next(r["success_rate"] for r in summary if r["task_key"] == task and int(r["configured_n_action_steps"]) == 25 and int(r["added_delay_ms"]) == d)) for d in ADDED_DELAYS_MS]
         ax.plot(ADDED_DELAYS_MS, values, marker="o", label=task)
-    ax.axvline(200, color="black", linestyle="--", alpha=.5); ax.set(xlabel="Added delay (ms)", ylabel="Success rate", ylim=(-.05, 1.05), title="Stage 2 delay slice at 25 actions"); ax.legend(); fig.tight_layout(); fig.savefig(args.output_dir / "stage2_delay_slice_25actions.png", dpi=180); plt.close(fig)
+    ax.axvline(200, color="black", linestyle="--", alpha=.5); ax.set(xlabel="Added delay (ms)", ylabel="Success rate", ylim=(-.05, 1.05), title="Confirmatory Horizon–Delay Operating Envelope delay slice at 25 actions"); ax.legend(); fig.tight_layout(); fig.savefig(args.output_dir / "stage2_delay_slice_25actions.png", dpi=180); plt.close(fig)
     fig, ax = plt.subplots(figsize=(7, 5))
     for task in tasks:
         subset = [r for r in rows if r["task_key"] == task]
@@ -113,12 +113,12 @@ def main() -> int:
     spread = max(local_rates) - min(local_rates) if local_rates else float("nan")
     observations = args.output_dir / "STAGE_2_LOCAL_SENSITIVITY_OBSERVATIONS.md"
     observations.write_text(
-        "# Stage 2 Local Sensitivity Observations\n\n"
+        "# Confirmatory Horizon–Delay Operating Envelope Local Sensitivity Observations\n\n"
         f"- Completed: {len(rows)}/360 episodes.\n"
         f"- Maximum success-rate spread across the pooled 20/25/30 neighborhood cells: {spread:.3f}.\n\n"
-        "## Decision\n\nClassification as locally stable, locally sensitive, or potentially under-covered requires task-level review of the generated surfaces, Native-normalized drops, and latency diagnostics; it is intentionally not assigned by an arbitrary scalar threshold. Stage 1 remains frozen at 25/+200 regardless of this result.\n"
+        "## Decision\n\nClassification as locally stable, locally sensitive, or potentially under-covered requires task-level review of the generated surfaces, Native-normalized drops, and latency diagnostics; it is intentionally not assigned by an arbitrary scalar threshold. Exploratory OOD–Delay Screening remains frozen at 25/+200 regardless of this result.\n"
     )
-    print(f"PASS: complete Stage 2 analysis generated in {args.output_dir}")
+    print(f"PASS: complete Confirmatory Horizon–Delay Operating Envelope analysis generated in {args.output_dir}")
     return 0
 
 

@@ -1,6 +1,6 @@
-"""Stage 0 manifest and `d*` selection-rule tests.
+"""Latency Calibration and Instrumentation manifest and `d*` selection-rule tests.
 
-The selection rule is the one piece of Stage 0 with real branching logic, and it
+The selection rule is the one piece of Latency Calibration and Instrumentation with real branching logic, and it
 runs once on data that costs ~6 GPU-hours to produce. These tests pin it against
 the thresholds in `docs/STAGE_0_LATENCY_CALIBRATION.md` section 8 so a later edit
 cannot quietly move the operating point.
@@ -71,7 +71,7 @@ def test_manifest_is_the_full_180_episode_grid():
 def test_calibration_seeds_avoid_the_stage_2_held_out_range():
     # STAGE_2 section 4 reserves seeds 2-9 for held-out confirmation; calibrating
     # d* on one of them would weaken that claim two stages downstream.
-    assert SEEDS[:2] == (0, 1), "Stage 1 reuses the first two seeds as ID controls"
+    assert SEEDS[:2] == (0, 1), "Exploratory OOD–Delay Screening reuses the first two seeds as ID controls"
     assert not set(SEEDS) & set(range(2, 10))
 
 
@@ -233,7 +233,7 @@ def test_fallback_2_flags_saturation_and_takes_the_smallest_qualifying_delay():
 def test_flat_curve_is_flagged_weak_even_though_fallback_1_claims_it():
     # Section 8.4 orders fallback 1 ahead of fallback 3, so a curve where delay
     # does nothing is still "selected" by fallback 1. The flag has to come from
-    # the curve, or the one result that most invalidates Stage 1 goes unlabelled.
+    # the curve, or the one result that most invalidates Exploratory OOD–Delay Screening goes unlabelled.
     rows = flat({d: 2 for d in ADDED_DELAYS_MS})
     result = select_high_delay(rows)
     assert result.rule_applied == "fallback_1_largest_drop"

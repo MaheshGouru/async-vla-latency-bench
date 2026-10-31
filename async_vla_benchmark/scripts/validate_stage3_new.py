@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fail-closed validator for Stage 3 New.
+"""Fail-closed validator for High-Power OOD–Delay Replication.
 
 Flags:
   --allow-incomplete   skip missing-results check (use after manifest freeze)
@@ -38,12 +38,12 @@ def _check_manifest(manifest: list[dict], errors: list[str], smoke: bool) -> Non
         if seed_set != set(SEEDS):
             errors.append(f"seeds must be exactly {min(SEEDS)}..{max(SEEDS)}")
         if seed_set & _OLD_SEEDS:
-            errors.append("manifest contains forbidden old Stage 3/3B seeds (14-21)")
+            errors.append("manifest contains forbidden old Held-Out OOD–Delay Horizon Confirmation/3B seeds (14-21)")
 
     if {int(r["added_delay_ms"]) for r in manifest} != set(ADDED_DELAYS_MS):
         errors.append("wrong delay conditions in manifest")
     if any(r["execution_method"] != "rtc" for r in manifest):
-        errors.append("Stage 3 New must be RTC-only")
+        errors.append("High-Power OOD–Delay Replication must be RTC-only")
 
     n_id  = sum(1 for r in manifest if r["scene"] == "id")
     n_ood = sum(1 for r in manifest if r["scene"] == "ood")
@@ -95,7 +95,7 @@ def _check_results(manifest: list[dict], results: list[dict],
 
     result_seeds = {int(r["seed"]) for r in results}
     if result_seeds & _OLD_SEEDS:
-        errors.append("results contain forbidden old Stage 3/3B seeds (14-21)")
+        errors.append("results contain forbidden old Held-Out OOD–Delay Horizon Confirmation/3B seeds (14-21)")
 
     if smoke:
         if len(results) != 18:
@@ -234,7 +234,7 @@ def main() -> int:
     if errors:
         print(*[f"ERROR: {e}" for e in errors], sep="\n")
         return 1
-    print("Stage 3 New validation passed")
+    print("High-Power OOD–Delay Replication validation passed")
     return 0
 
 

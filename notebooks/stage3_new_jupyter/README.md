@@ -1,9 +1,9 @@
-# Stage 3 New high-power replication — Jupyter workflow
+# High-Power OOD–Delay Replication — Jupyter workflow
 
 Run notebooks `01` through `05` in order on one idle A100. This workflow is the
 fresh, high-replication rerun frozen in
-`docs/STAGE_3_NEW_HIGH_POWER_REPLICATION.md`; it does not pool Stage 3 or Stage
-3B outcomes into the primary estimates.
+`docs/STAGE_3_NEW_HIGH_POWER_REPLICATION.md`; it does not pool the Held-Out OOD–Delay Horizon Confirmation or
+Held-Out Object-Layout Cross-Task Replication outcomes into the primary estimates.
 
 Frozen physical matrix:
 
@@ -38,5 +38,5 @@ analyze_stage3_new
 
 The final validator must reject missing/duplicate physical rows, seed
 replacement, reset-pairing failures, variant drift, and any primary row from
-the old Stage 3/3B seed block. Bootstrap analysis must resample complete seed
+the old Held-Out OOD–Delay Horizon Confirmation and Held-Out Object-Layout Cross-Task Replication seed block. Bootstrap analysis must resample complete seed
 blocks at least 10,000 times using a recorded RNG seed.

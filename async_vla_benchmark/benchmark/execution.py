@@ -314,7 +314,7 @@ class EpisodeRunner:
                     max(0, self.fixed_horizon - rtc_counts["effective_execution_horizon"])
                     if rtc_counts else None
                 ),
-                # Stage 2 paper-facing aliases use "steps" while the legacy
+                # Confirmatory Horizon–Delay Operating Envelope paper-facing aliases use "steps" while the legacy
                 # diagnostics above retain their established "actions" names.
                 "rtc_frozen_prefix_steps": (
                     rtc_counts["frozen_prefix_actions"] if rtc_counts else None

@@ -1,9 +1,9 @@
-"""Frozen Stage 3 New — high-power replication of the Stage 3 / Stage 3B matrix.
+"""Frozen High-Power OOD–Delay Replication — high-power replication of the Held-Out OOD–Delay Horizon Confirmation / Held-Out Object-Layout Cross-Task Replication matrix.
 
 64 completely fresh rollout seeds (46-109) per unique cell. The conservative
 worst-case 95% interaction half-width is approximately 0.25, compared with
-approximately 0.69 for the original 8-seed Stage 3/3B design.
-Seeds 14-21 (old Stage 3/3B block) must never appear here.
+approximately 0.69 for the original 8-seed Held-Out OOD–Delay Horizon Confirmation/3B design.
+Seeds 14-21 (old Held-Out OOD–Delay Horizon Confirmation/3B block) must never appear here.
 """
 
 from __future__ import annotations
@@ -41,7 +41,7 @@ TASKS = {
     },
 }
 
-# 6 candidates: 4 from Stage 3 + 2 unique from Stage 3B.
+# 6 candidates: 4 from Held-Out OOD–Delay Horizon Confirmation + 2 unique from Held-Out Object-Layout Cross-Task Replication.
 # long_stove_moka x object_layout overlaps both stages and is executed once.
 CANDIDATES = (
     {
@@ -248,20 +248,20 @@ def stage3_new_manifest(provenance: Mapping[str, str],
 def validate_manifest(rows: Sequence[Stage3NewPlan]) -> None:
     if len(rows) != _EXPECTED_TOTAL:
         raise ValueError(
-            f"Stage 3 New manifest must contain {_EXPECTED_TOTAL} rows; got {len(rows)}")
+            f"High-Power OOD–Delay Replication manifest must contain {_EXPECTED_TOTAL} rows; got {len(rows)}")
     if len({r.run_id for r in rows}) != _EXPECTED_TOTAL:
-        raise ValueError("Stage 3 New manifest contains duplicate run_ids")
+        raise ValueError("High-Power OOD–Delay Replication manifest contains duplicate run_ids")
     seed_set = {r.seed for r in rows}
     if seed_set != set(SEEDS):
         raise ValueError(f"Seeds must be exactly {min(SEEDS)}..{max(SEEDS)}")
     if seed_set & _OLD_SEEDS:
-        raise ValueError("Manifest contains forbidden old Stage 3/3B seeds (14-21)")
+        raise ValueError("Manifest contains forbidden old Held-Out OOD–Delay Horizon Confirmation/3B seeds (14-21)")
     if {r.configured_n_action_steps for r in rows} != set(HORIZONS):
-        raise ValueError("Wrong Stage 3 New horizons")
+        raise ValueError("Wrong High-Power OOD–Delay Replication horizons")
     if {r.added_delay_ms for r in rows} != set(ADDED_DELAYS_MS):
-        raise ValueError("Wrong Stage 3 New delays")
+        raise ValueError("Wrong High-Power OOD–Delay Replication delays")
     if any(r.execution_method != METHOD for r in rows):
-        raise ValueError("Stage 3 New is RTC-only")
+        raise ValueError("High-Power OOD–Delay Replication is RTC-only")
     id_rows  = [r for r in rows if r.scene == "id"]
     ood_rows = [r for r in rows if r.scene == "ood"]
     if len(id_rows) != _EXPECTED_ID:

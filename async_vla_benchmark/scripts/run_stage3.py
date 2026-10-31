@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run one scene shard of the frozen Stage 3 matrix serially."""
+"""Run one scene shard of the frozen Held-Out OOD–Delay Horizon Confirmation matrix serially."""
 from __future__ import annotations
 import argparse, gc, hashlib, json, os, traceback
 from pathlib import Path
@@ -124,12 +124,12 @@ def main():
     cfg = load_config(args.config); _configure_libero_home(args.scene)
     dispatch_gate_sha256 = ""
     if args.stage_label == "experiment_b":
-        if args.dispatch_gate is None: raise ValueError("Experiment B requires --dispatch-gate")
+        if args.dispatch_gate is None: raise ValueError("Multi-Stage Task Generalization requires --dispatch-gate")
         from async_vla_benchmark.benchmark.experiment_b import validate_experiment_a_gate
         dispatch_gate_sha256 = validate_experiment_a_gate(args.dispatch_gate)
     plans = [r for r in read_csv(args.manifest) if r["scene"] == args.scene]
     if args.stage_label == "experiment_b" and {r.get("experiment_a_dispatch_gate_sha256") for r in plans} != {dispatch_gate_sha256}:
-        raise ValueError("Experiment B manifest is not bound to the supplied passing dispatch gate")
+        raise ValueError("Multi-Stage Task Generalization manifest is not bound to the supplied passing dispatch gate")
     plans = _select(plans, "configured_n_action_steps", args.horizon); plans = _select(plans, "added_delay_ms", args.delay)
     plans = _select(plans, "seed", args.seed); plans = _select(plans, "task_key", args.task)
     plans = _select(plans, "perturbation_key", args.perturbation)

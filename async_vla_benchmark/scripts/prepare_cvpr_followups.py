@@ -89,7 +89,7 @@ def build(output_dir: Path) -> None:
         """# CVPR follow-up protocol manifests
 
 These CSVs are frozen planning artifacts, not completed results.
-The first step (Stage 3 New queue/freshness analysis) can be run now
+The first step (High-Power OOD–Delay Replication queue/freshness analysis) can be run now
 on the archived CSV. Steps 2--4 require a separate review of policy
 compatibility, seed allocation, and compute budget before execution.
 No row should be reported as evidence until its runner, checkpoint,

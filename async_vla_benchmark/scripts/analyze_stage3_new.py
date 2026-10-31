@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Bootstrap analysis for Stage 3 New high-power replication.
+"""Bootstrap analysis for High-Power OOD–Delay Replication.
 
 Resamples complete seed blocks (not individual rows), one block per SEEDS
 entry, with at least 10,000 replicates. Primary operating point: h=25. Includes cross-task object-layout
@@ -92,7 +92,7 @@ def main() -> int:
 
     result_seeds = {int(r["seed"]) for r in all_rows}
     if result_seeds & _OLD_SEEDS:
-        raise ValueError("Results contain forbidden old Stage 3/3B seeds (14-21)")
+        raise ValueError("Results contain forbidden old Held-Out OOD–Delay Horizon Confirmation/3B seeds (14-21)")
 
     if len(all_rows) != _EXPECTED_TOTAL and not args.allow_incomplete:
         raise ValueError(f"Refusing incomplete analysis: {len(all_rows)}/{_EXPECTED_TOTAL} valid rows")
@@ -266,7 +266,7 @@ def main() -> int:
         ax.axvline(25, color="black", linestyle="--", alpha=0.4)
         ax.set(xlabel="Configured action coverage",
                ylabel="OOD x delay interaction I_h",
-               title=f"Stage 3 New — prespecified interactions (n={len(seeds_present)} seeds)")
+               title=f"High-Power OOD–Delay Replication — prespecified interactions (n={len(seeds_present)} seeds)")
         ax.legend(fontsize=8)
         fig.tight_layout()
         fig.savefig(
@@ -296,7 +296,7 @@ def main() -> int:
             ax.set_xticklabels([labels.get(k, k) for k in ol_keys],
                                fontsize=8, rotation=15)
             ax.set(ylabel="Interaction I_25",
-                   title=f"Stage 3 New — object-layout cross-task (h=25, n={len(seeds_present)})")
+                   title=f"High-Power OOD–Delay Replication — object-layout cross-task (h=25, n={len(seeds_present)})")
             fig.tight_layout()
             fig.savefig(args.output_dir / "stage3_new_object_layout_cross_task.png", dpi=180)
             plt.close(fig)
@@ -306,12 +306,12 @@ def main() -> int:
     # Observations markdown.
     h25 = [r for r in interaction_records if int(r["configured_n_action_steps"]) == 25]
     lines = [
-        "# Stage 3 New — High-Power Replication Observations",
+        "# High-Power OOD–Delay Replication — High-Power Replication Observations",
         "",
         f"- Completed: {len(rows)}/{_EXPECTED_TOTAL} valid episodes.",
         f"- Fresh seeds: {min(seeds_present)}..{max(seeds_present)} "
         f"({len(seeds_present)} seeds per cell).",
-        "- Old Stage 3/3B seeds (14-21) excluded from all estimates.",
+        "- Old Held-Out OOD–Delay Horizon Confirmation/3B seeds (14-21) excluded from all estimates.",
         f"- Bootstrap: {args.bootstrap_replicates:,} replicates, "
         f"RNG seed {args.bootstrap_seed}.",
         "",
@@ -335,14 +335,14 @@ def main() -> int:
         )
     lines += [
         "", "## Guardrails", "",
-        "- Stage 3/3B rows (seeds 14-21) were NOT pooled into these estimates.",
+        "- Held-Out OOD–Delay Horizon Confirmation/3B rows (seeds 14-21) were NOT pooled into these estimates.",
         "- Sensor noise remains labeled `posthoc_replication`.",
-        "- Coverage selection (Stage 2) did not alter the frozen horizon set.",
+        "- Coverage selection (Confirmatory Horizon–Delay Operating Envelope) did not alter the frozen horizon set.",
     ]
     (args.output_dir / "STAGE_3_NEW_OBSERVATIONS.md").write_text(
         "\n".join(lines) + "\n")
 
-    print(f"PASS: Stage 3 New analysis complete -> {args.output_dir}")
+    print(f"PASS: High-Power OOD–Delay Replication analysis complete -> {args.output_dir}")
     return 0
 
 

@@ -49,7 +49,7 @@ def main():
     (a.output_dir/"stage4_validation.json").write_text(json.dumps(report,indent=2)+"\n")
     print(f"manifest={len(rows)} results={len(results)} missing={len(missing)} invalid={len(invalid)}")
     if errors: print(*(f"ERROR: {e}" for e in sorted(set(errors))),sep="\n"); return 1
-    print("Stage 4 validation passed"); return 0
+    print("Cross-Policy OpenVLA-OFT Diagnostic validation passed"); return 0
 
 
 if __name__=="__main__": raise SystemExit(main())

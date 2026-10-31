@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Generate the paper's Figures 1--5 and Table 1 from frozen result artifacts.
 
-The script performs no outcome selection.  It reads the completed Stage 1/2/3
-tables and the archived Stage 3B / Experiment A / Experiment B analysis tables.
+The script performs no outcome selection.  It reads the completed Exploratory OOD–Delay Screening/2/3
+tables and the archived Held-Out Object-Layout Cross-Task Replication / Object-Layout Generalization / Multi-Stage Task Generalization analysis tables.
 All outputs are written as both PNG and vector PDF where applicable.
 """
 
@@ -318,7 +318,7 @@ def figure3(stage1_episode_rows: list[dict[str, str]], four_cell: list[dict[str,
                      color="white" if abs(val) >= .3 else TEXT)
     cbar = fig.colorbar(im, ax=ax2, fraction=0.035, pad=0.025)
     cbar.set_label("OOD × delay interaction $I$")
-    fig.suptitle("Figure 3 | Broad OOD screen (Stage 1; exploratory, 5 seeds/cell)", fontsize=14, fontweight="bold", x=0.06, ha="left", y=1.02)
+    fig.suptitle("Figure 3 | Broad OOD screen (Exploratory OOD–Delay Screening; exploratory, 5 seeds/cell)", fontsize=14, fontweight="bold", x=0.06, ha="left", y=1.02)
     save(fig, out, "figure3_stage1_broad_ood_screen")
 
 
@@ -486,13 +486,13 @@ def figure5(
 def table1(out: Path) -> None:
     headers = ["Stage", "Design role", "Evidence", "Claim disposition"]
     rows = [
-        ["Stage 1", "Broad exploratory screen", "480 episodes; 7 OOD families", "No broad OOD amplification; localized candidates"],
-        ["Stage 2", "Operating-envelope sensitivity", "6 horizons × 4 delays × 3 tasks", "$h=10$ collapses; $h=20$–30 locally stable"],
-        ["Stage 3", "Held-out confirmation", "8 new seeds; frozen horizons", "Most candidates do not replicate; long × layout survives"],
-        ["Stage 3B", "Cross-task object-layout replication", "3 tasks across $h=20,25,30$", "Effect is task-dependent, not family-wide"],
-        ["Experiment A", "Within-task layout generalization", "3 new long-task layouts", "Negative in 2/3; heterogeneous across layouts"],
-        ["Experiment B", "Second-task generalization", "3 layouts on new multi-stage task", "Negative in 1/3; no general multi-stage vulnerability"],
-        ["Stage 3C", "Initialization audit", "Reset-only, failed closed", "One distinct OOD reset/variant; no initialization claim"],
+        ["Exploratory OOD–Delay Screening", "Broad exploratory screen", "480 episodes; 7 OOD families", "No broad OOD amplification; localized candidates"],
+        ["Confirmatory Horizon–Delay Operating Envelope", "Operating-envelope sensitivity", "6 horizons × 4 delays × 3 tasks", "$h=10$ collapses; $h=20$–30 locally stable"],
+        ["Held-Out OOD–Delay Horizon Confirmation", "Held-out confirmation", "8 new seeds; frozen horizons", "Most candidates do not replicate; long × layout survives"],
+        ["Held-Out Object-Layout Cross-Task Replication", "Cross-task object-layout replication", "3 tasks across $h=20,25,30$", "Effect is task-dependent, not family-wide"],
+        ["Object-Layout Generalization", "Within-task layout generalization", "3 new long-task layouts", "Negative in 2/3; heterogeneous across layouts"],
+        ["Multi-Stage Task Generalization", "Second-task generalization", "3 layouts on new multi-stage task", "Negative in 1/3; no general multi-stage vulnerability"],
+        ["Initialization-State Audit", "Initialization audit", "Reset-only, failed closed", "One distinct OOD reset/variant; no initialization claim"],
     ]
     with (out / "table1_experiment_progression.csv").open("w", newline="", encoding="utf-8") as handle:
         writer = csv.writer(handle)
@@ -519,7 +519,7 @@ def table1(out: Path) -> None:
                 cell.get_text().set_fontweight("bold")
                 cell.get_text().set_color(BLUE if r < 5 else PURPLE)
     ax.set_title("Table 1 | Experiment progression and claim disposition", fontsize=14, fontweight="bold", loc="left", pad=14)
-    ax.text(0, -0.03, "Stage 3C is a documented design limitation, not a policy-outcome experiment.", transform=ax.transAxes, fontsize=8.5)
+    ax.text(0, -0.03, "Initialization-State Audit is a documented design limitation, not a policy-outcome experiment.", transform=ax.transAxes, fontsize=8.5)
     save(fig, out, "table1_experiment_progression")
 
 

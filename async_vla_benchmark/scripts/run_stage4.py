@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run one serial scene shard of frozen Stage 4 with official OpenVLA-OFT."""
+"""Run one serial scene shard of frozen Cross-Policy OpenVLA-OFT Diagnostic with official OpenVLA-OFT."""
 from __future__ import annotations
 import argparse, gc, hashlib, json, os, traceback
 from pathlib import Path

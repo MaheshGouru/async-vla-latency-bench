@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # ============================================================
-# Stage 3 New — vast.ai A100 bootstrap script
+# High-Power OOD–Delay Replication — vast.ai A100 bootstrap script
 #
 # Run this once after SSH-ing into a fresh vast.ai instance.
-# Handles everything the Stage 1 notebooks do, condensed into
+# Handles everything the Exploratory OOD–Delay Screening notebooks do, condensed into
 # a single non-interactive script for vast.ai.
 #
 # Prerequisites (set before running):
@@ -61,7 +61,7 @@ if [ "$GPU_MEMORY" -lt 40000 ] || [ "$GPU_MEMORY" -gt 42000 ]; then
 fi
 
 echo "========================================================"
-echo "Stage 3 New — vast.ai setup"
+echo "High-Power OOD–Delay Replication — vast.ai setup"
 echo "========================================================"
 
 # -----------------------------------------------------------
@@ -254,8 +254,8 @@ echo "Assets: $ASSET_COUNT files in $ASSETS_TARGET"
 echo ""
 echo ">>> [8/8] Registering Jupyter kernels and checking imports..."
 
-"$VENV_ID/bin/python" -m ipykernel install --user --name stage1-id --display-name "Stage1-ID (py3.12)"
-"$VENV_OOD/bin/python" -m ipykernel install --user --name stage1-ood --display-name "Stage1-OOD (py3.12)"
+"$VENV_ID/bin/python" -m ipykernel install --user --name stage1-id --display-name "Exploratory-OOD-Delay-ID (py3.12)"
+"$VENV_OOD/bin/python" -m ipykernel install --user --name stage1-ood --display-name "Exploratory-OOD-Delay-OOD (py3.12)"
 
 export MUJOCO_GL=egl PYOPENGL_PLATFORM=egl MPLBACKEND=Agg
 

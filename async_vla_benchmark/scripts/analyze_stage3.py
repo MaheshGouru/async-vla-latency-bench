@@ -42,7 +42,7 @@ def main():
     if len(rows)!=288 and not args.allow_incomplete: raise ValueError(f"refusing incomplete analysis: {len(rows)}/288")
     if not args.allow_incomplete:
         unique={r["run_id"]:r for r in rows}
-        if len(unique)!=288: raise ValueError("duplicate result run_ids would bias Stage 3 analysis")
+        if len(unique)!=288: raise ValueError("duplicate result run_ids would bias Held-Out OOD–Delay Horizon Confirmation analysis")
         primary=[r for r in unique.values() if r["analysis_status"]==PRESPECIFIED]
         posthoc=[r for r in unique.values() if r["analysis_status"]==POSTHOC]
         if len(primary)!=240 or len(posthoc)!=48: raise ValueError("primary/post-hoc accounting must be 240/48")
@@ -74,7 +74,7 @@ def main():
     fig,ax=plt.subplots(figsize=(7,5))
     for key in ("object_layout","robot_initial_state","light_conditions"):
         subset=[r for r in interactions if r["perturbation_key"]==key]; ax.plot(HORIZONS,[float(r["interaction_I_h"]) for r in subset],marker="o",label=labels[key])
-    ax.axhline(0,color="black",linewidth=1); ax.axvline(25,color="black",linestyle="--",alpha=.4); ax.set(xlabel="Configured action coverage",ylabel="OOD × delay interaction I_h",title="Stage 3 prespecified held-out interactions"); ax.legend(); fig.tight_layout(); fig.savefig(args.output_dir/"stage3_prespecified_interaction_vs_horizon.png",dpi=180); plt.close(fig)
+    ax.axhline(0,color="black",linewidth=1); ax.axvline(25,color="black",linestyle="--",alpha=.4); ax.set(xlabel="Configured action coverage",ylabel="OOD × delay interaction I_h",title="Held-Out OOD–Delay Horizon Confirmation prespecified held-out interactions"); ax.legend(); fig.tight_layout(); fig.savefig(args.output_dir/"stage3_prespecified_interaction_vs_horizon.png",dpi=180); plt.close(fig)
     filenames={"object_layout":"stage3_object_layout.png","robot_initial_state":"stage3_robot_initial_state.png","light_conditions":"stage3_lighting.png","sensor_noise":"stage3_sensor_noise_posthoc.png"}
     for key,filename in filenames.items():
         subset=[r for r in four if r["perturbation_key"]==key]; fig,axes=plt.subplots(1,3,figsize=(11,3.5),sharey=True)
@@ -82,11 +82,11 @@ def main():
             ax.plot([0,200],[float(row["id_native_rate"]),float(row["id_plus_200_rate"])],marker="o",label="ID"); ax.plot([0,200],[float(row["ood_native_rate"]),float(row["ood_plus_200_rate"])],marker="o",label="OOD"); ax.set_title(f"h={h}"); ax.set_xticks([0,200],["Native","+200"]); ax.set_ylim(-.05,1.05)
         axes[0].set_ylabel("Success rate"); axes[-1].legend(); fig.suptitle(labels[key]); fig.tight_layout(); fig.savefig(args.output_dir/filename,dpi=180); plt.close(fig)
     h25=[r for r in interactions if int(r["configured_n_action_steps"])==25]
-    lines=["# Stage 3 OOD Confirmation Observations","",f"- Completed: {len(rows)}/288 episodes.","- Primary evidence: three prespecified task–perturbation candidates on held-out seeds.","- Sensor noise remains a separately labeled post-hoc replication.","","## h=25 confirmation gate",""]
+    lines=["# Held-Out OOD–Delay Horizon Confirmation OOD Confirmation Observations","",f"- Completed: {len(rows)}/288 episodes.","- Primary evidence: three prespecified task–perturbation candidates on held-out seeds.","- Sensor noise remains a separately labeled post-hoc replication.","","## h=25 confirmation gate",""]
     for r in h25: lines.append(f"- {r['task_key']} × {r['perturbation_key']} ({r['analysis_status']}): I_25={float(r['interaction_I_h']):+.3f}, paired bootstrap 95% CI [{float(r['paired_bootstrap95_low']):+.3f}, {float(r['paired_bootstrap95_high']):+.3f}].")
-    lines += ["","## Guardrail","","Stage 2 is supporting sensitivity evidence only. It did not alter the frozen Stage 3 horizons, delays, seeds, or exact Stage 1 OOD variant identities."]
+    lines += ["","## Guardrail","","Confirmatory Horizon–Delay Operating Envelope is supporting sensitivity evidence only. It did not alter the frozen Held-Out OOD–Delay Horizon Confirmation horizons, delays, seeds, or exact Exploratory OOD–Delay Screening OOD variant identities."]
     (args.output_dir/"STAGE_3_OOD_CONFIRMATION_OBSERVATIONS.md").write_text("\n".join(lines)+"\n")
-    print(f"PASS: complete Stage 3 analysis generated in {args.output_dir}"); return 0
+    print(f"PASS: complete Held-Out OOD–Delay Horizon Confirmation analysis generated in {args.output_dir}"); return 0
 
 
 if __name__=="__main__": raise SystemExit(main())

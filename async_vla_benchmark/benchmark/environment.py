@@ -283,7 +283,7 @@ def available_initialization_count(environment: Any) -> int:
 def resolve_episode_index(environment: Any) -> int:
     """Read the init-state array index actually selected by LIBERO.
 
-    Stage 3C must verify resolution rather than assume that passing an index to
+    Initialization-State Audit must verify resolution rather than assume that passing an index to
     a constructor prevents clamping, wrapping, or fallback. The pinned wrapper
     selects ``_init_states[episode_index % len(_init_states)]``; reproduce that
     resolution explicitly so an out-of-range request cannot masquerade as the
@@ -308,7 +308,7 @@ def resolve_episode_index(environment: Any) -> int:
             if child is not None and child is not obj:
                 pending.append(child)
     raise EnvironmentUnavailable(
-        "LIBERO did not expose the resolved episode_index; Stage 3C cannot "
+        "LIBERO did not expose the resolved episode_index; Initialization-State Audit cannot "
         "verify requested-index dispatch and therefore fails closed."
     )
 

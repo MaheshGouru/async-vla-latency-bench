@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Materialize the frozen 480-row Stage 1 analysis manifest."""
+"""Materialize the frozen 480-row Exploratory OOD–Delay Screening analysis manifest."""
 
 import argparse
 import csv
@@ -48,7 +48,7 @@ def main() -> int:
         _variants(args.variants), load_selected_delay(args.selected_delay), provenance
     )
     write_dataclass_csv(args.output, plans)
-    print(f"wrote {len(plans)} rows: 420 OOD, 36 new ID, 24 reused Stage 0")
+    print(f"wrote {len(plans)} rows: 420 OOD, 36 new ID, 24 reused Latency Calibration and Instrumentation")
     return 0
 
 

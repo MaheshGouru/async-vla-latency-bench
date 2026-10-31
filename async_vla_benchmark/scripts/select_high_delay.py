@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Stage 0 — apply the frozen `d*` rule and emit the calibration tables.
+"""Latency Calibration and Instrumentation — apply the frozen `d*` rule and emit the calibration tables.
 
     python -m async_vla_benchmark.scripts.select_high_delay \
         --results async_vla_benchmark/outputs/stage0/latency_calibration_episode_results.csv
@@ -278,7 +278,7 @@ def main() -> int:
     rows, raw = load_rows(args.results)
     valid = [r for r in rows if r.status == "ok"]
     # Derive from SEEDS rather than a literal: this was `* 2` and would have
-    # accepted a third of the grid as "complete" once Stage 0 moved to six seeds.
+    # accepted a third of the grid as "complete" once Latency Calibration and Instrumentation moved to six seeds.
     expected = len(stage0_manifest())
     if args.require_complete and len(valid) < expected:
         raise SystemExit(
@@ -309,7 +309,7 @@ def main() -> int:
         print(f"WARN {note}")
     print(f"\nwrote selected_high_delay.json and 4 tables to {out_dir}")
 
-    # Nonzero exit on a flagged calibration: Stage 1 is still runnable, but the
+    # Nonzero exit on a flagged calibration: Exploratory OOD–Delay Screening is still runnable, but the
     # decision to proceed should be deliberate rather than implied by silence.
     if result.calibration_weak or result.calibration_saturated or result.insufficient_viable_cells:
         return 2

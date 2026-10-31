@@ -1,4 +1,4 @@
-"""Pure Stage 1 design, variant resolution, manifest, and interaction helpers."""
+"""Pure Exploratory OOD–Delay Screening design, variant resolution, manifest, and interaction helpers."""
 
 from __future__ import annotations
 
@@ -166,7 +166,7 @@ def stage1_manifest(
     provenance: Mapping[str, str],
 ) -> list[Stage1Plan]:
     if high_delay_ms != 200:
-        raise ValueError(f"Stage 1 high delay is frozen at 200 ms, got {high_delay_ms}")
+        raise ValueError(f"Exploratory OOD–Delay Screening high delay is frozen at 200 ms, got {high_delay_ms}")
     by_pair = {(v.task_key, v.perturbation_key): v for v in variants}
     if len(by_pair) != 21:
         raise ValueError("resolved variant mapping must contain 21 unique task/perturbation pairs")
@@ -187,7 +187,7 @@ def stage1_manifest(
                         0 if delay == "low" else high_delay_ms, seed, N_ACTION_STEPS,
                         (f"stage0_reuse/episodes/{source_run_id}.json" if reuse else f"episodes/{run_id}.json"), reuse, source_run_id,
                         "pending",
-                        "Stage 0 identity metadata incomplete; reuse accepted as documented limitation" if reuse else "",
+                        "Latency Calibration and Instrumentation identity metadata incomplete; reuse accepted as documented limitation" if reuse else "",
                     ))
         for perturbation in PERTURBATIONS:
             variant = by_pair[(task.task_key, perturbation.key)]
@@ -218,7 +218,7 @@ def validate_manifest(plans: Sequence[Stage1Plan], high_delay_ms: int = 200) -> 
     if sum(p.scene_condition == "ood" for p in plans) != 420:
         raise ValueError("manifest must contain 420 OOD rows")
     if sum(p.reuse_stage0 for p in plans) != 24:
-        raise ValueError("manifest must mark exactly 24 Stage 0 rows for reuse")
+        raise ValueError("manifest must mark exactly 24 Latency Calibration and Instrumentation rows for reuse")
     if {p.seed for p in plans} != set(SEEDS):
         raise ValueError("manifest seed set is not frozen")
     if any(p.n_action_steps != N_ACTION_STEPS for p in plans):

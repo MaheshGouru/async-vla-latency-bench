@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate the frozen Stage 2 matrix and request-level diagnostics."""
+"""Validate the frozen Confirmatory Horizon–Delay Operating Envelope matrix and request-level diagnostics."""
 
 import argparse
 from collections import defaultdict
@@ -118,7 +118,7 @@ def main() -> int:
     if errors:
         for error in errors: print(f"ERROR: {error}")
         return 1
-    print("Stage 2 validation passed")
+    print("Confirmatory Horizon–Delay Operating Envelope validation passed")
     return 0
 
 

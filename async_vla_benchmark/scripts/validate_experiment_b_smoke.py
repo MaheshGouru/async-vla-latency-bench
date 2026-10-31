@@ -18,7 +18,7 @@ def main():
     if len(rows) != 8 or {row["seed"] for row in rows} != {"999"}:
         errors.append("smoke manifest must contain 8 seed-999 rows")
     if {row.get("experiment_a_dispatch_gate_sha256") for row in rows} != {gate_hash}:
-        errors.append("smoke manifest does not consume the passing Experiment A gate")
+        errors.append("smoke manifest does not consume the passing Object-Layout Generalization gate")
     result_path = args.output_dir / "experiment_b_episode_results.csv"
     results = read_csv(result_path) if result_path.exists() else []; by_id = {row["run_id"]: row for row in results}
     for row in rows:
@@ -32,7 +32,7 @@ def main():
     (args.output_dir / "experiment_b_smoke_validation.json").write_text(json.dumps(report, indent=2) + "\n")
     if errors:
         print(*(f"ERROR: {error}" for error in errors), sep="\n"); return 1
-    print("PASS: 8 seed-999 Experiment B smoke episodes; no analysis seeds used; Experiment A gate verified")
+    print("PASS: 8 seed-999 Multi-Stage Task Generalization smoke episodes; no analysis seeds used; Object-Layout Generalization gate verified")
     return 0
 
 

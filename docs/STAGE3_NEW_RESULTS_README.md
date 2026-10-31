@@ -1,4 +1,4 @@
-# Stage 3 New results archive
+# High-Power OOD–Delay Replication results archive
 
 The complete 64-seed run is stored at:
 

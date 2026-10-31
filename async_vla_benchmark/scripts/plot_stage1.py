@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate all required Stage 1 figures from validated CSV artifacts."""
+"""Generate all required Exploratory OOD–Delay Screening figures from validated CSV artifacts."""
 
 import argparse
 import os
@@ -61,7 +61,7 @@ def main() -> int:
 
     fig,ax=plt.subplots(figsize=(9,5)); valid=[r for r in results if r.get("action_age_p95_ms") not in ("","nan")]
     ax.scatter([float(r["action_age_p95_ms"]) for r in valid],[int(r["success"]) for r in valid],alpha=.35); ax.set_xlabel("p95 action age (ms)"); ax.set_ylabel("success"); fig.tight_layout(); fig.savefig(args.output_dir/"stage1_action_age_outcome.png",dpi=180); plt.close(fig)
-    print(f"wrote required Stage 1 figures to {args.output_dir}")
+    print(f"wrote required Exploratory OOD–Delay Screening figures to {args.output_dir}")
     return 0
 
 

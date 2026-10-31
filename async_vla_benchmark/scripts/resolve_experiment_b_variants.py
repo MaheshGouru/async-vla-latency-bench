@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Deterministically freeze the three Experiment B object-layout variants."""
+"""Deterministically freeze the three Multi-Stage Task Generalization object-layout variants."""
 import argparse
 import csv
 import hashlib

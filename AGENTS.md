@@ -8,23 +8,23 @@ Before making changes, read these files completely:
 
 ## Current objective
 
-Implement the frozen Stage 3 held-out OOD confirmation without modifying Stage 0
-or Stage 1 artifacts.
+Implement the frozen Held-Out OOD–Delay Horizon Confirmation without modifying Latency Calibration and Instrumentation
+or Exploratory OOD–Delay Screening artifacts.
 
-Required Stage 3 execution conditions:
+Required Held-Out OOD–Delay Horizon Confirmation execution conditions:
 
 - RTC only
 - `n_action_steps = {20,25,30}`
 - Native and Native + 200 ms
 - held-out seeds `14..21`
-- exact Stage 1 OOD variants frozen in `STAGE_3_OOD_HORIZON_CONFIRMATION.md`
+- exact Exploratory OOD–Delay Screening OOD variants frozen in `STAGE_3_OOD_HORIZON_CONFIRMATION.md`
 - 96 logically shared ID controls and 192 OOD episodes
 - sensor noise labeled only as `posthoc_replication`
 - strict initialization pairing across the six horizon/delay cells for each
   `(task, variant, seed, scene)` key
 
-Stage 2 is supporting sensitivity evidence only. It must not alter the frozen
-Stage 3 horizons, delays, seeds, or exact Stage 1 OOD variant identities. Surface
+Confirmatory Horizon–Delay Operating Envelope is supporting sensitivity evidence only. It must not alter the frozen
+Held-Out OOD–Delay Horizon Confirmation horizons, delays, seeds, or exact Exploratory OOD–Delay Screening OOD variant identities. Surface
 documentation inconsistencies for review rather than changing the experiment.
 
 Do not implement VLASH, FASTER, DEHP, SmolVLA, OpenVLA, dynamic interventions,

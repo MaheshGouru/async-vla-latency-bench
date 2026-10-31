@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Execute one Stage 3C scene shard (reset/fingerprint only; no policy)."""
+"""Execute one Initialization-State Audit scene shard (reset/fingerprint only; no policy)."""
 import argparse
 import hashlib
 import importlib.metadata
@@ -54,7 +54,7 @@ def main():
 
     cfg = yaml.safe_load(args.config.read_text())
     if not isinstance(cfg, dict):
-        raise ValueError("Stage 3C environment config must be a mapping")
+        raise ValueError("Initialization-State Audit environment config must be a mapping")
     frozen = read_csv(args.frozen_variants)
     assert_frozen_variants(frozen)
     _configure_libero_home(args.scene)
@@ -92,7 +92,7 @@ def main():
                     initialization_state_count = available_initialization_count(env)
                     method, fingerprint = initial_state_fingerprint(env, None)
                     if method != FINGERPRINT_METHOD:
-                        raise RuntimeError(f"unsupported Stage 3C fingerprint method: {method}")
+                        raise RuntimeError(f"unsupported Initialization-State Audit fingerprint method: {method}")
                 finally:
                     if hasattr(env, "close"):
                         env.close()
@@ -130,7 +130,7 @@ def main():
                       f"resolved={resolved}", f"available={initialization_state_count}",
                       f"repeat={repeat_id}", fingerprint)
     write_csv(output, rows)
-    print(f"PASS: Stage 3C {args.scene} shard wrote {len(TASKS)*len(INITIALIZATION_INDICES)*len(REPEAT_IDS)} reset-only rows")
+    print(f"PASS: Initialization-State Audit {args.scene} shard wrote {len(TASKS)*len(INITIALIZATION_INDICES)*len(REPEAT_IDS)} reset-only rows")
     return 0
 
 

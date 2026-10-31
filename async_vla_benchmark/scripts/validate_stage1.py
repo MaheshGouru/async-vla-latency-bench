@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate Stage 1 manifest coverage and completed episode artifacts."""
+"""Validate Exploratory OOD–Delay Screening manifest coverage and completed episode artifacts."""
 
 import argparse
 from collections import Counter
@@ -22,7 +22,7 @@ def main() -> int:
     if counts != {"id": 60, "ood": 420}:
         errors.append(f"wrong scene counts: {dict(counts)}")
     if sum(r["reuse_stage0"].lower() == "true" for r in manifest) != 24:
-        errors.append("expected 24 Stage 0 reuse rows")
+        errors.append("expected 24 Latency Calibration and Instrumentation reuse rows")
     if {r["seed"] for r in manifest} != {"0", "1", "2", "3", "4"}:
         errors.append("wrong seed set")
     if any(r["n_action_steps"] != "25" for r in manifest): errors.append("non-25 action horizon")
@@ -48,16 +48,16 @@ def main() -> int:
             if result.get(field, "") == "": errors.append(f"{row['run_id']}: missing metric {field}")
         if result.get("source") == "stage0_reuse_unverified_identity":
             if any(result.get(field) for field in ("git_sha", "lerobot_git_sha", "model_revision", "environment_fingerprint")):
-                errors.append(f"{row['run_id']}: reused row falsely claims verified Stage 0 identity")
+                errors.append(f"{row['run_id']}: reused row falsely claims verified Latency Calibration and Instrumentation identity")
         elif any(not result.get(field) for field in ("git_sha", "lerobot_git_sha", "model_revision", "environment_fingerprint")):
-            errors.append(f"{row['run_id']}: new Stage 1 row missing immutable identity")
+            errors.append(f"{row['run_id']}: new Exploratory OOD–Delay Screening row missing immutable identity")
     if missing and not args.allow_incomplete: errors.append(f"{len(missing)} missing result rows")
     if invalid: errors.append(f"{len(invalid)} invalid result rows")
     print(f"manifest=480 results={len(results)} missing={len(missing)} invalid={len(invalid)}")
     if errors:
         for error in errors: print(f"ERROR: {error}")
         return 1
-    print("Stage 1 validation passed")
+    print("Exploratory OOD–Delay Screening validation passed")
     return 0
 
 

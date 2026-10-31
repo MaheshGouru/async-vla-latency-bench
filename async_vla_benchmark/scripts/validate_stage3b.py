@@ -38,5 +38,5 @@ def main():
  if invalid: errors.append(f"{len(invalid)} invalid results")
  print(f"manifest=144 results={len(results)} missing={len(missing)} invalid={len(invalid)} reused_goal_id={len(reuse)}")
  if errors: print(*(f"ERROR: {x}" for x in errors),sep="\n"); return 1
- print("Stage 3B validation passed"); return 0
+ print("Held-Out Object-Layout Cross-Task Replication validation passed"); return 0
 if __name__=="__main__": raise SystemExit(main())

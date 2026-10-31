@@ -1,4 +1,4 @@
-"""Pinned official OpenVLA-OFT adapter for the Stage 4 LIBERO diagnostic."""
+"""Pinned official OpenVLA-OFT adapter for the Cross-Policy OpenVLA-OFT Diagnostic LIBERO diagnostic."""
 
 from __future__ import annotations
 
@@ -52,7 +52,7 @@ class OpenVLAOFTPolicy:
             load_in_8bit=False, load_in_4bit=False, use_wandb=False,
         )
         self.model, self.action_head, self.proprio_projector, noisy, self.processor = initialize_model(self.cfg)
-        if noisy is not None: raise RuntimeError("Stage 4 prohibits a diffusion/noisy-action projector")
+        if noisy is not None: raise RuntimeError("Cross-Policy OpenVLA-OFT Diagnostic prohibits a diffusion/noisy-action projector")
         self._get_vla_action = get_vla_action
         self._resize = resize_image_for_policy
         self.current_suite = None

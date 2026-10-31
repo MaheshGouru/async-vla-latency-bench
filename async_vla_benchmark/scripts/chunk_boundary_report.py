@@ -1,7 +1,7 @@
 """Is naive_async's 0/6 an open-loop-horizon failure or a staleness failure?
 
 Runs on episodes already on disk. No GPU, no new episodes, no third execution
-strategy -- only the naive_async and rtc traces Stage 0 already wrote.
+strategy -- only the naive_async and rtc traces Latency Calibration and Instrumentation already wrote.
 
 The question the pooled success table cannot answer: naive_async scored 0/6 at
 Native ID on spatial_transport and long_stove_moka while rtc scored 6/6 and 5/6.

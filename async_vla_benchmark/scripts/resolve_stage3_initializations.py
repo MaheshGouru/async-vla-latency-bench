@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Resolve Stage 3 reset fingerprints one scene environment at a time."""
+"""Resolve Held-Out OOD–Delay Horizon Confirmation reset fingerprints one scene environment at a time."""
 import argparse
 import os
 from collections import defaultdict
@@ -35,7 +35,7 @@ def main():
         # runtime wins the loader-order race in the no-sudo Jupyter image.
         from wand.api import library as _wand_library  # noqa: F401
     cfg = load_config(args.config); rows = read_csv(args.manifest)
-    if len(rows) != args.expected_rows: raise ValueError(f"expected {args.expected_rows} Stage 3 rows, got {len(rows)}")
+    if len(rows) != args.expected_rows: raise ValueError(f"expected {args.expected_rows} Held-Out OOD–Delay Horizon Confirmation rows, got {len(rows)}")
     _configure_libero_home(args.scene)
     selected = [r for r in rows if r["scene"] == args.scene]
     identities = {}; audit_rows = []
@@ -94,7 +94,7 @@ def main():
         groups[key].add((row["initialization_index_or_id"], row["initial_state_fingerprint_method"], row["initial_state_fingerprint"]))
         counts[key] += 1
     if set(counts.values()) != {args.expected_cells_per_key} or any(len(v) != 1 for v in groups.values()):
-        raise ValueError(f"Stage 3 {args.scene} pairing invariant failed")
+        raise ValueError(f"Held-Out OOD–Delay Horizon Confirmation {args.scene} pairing invariant failed")
     write_csv(args.manifest, rows)
     if args.audit_output:
         previous = read_csv(args.audit_output) if args.audit_output.exists() else []

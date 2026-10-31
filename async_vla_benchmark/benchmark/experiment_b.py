@@ -1,4 +1,4 @@
-"""Frozen Experiment B cross-task object-layout generalization."""
+"""Frozen Multi-Stage Task Generalization cross-task object-layout generalization."""
 from __future__ import annotations
 
 import hashlib
@@ -44,15 +44,15 @@ def validate_experiment_a_gate(path: Path) -> str:
         "validation_status": "pass",
     }
     if any(gate.get(key) != value for key, value in required.items()):
-        raise ValueError("Experiment A dispatch gate is absent, failed, or incompatible")
+        raise ValueError("Object-Layout Generalization dispatch gate is absent, failed, or incompatible")
     if int(gate.get("negative_variants", -1)) < 2 or float(gate.get("mean_interaction", 0.0)) >= 0:
-        raise ValueError("Experiment A did not satisfy the frozen directional gate")
+        raise ValueError("Object-Layout Generalization did not satisfy the frozen directional gate")
     for field in ("validation_sha256", "experiment_a_results_sha256", "frozen_variants_sha256"):
         value = str(gate.get(field, ""))
         if len(value) != 64:
-            raise ValueError(f"Experiment A gate lacks valid {field}")
+            raise ValueError(f"Object-Layout Generalization gate lacks valid {field}")
         try: int(value, 16)
-        except ValueError as exc: raise ValueError(f"Experiment A gate has non-hex {field}") from exc
+        except ValueError as exc: raise ValueError(f"Object-Layout Generalization gate has non-hex {field}") from exc
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
@@ -66,7 +66,7 @@ def select_variant_entries(entries, api_names):
     try:
         candidates.sort(key=lambda entry: (abs(int(entry["difficulty_level"]) - 2), int(entry["id"])))
     except (TypeError, ValueError) as exc:
-        raise ValueError("Experiment B matched an unscored object-layout candidate") from exc
+        raise ValueError("Multi-Stage Task Generalization matched an unscored object-layout candidate") from exc
     if len(candidates) < 3:
         raise ValueError(f"only {len(candidates)} eligible variants; exactly 3 required")
     names = list(api_names)
@@ -90,7 +90,7 @@ def select_variant_entries(entries, api_names):
 
 def validate_frozen_variants(variants: Sequence[Mapping[str, str]]) -> None:
     if len(variants) != 3 or len({row["classification_id"] for row in variants}) != 3:
-        raise ValueError("Experiment B requires exactly three unique frozen variants")
+        raise ValueError("Multi-Stage Task Generalization requires exactly three unique frozen variants")
     expected = {
         "task_key": TASK_KEY, "suite": SUITE, "base_task_id": str(BASE_TASK_ID),
         "base_task_name": BASE_TASK_NAME, "task_demand_type": TASK_DEMAND_TYPE,
@@ -99,9 +99,9 @@ def validate_frozen_variants(variants: Sequence[Mapping[str, str]]) -> None:
     }
     for row in variants:
         if any(row.get(key) != value for key, value in expected.items()):
-            raise ValueError(f"invalid Experiment B frozen variant row: {row}")
+            raise ValueError(f"invalid Multi-Stage Task Generalization frozen variant row: {row}")
         if not row["variant_name"].startswith(BASE_TASK_NAME):
-            raise ValueError("variant does not match the frozen Experiment B base task")
+            raise ValueError("variant does not match the frozen Multi-Stage Task Generalization base task")
         int(row["classification_id"]); int(row["api_task_index"]); int(row["difficulty_level"])
 
 
@@ -160,20 +160,20 @@ def experiment_b_manifest(variants, provenance, frozen_hash, gate_hash):
 
 def validate_manifest(rows, variants, frozen_hash, gate_hash):
     if len(rows) != 64 or len({row["run_id"] for row in rows}) != 64:
-        raise ValueError("Experiment B manifest must contain 64 unique episodes")
+        raise ValueError("Multi-Stage Task Generalization manifest must contain 64 unique episodes")
     if sum(row["scene"] == "id" for row in rows) != 16 or sum(row["scene"] == "ood" for row in rows) != 48:
-        raise ValueError("Experiment B accounting must be 16 ID + 48 OOD")
+        raise ValueError("Multi-Stage Task Generalization accounting must be 16 ID + 48 OOD")
     if {int(row["seed"]) for row in rows} != set(SEEDS) or {int(row["added_delay_ms"]) for row in rows} != set(DELAYS):
-        raise ValueError("Experiment B seeds or delays changed")
+        raise ValueError("Multi-Stage Task Generalization seeds or delays changed")
     if {int(row["configured_n_action_steps"]) for row in rows} != {HORIZON} or {row["execution_method"] for row in rows} != {"rtc"}:
-        raise ValueError("Experiment B method/horizon changed")
+        raise ValueError("Multi-Stage Task Generalization method/horizon changed")
     if {row["frozen_variant_csv_sha256"] for row in rows} != {frozen_hash}:
         raise ValueError("manifest does not consume one frozen variant artifact")
     if {row["experiment_a_dispatch_gate_sha256"] for row in rows} != {gate_hash}:
-        raise ValueError("manifest does not consume the passing Experiment A gate")
+        raise ValueError("manifest does not consume the passing Object-Layout Generalization gate")
     expected = {(v["classification_id"], v["api_task_index"], v["difficulty_level"], v["variant_name"]) for v in variants}
     actual = {(r["classification_id"], str(r["api_task_index"]), r["difficulty_level"], r["variant_name"]) for r in rows if r["scene"] == "ood"}
     if actual != expected:
         raise ValueError("manifest variant identities differ from frozen CSV")
     if any(str(row.get("requested_initialization_index")) != "0" for row in rows):
-        raise ValueError("Experiment B must request initialization zero")
+        raise ValueError("Multi-Stage Task Generalization must request initialization zero")

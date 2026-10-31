@@ -41,5 +41,5 @@ def main():
  a.output_dir.mkdir(parents=True,exist_ok=True); (a.output_dir/"experiment_a_validation.json").write_text(json.dumps(report,indent=2)+"\n")
  print(f"manifest={len(rows)} results={len(results)} missing={len(missing)} invalid={len(invalid)} variants={len(variants)}")
  if errors: print(*(f"ERROR: {e}" for e in sorted(set(errors))),sep="\n"); return 1
- print("Experiment A validation passed"); return 0
+ print("Object-Layout Generalization validation passed"); return 0
 if __name__=="__main__": raise SystemExit(main())

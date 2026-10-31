@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Create an isolated non-analysis Stage 3 smoke manifest on seed 999."""
+"""Create an isolated non-analysis Held-Out OOD–Delay Horizon Confirmation smoke manifest on seed 999."""
 import argparse
 from dataclasses import replace
 from pathlib import Path

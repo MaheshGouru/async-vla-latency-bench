@@ -1,4 +1,4 @@
-"""Frozen Stage 3 held-out OOD confirmation design."""
+"""Frozen Held-Out OOD–Delay Horizon Confirmation design."""
 
 from __future__ import annotations
 
@@ -164,24 +164,24 @@ def stage3_manifest(provenance: Mapping[str, str]) -> list[Stage3Plan]:
 
 def validate_manifest(rows: Sequence[Stage3Plan]) -> None:
     if len(rows) != 288 or len({row.run_id for row in rows}) != 288:
-        raise ValueError("Stage 3 manifest must contain 288 unique episodes")
-    if {row.configured_n_action_steps for row in rows} != set(HORIZONS): raise ValueError("wrong Stage 3 horizons")
-    if {row.added_delay_ms for row in rows} != set(ADDED_DELAYS_MS): raise ValueError("wrong Stage 3 delays")
-    if {row.seed for row in rows} != set(SEEDS): raise ValueError("wrong Stage 3 seeds")
-    if any(row.execution_method != METHOD for row in rows): raise ValueError("Stage 3 is RTC-only")
+        raise ValueError("Held-Out OOD–Delay Horizon Confirmation manifest must contain 288 unique episodes")
+    if {row.configured_n_action_steps for row in rows} != set(HORIZONS): raise ValueError("wrong Held-Out OOD–Delay Horizon Confirmation horizons")
+    if {row.added_delay_ms for row in rows} != set(ADDED_DELAYS_MS): raise ValueError("wrong Held-Out OOD–Delay Horizon Confirmation delays")
+    if {row.seed for row in rows} != set(SEEDS): raise ValueError("wrong Held-Out OOD–Delay Horizon Confirmation seeds")
+    if any(row.execution_method != METHOD for row in rows): raise ValueError("Held-Out OOD–Delay Horizon Confirmation is RTC-only")
     if sum(row.scene == "id" for row in rows) != 96 or sum(row.scene == "ood" for row in rows) != 192:
-        raise ValueError("Stage 3 must contain 96 shared ID and 192 OOD episodes")
+        raise ValueError("Held-Out OOD–Delay Horizon Confirmation must contain 96 shared ID and 192 OOD episodes")
     condition_keys = {
         (row.scene, row.task_key, row.variant_name, row.configured_n_action_steps,
          row.added_delay_ms, row.seed)
         for row in rows
     }
     if len(condition_keys) != 288:
-        raise ValueError("Stage 3 contains duplicate scene/task/variant/horizon/delay/seed conditions")
+        raise ValueError("Held-Out OOD–Delay Horizon Confirmation contains duplicate scene/task/variant/horizon/delay/seed conditions")
     if sum(row.analysis_status == PRESPECIFIED for row in rows) != 240:
-        raise ValueError("Stage 3 primary analysis must contain exactly 240 unique episodes")
+        raise ValueError("Held-Out OOD–Delay Horizon Confirmation primary analysis must contain exactly 240 unique episodes")
     if sum(row.analysis_status == POSTHOC for row in rows) != 48:
-        raise ValueError("Stage 3 post-hoc sensor-noise replication must contain exactly 48 episodes")
+        raise ValueError("Held-Out OOD–Delay Horizon Confirmation post-hoc sensor-noise replication must contain exactly 48 episodes")
     expected = {
         (str(v["classification_id"]), v["api_task_index"], v["variant_name"],
          str(v["difficulty_level"]), v["analysis_status"])
@@ -193,7 +193,7 @@ def validate_manifest(rows: Sequence[Stage3Plan]) -> None:
         for row in rows if row.scene == "ood"
     }
     if actual != expected:
-        raise ValueError("Stage 3 exact frozen OOD variant identities changed")
+        raise ValueError("Held-Out OOD–Delay Horizon Confirmation exact frozen OOD variant identities changed")
     if any(row.rtc_execution_horizon != row.configured_n_action_steps for row in rows): raise ValueError("RTC horizon mismatch")
     if any(row.request_threshold_actions != row.configured_n_action_steps for row in rows): raise ValueError("request threshold mismatch")
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Stage 0 follow-up: widen the calibration grid before freezing d*.
+# Latency Calibration and Instrumentation follow-up: widen the calibration grid before freezing d*.
 #
 # Adds seeds 14-19 to the four viable cells, taking each pooled point from n=24
 # to n=48. At n=24 the frozen rule reproduces its own d*=200 only about half the
@@ -9,7 +9,7 @@
 # stage, so this is the cheapest place in the pipeline to buy that precision.
 #
 # Two strategies only, naive_async and rtc, exactly as EXECUTION_METHODS freezes
-# them. Nothing here introduces a condition the Stage 1 factorial does not have.
+# them. Nothing here introduces a condition the Exploratory OOD–Delay Screening factorial does not have.
 #
 # The separate question -- why naive_async is 0/6 at Native ID on
 # spatial_transport and long_stove_moka -- needs no episodes at all. Run

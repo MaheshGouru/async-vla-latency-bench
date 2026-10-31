@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Resolve and freeze the 21 Stage 1 LIBERO-Plus variants."""
+"""Resolve and freeze the 21 Exploratory OOD–Delay Screening LIBERO-Plus variants."""
 
 import argparse
 import json

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Deterministically freeze three new Experiment A object-layout variants."""
+"""Deterministically freeze three new Object-Layout Generalization object-layout variants."""
 import argparse, csv, json, os, sys
 from pathlib import Path
 

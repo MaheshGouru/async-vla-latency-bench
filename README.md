@@ -14,9 +14,29 @@ distribution shift affect asynchronous vision-language-action (VLA) execution.
 - [`docs/`](docs/) — experiment protocols, results ledger, reproducibility notes, and runbooks.
 - [`DataArchive/`](DataArchive/) — selected tracked benchmark artifacts; the large 64-seed episode archive is intentionally kept outside Git.
 
+## Public experiment names
+
+The descriptive names below are used in documentation and progress reports.
+Machine-facing identifiers such as `stage3_new` remain unchanged in scripts,
+manifests, filenames, and archived results.
+
+| Internal ID | Public name |
+|---|---|
+| Stage 0 | Latency Calibration and Instrumentation |
+| Stage 1 | Exploratory OOD–Delay Screening |
+| Stage 2 | Confirmatory Horizon–Delay Operating Envelope |
+| Stage 3 | Held-Out OOD–Delay Horizon Confirmation |
+| Stage 3B | Held-Out Object-Layout Cross-Task Replication |
+| Stage 3C | Initialization-State Audit |
+| Stage 3 New | High-Power OOD–Delay Replication |
+| Experiment A | Object-Layout Generalization |
+| Experiment B | Multi-Stage Task Generalization |
+| Stage 4 | Cross-Policy OpenVLA-OFT Diagnostic |
+| Stage 5 | OpenVLA-OFT Temporal-Coverage Calibration |
+
 ## Reproduce the results
 
-The final primary-policy experiment is the Stage 3 New high-power replication:
+The final primary-policy experiment is the High-Power OOD–Delay Replication:
 RTC execution, horizons \(h \in \{20,25,30\}\), native and +200 ms logical
 delay, six frozen OOD task–perturbation candidates, and 64 seeds (`46..109`)
 per cell. It produces 3,456 physical episode rows. The complete protocol is in

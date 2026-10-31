@@ -1,6 +1,6 @@
 # STATUS — CANCELED BEFORE EXECUTION
 
-**Canceled on 2026-08-26. No Stage 5 OpenVLA-OFT experiments will be run.**
+**Canceled on 2026-08-26. No OpenVLA-OFT Temporal-Coverage Calibration experiments will be run.**
 
 The protocol below is retained only for provenance. It must not be dispatched.
 The active final experiment is:
@@ -9,35 +9,35 @@ The active final experiment is:
 STAGE_3_NEW_HIGH_POWER_REPLICATION.md
 ```
 
-Reason: reviewer feedback identified low rollout count in the existing Stage 3 /
-Stage 3B four-cell interaction estimates as the higher-value limitation to
+Reason: reviewer feedback identified low rollout count in the existing Held-Out OOD–Delay Horizon Confirmation /
+Held-Out Object-Layout Cross-Task Replication four-cell interaction estimates as the higher-value limitation to
 address. The remaining compute budget is therefore concentrated on a fresh
-64-seed replication of the π0.5 Stage 3/3B matrix.
+64-seed replication of the π0.5 Held-Out OOD–Delay Horizon Confirmation and Held-Out Object-Layout Cross-Task Replication matrix.
 
 ---
 
-# Stage 5 — OpenVLA-OFT Temporal-Coverage Calibration and Final Second-Policy Replication
+# OpenVLA-OFT Temporal-Coverage Calibration — OpenVLA-OFT Temporal-Coverage Calibration and Final Second-Policy Replication
 
 ## 0. Motivation
 
-Stage 4 used OpenVLA-OFT's native/default 8-action chunk under naive asynchronous execution. That was a defensible policy-native diagnostic, but unlike π0.5 it was **not preceded by an ID-only temporal-coverage calibration**.
+Cross-Policy OpenVLA-OFT Diagnostic used OpenVLA-OFT's native/default 8-action chunk under naive asynchronous execution. That was a defensible policy-native diagnostic, but unlike π0.5 it was **not preceded by an ID-only temporal-coverage calibration**.
 
-Stage 4 therefore remains a valid completed native-stack diagnostic, but it must not be treated as the final calibrated cross-policy experiment until we determine whether OpenVLA-OFT's executable action coverage is actually tunable.
+Cross-Policy OpenVLA-OFT Diagnostic therefore remains a valid completed native-stack diagnostic, but it must not be treated as the final calibrated cross-policy experiment until we determine whether OpenVLA-OFT's executable action coverage is actually tunable.
 
-Stage 5 has two parts:
+OpenVLA-OFT Temporal-Coverage Calibration has two parts:
 
 ```text
-Stage 5A = capability audit + ID-only temporal-coverage calibration
-Stage 5B = final OOD × delay replication at the frozen Stage-5A operating point, only if a legitimate alternative coverage exists
+OpenVLA-OFT Temporal-Coverage Calibration Phase A = capability audit + ID-only temporal-coverage calibration
+OpenVLA-OFT Temporal-Coverage Calibration Phase B = final OOD × delay replication at the frozen OpenVLA-OFT Temporal-Coverage Calibration Phase A operating point, only if a legitimate alternative coverage exists
 ```
 
-Do not call Stage 5A a search for the "best" chunk length. The goal is to identify a **legitimate, locally stable operating point without using OOD outcomes**.
+Do not call OpenVLA-OFT Temporal-Coverage Calibration Phase A a search for the "best" chunk length. The goal is to identify a **legitimate, locally stable operating point without using OOD outcomes**.
 
 ---
 
 ## 1. Policy freeze
 
-Use the same policy provenance as Stage 4:
+Use the same policy provenance as Cross-Policy OpenVLA-OFT Diagnostic:
 
 ```text
 policy_family = OpenVLA-OFT
@@ -51,7 +51,7 @@ No retraining, fine-tuning, chunk concatenation, repeated actions, time-stretchi
 
 ---
 
-## 2. Stage 5A0 — capability audit before any sweep
+## 2. OpenVLA-OFT Temporal-Coverage Calibration Phase A0 — capability audit before any sweep
 
 Before running calibration rollouts, establish the exact semantics of OpenVLA-OFT's action output.
 
@@ -77,21 +77,21 @@ If a single inference returns **exactly 8 valid future actions and no legitimate
 
 ```text
 maximum_native_coverage = 8
-Stage 5A coverage sweep over >8 = NOT ALLOWED
-Stage 5B rerun = NOT REQUIRED
+OpenVLA-OFT Temporal-Coverage Calibration Phase A coverage sweep over >8 = NOT ALLOWED
+OpenVLA-OFT Temporal-Coverage Calibration Phase B rerun = NOT REQUIRED
 ```
 
-In that case Stage 4 remains the native-horizon second-policy diagnostic, and the paper should state that OpenVLA-OFT's native 8-step horizon is itself a temporal-coverage constraint.
+In that case Cross-Policy OpenVLA-OFT Diagnostic remains the native-horizon second-policy diagnostic, and the paper should state that OpenVLA-OFT's native 8-step horizon is itself a temporal-coverage constraint.
 
-If a single inference legitimately supports multiple executable coverages, continue to Stage 5A1.
+If a single inference legitimately supports multiple executable coverages, continue to OpenVLA-OFT Temporal-Coverage Calibration Phase A1.
 
 ---
 
-## 3. Stage 5A1 — ID-only temporal-coverage calibration
+## 3. OpenVLA-OFT Temporal-Coverage Calibration Phase A1 — ID-only temporal-coverage calibration
 
 ### Tasks
 
-Use the same two standard-LIBERO ID tasks as Stage 4:
+Use the same two standard-LIBERO ID tasks as Cross-Policy OpenVLA-OFT Diagnostic:
 
 ```text
 spatial_transport
@@ -105,11 +105,11 @@ long_stove_moka
   task = KITCHEN_SCENE3_turn_on_the_stove_and_put_the_moka_pot_on_it
 ```
 
-**ID only. Do not inspect any LIBERO-Plus OOD outcomes during Stage 5A.**
+**ID only. Do not inspect any LIBERO-Plus OOD outcomes during OpenVLA-OFT Temporal-Coverage Calibration Phase A.**
 
 ### Candidate coverages
 
-Construct the candidate set only from values that Stage 5A0 proves are legitimate from **one model inference**.
+Construct the candidate set only from values that OpenVLA-OFT Temporal-Coverage Calibration Phase A0 proves are legitimate from **one model inference**.
 
 Preferred candidate set if all are natively supported:
 
@@ -117,7 +117,7 @@ Preferred candidate set if all are natively supported:
 configured_action_coverage ∈ {8,12,16,20,25}
 ```
 
-If some values are unsupported, remove them **before any Stage-5A success results are inspected** and record why. Never manufacture longer coverage by concatenating multiple predictions.
+If some values are unsupported, remove them **before any OpenVLA-OFT Temporal-Coverage Calibration Phase A success results are inspected** and record why. Never manufacture longer coverage by concatenating multiple predictions.
 
 For each coverage `c`, use the benchmark's same half-coverage request rule unless implementation semantics require a predeclared exception:
 
@@ -183,13 +183,13 @@ STAGE_5A_OBSERVATIONS.md
 
 ---
 
-## 4. Stage 5B — final second-policy OOD × delay replication
+## 4. OpenVLA-OFT Temporal-Coverage Calibration Phase B — final second-policy OOD × delay replication
 
-Run Stage 5B **only if Stage 5A identifies a legitimate coverage different from Stage 4's uncalibrated native-8 setting, or otherwise establishes a calibrated setting that warrants a clean fresh-seed rerun**.
+Run OpenVLA-OFT Temporal-Coverage Calibration Phase B **only if OpenVLA-OFT Temporal-Coverage Calibration Phase A identifies a legitimate coverage different from Cross-Policy OpenVLA-OFT Diagnostic's uncalibrated native-8 setting, or otherwise establishes a calibrated setting that warrants a clean fresh-seed rerun**.
 
 ### Frozen tasks and OOD variants
 
-Use exactly the same diagnostic contrast as Stage 4:
+Use exactly the same diagnostic contrast as Cross-Policy OpenVLA-OFT Diagnostic:
 
 ```text
 spatial_transport
@@ -205,13 +205,13 @@ long_stove_moka
   variant = KITCHEN_SCENE3_turn_on_the_stove_and_put_the_moka_pot_on_it_add_25
 ```
 
-Do not substitute Experiment-A or Experiment-B layouts.
+Do not substitute Object-Layout Generalization or Multi-Stage Task Generalization layouts.
 
 ### Execution
 
 ```text
 execution_method = naive_async_openvla_oft
-configured_action_coverage = <frozen Stage-5A value>
+configured_action_coverage = <frozen OpenVLA-OFT Temporal-Coverage Calibration Phase A value>
 request_threshold_actions = ceil(configured_action_coverage/2)
 delay = {Native, Native+200ms}
 libero_episode_index = 0
@@ -229,7 +229,7 @@ Physical analysis episodes:
 2 tasks × 2 scenes × 2 delays × 8 seeds = 64
 ```
 
-Do not reuse Stage-4 outcomes as Stage-5B analysis rows.
+Do not reuse Cross-Policy OpenVLA-OFT Diagnostic outcomes as OpenVLA-OFT Temporal-Coverage Calibration Phase B analysis rows.
 
 ### Primary interaction
 
@@ -248,11 +248,11 @@ Secondary diagnostics remain request latency, logical delay steps, action age, q
 
 ---
 
-## 5. Relationship to completed Stage 4
+## 5. Relationship to completed Cross-Policy OpenVLA-OFT Diagnostic
 
-Stage 4 is **not deleted or overwritten**. It is a completed preliminary/native-stack diagnostic at coverage 8.
+Cross-Policy OpenVLA-OFT Diagnostic is **not deleted or overwritten**. It is a completed preliminary/native-stack diagnostic at coverage 8.
 
-Observed Stage-4 results:
+Observed Cross-Policy OpenVLA-OFT Diagnostic results:
 
 ```text
 spatial_transport:
@@ -270,23 +270,23 @@ long_stove_moka:
   I = +0.125, paired-bootstrap 95% CI [0.000, 0.375]
 ```
 
-The `long_stove_moka` Stage-4 interaction is not substantively interpretable because the policy is already at/near floor. Stage 4 also showed substantial latency-induced queue starvation at the native 8-action coverage.
+The `long_stove_moka` Cross-Policy OpenVLA-OFT Diagnostic interaction is not substantively interpretable because the policy is already at/near floor. Cross-Policy OpenVLA-OFT Diagnostic also showed substantial latency-induced queue starvation at the native 8-action coverage.
 
-Stage 5 exists to determine whether that behavior is an unavoidable native-horizon limitation or an artifact of using an uncalibrated executable coverage.
+OpenVLA-OFT Temporal-Coverage Calibration exists to determine whether that behavior is an unavoidable native-horizon limitation or an artifact of using an uncalibrated executable coverage.
 
 ---
 
 ## 6. Paper-facing interpretation gate
 
-### If Stage 5A proves maximum native coverage is exactly 8
+### If OpenVLA-OFT Temporal-Coverage Calibration Phase A proves maximum native coverage is exactly 8
 
 Do not run an artificial longer-horizon experiment. State:
 
 > OpenVLA-OFT's native action horizon is eight steps in our evaluated checkpoint. Under the 20-Hz asynchronous controller, added latency consumes a large fraction of this temporal coverage, producing substantial queue starvation. We therefore treat the second-policy result as a native-stack operating-envelope diagnostic rather than a coverage-matched comparison to π0.5.
 
-### If Stage 5A finds a stable legitimate coverage and Stage 5B completes
+### If OpenVLA-OFT Temporal-Coverage Calibration Phase A finds a stable legitimate coverage and OpenVLA-OFT Temporal-Coverage Calibration Phase B completes
 
-Use Stage 5B as the final calibrated second-policy result and retain Stage 4 as preliminary provenance.
+Use OpenVLA-OFT Temporal-Coverage Calibration Phase B as the final calibrated second-policy result and retain Cross-Policy OpenVLA-OFT Diagnostic as preliminary provenance.
 
 ### If no stable operating point exists
 
@@ -296,13 +296,13 @@ State that directly. Do not tune on OOD or silently relax +200 ms.
 
 ## 7. Prohibited adaptations
 
-After Stage-5A ID results are inspected, do not change:
+After OpenVLA-OFT Temporal-Coverage Calibration Phase A ID results are inspected, do not change:
 
 - the candidate-set construction rule;
-- the two Stage-5B tasks;
+- the two OpenVLA-OFT Temporal-Coverage Calibration Phase B tasks;
 - the exact two OOD variants;
 - the +200-ms stress condition;
-- Stage-5B seeds `51..58`;
+- OpenVLA-OFT Temporal-Coverage Calibration Phase B seeds `51..58`;
 - the interaction definition.
 
-At no point may OOD outcomes influence the Stage-5A coverage choice.
+At no point may OOD outcomes influence the OpenVLA-OFT Temporal-Coverage Calibration Phase A coverage choice.

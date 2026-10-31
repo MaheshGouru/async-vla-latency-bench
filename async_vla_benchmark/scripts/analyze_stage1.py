@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate the seven Stage 1 tables, interaction plots, and observations."""
+"""Generate the seven Exploratory OOD–Delay Screening tables, interaction plots, and observations."""
 
 import argparse
 from collections import defaultdict
@@ -102,7 +102,7 @@ def main() -> int:
     write_csv(args.output_dir / "stage1_table_freshness.csv", freshness)
 
     observations = args.output_dir / "STAGE_1_OBSERVATIONS.md"
-    observations.write_text("# Stage 1 Observations\n\n## 1. Coverage\n" f"- Completed: {len(rows)}/480\n- Invalid: {480-len(rows)}\n- Missing: {480-len(rows)}\n\n"
+    observations.write_text("# Exploratory OOD–Delay Screening Observations\n\n## 1. Coverage\n" f"- Completed: {len(rows)}/480\n- Invalid: {480-len(rows)}\n- Missing: {480-len(rows)}\n\n"
         "## 2. Overall OOD × Delay Pattern\n" f"- ID-low success: {_rate([r for r in id_rows if r['delay_condition']=='low']):.3f}\n"
         f"- ID-high success: {_rate([r for r in id_rows if r['delay_condition']=='high']):.3f}\n"
         f"- OOD-low success: {_rate([r for r in ood_rows if r['delay_condition']=='low']):.3f}\n"
@@ -112,8 +112,8 @@ def main() -> int:
         "## 5. Execution-Method Effects\nGenerated in `stage1_table_method_comparison.csv`.\n\n"
         "## 6. Temporal-Freshness Diagnostics\nGenerated in `stage1_table_freshness.csv`.\n\n"
         "## 7. Candidate Confirmatory Effects\nPending frozen selection rule.\n\n## 8. Null / Counterintuitive Results\nReview all rows.\n\n"
-        "## 9. Data-Quality Warnings\n- Stage 0 seed-0/1 controls were reused without immutable runtime identity metadata.\n")
-    print(f"wrote Stage 1 analysis artifacts to {args.output_dir}")
+        "## 9. Data-Quality Warnings\n- Latency Calibration and Instrumentation seed-0/1 controls were reused without immutable runtime identity metadata.\n")
+    print(f"wrote Exploratory OOD–Delay Screening analysis artifacts to {args.output_dir}")
     return 0
 
 

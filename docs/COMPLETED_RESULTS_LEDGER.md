@@ -1,8 +1,8 @@
 # Completed Results Ledger
 
-This file is the authoritative concise record of completed empirical results after Stage 1. It does not replace the frozen conduct specifications.
+This file is the authoritative concise record of completed empirical results after Exploratory OOD–Delay Screening. It does not replace the frozen conduct specifications.
 
-## Stage 1 — broad OOD × delay screen — COMPLETE
+## Exploratory OOD–Delay Screening — broad OOD × delay screen — COMPLETE
 
 Frozen analysis configuration:
 
@@ -30,9 +30,9 @@ I = [S(OOD,+200)-S(OOD,Native)] - [S(ID,+200)-S(ID,Native)]
   ≈ +1.4 pp
 ```
 
-Decision: **do not claim broad OOD amplification of delay sensitivity.** Stage 1 is a broad exploratory screen. Localized negative RTC interactions motivated held-out follow-up, especially long-task × object layout.
+Decision: **do not claim broad OOD amplification of delay sensitivity.** Exploratory OOD–Delay Screening is a broad exploratory screen. Localized negative RTC interactions motivated held-out follow-up, especially long-task × object layout.
 
-Selected RTC family-level Stage-1 interactions included:
+Selected RTC family-level Exploratory OOD–Delay Screening interactions included:
 
 ```text
 object layout       -13.3 pp
@@ -41,11 +41,11 @@ robot initial state  -6.7 pp
 sensor noise         -6.7 pp   (secondary/post-hoc follow-up only)
 ```
 
-The full Stage-1 screen, including null/positive cells, must remain reported.
+The full Exploratory OOD–Delay Screening screen, including null/positive cells, must remain reported.
 
 ---
 
-## Stage 2 — RTC local operating-point sensitivity — COMPLETE
+## Confirmatory Horizon–Delay Operating Envelope — RTC local operating-point sensitivity — COMPLETE
 
 Frozen design:
 
@@ -70,7 +70,7 @@ Pooled success over the three tasks (15 trials/cell):
 | 30 | 15/15 | 15/15 | 14/15 | 15/15 |
 | 35 | 15/15 | 13/15 | 14/15 | 15/15 |
 
-At the Stage-1 delay of +200 ms:
+At the Exploratory OOD–Delay Screening delay of +200 ms:
 
 ```text
 h=20: 14/15
@@ -90,13 +90,13 @@ h=30: 0 at all tested delays
 h=35: 0 at all tested delays
 ```
 
-Decision: **retain the frozen Stage-1 operating point `n_action_steps=25, +200 ms`.** It lies in a broad local high-success region rather than at an isolated optimum. The robust short-coverage failure is at 10 actions by +200 ms, and is accompanied by severe queue underruns.
+Decision: **retain the frozen Exploratory OOD–Delay Screening operating point `n_action_steps=25, +200 ms`.** It lies in a broad local high-success region rather than at an isolated optimum. The robust short-coverage failure is at 10 actions by +200 ms, and is accompanied by severe queue underruns.
 
 RTC causal delay-estimation mismatch is treated as an implementation/provenance diagnostic, not an explanation for the h=10 failure; aggregate error is not uniquely elevated at h=10.
 
 ---
 
-## Stage 3 — held-out OOD × horizon confirmation — COMPLETE
+## Held-Out OOD–Delay Horizon Confirmation — held-out OOD × horizon confirmation — COMPLETE
 
 Frozen design:
 
@@ -135,24 +135,24 @@ Primary aggregate accounting, with shared ID rows deduplicated:
 | 25 | 14/16 | 14/16 | 16/24 | 16/24 |
 | 30 | 15/16 | 15/16 | 16/24 | 16/24 |
 
-Decision: most Stage-1 localized negative interactions **do not replicate** on held-out rollouts. Object layout on the long multi-stage task is the surviving directionally consistent candidate, but most of its performance loss is an OOD main effect; the additional +200-ms penalty is modest (one extra failure of eight per horizon).
+Decision: most Exploratory OOD–Delay Screening localized negative interactions **do not replicate** on held-out rollouts. Object layout on the long multi-stage task is the surviving directionally consistent candidate, but most of its performance loss is an OOD main effect; the additional +200-ms penalty is modest (one extra failure of eight per horizon).
 
 ---
 
-## Stage 3B — targeted cross-task object-layout replication — COMPLETE
+## Held-Out Object-Layout Cross-Task Replication — targeted cross-task object-layout replication — COMPLETE
 
 Frozen conduct:
 
 ```text
 new OOD tasks = spatial_transport, goal_drawer
-perturbation = exact frozen Stage-1 object-layout variant
+perturbation = exact frozen Exploratory OOD–Delay Screening object-layout variant
 RTC only
 horizons = 20,25,30
 delays = Native,+200 ms
 seeds = 14..21
 libero_episode_index = 0
 144 new episodes
-288 unique rows in final three-task object-layout analysis after Stage-3 reuse
+288 unique rows in final three-task object-layout analysis after Held-Out OOD–Delay Horizon Confirmation reuse
 ```
 
 Completed interactions:
@@ -193,7 +193,7 @@ SHA-256 d4ab1b7ad75fec70ca7a6d48a6e3f11458bab84f0ee5c59daa96c19bb50a50c2
 
 ---
 
-## Stage 3C — initialization diversity/determinism audit — COMPLETE, FAILED CLOSED
+## Initialization-State Audit — initialization diversity/determinism audit — COMPLETE, FAILED CLOSED
 
 Frozen audit:
 
@@ -220,7 +220,7 @@ Decision:
 - initialization-generalization cannot be evaluated for these frozen OOD variants;
 - do not substitute indices;
 - do not reinterpret rollout seeds as environment-initialization diversity;
-- this benchmark limitation does not invalidate Stages 1–3B.
+- this benchmark limitation does not invalidate earlier primary-policy stages.
 
 Preserved archive:
 
@@ -231,7 +231,7 @@ SHA-256 f38bde65fe1d87ecb90a9dbe53ef42a6eef361938317308dc8b5803f65455413
 
 ---
 
-## Experiment A — within-task object-layout variant generalization — COMPLETE
+## Object-Layout Generalization — within-task object-layout variant generalization — COMPLETE
 
 Frozen design:
 
@@ -263,7 +263,7 @@ Decision: the negative `long_stove_moka` interaction is not unique to the origin
 
 ---
 
-## Experiment B — additional multi-stage task generalization — COMPLETE
+## Multi-Stage Task Generalization — additional multi-stage task generalization — COMPLETE
 
 Frozen design:
 
@@ -290,7 +290,7 @@ Decision: the negative object-layout × delay pattern does **not** generalize co
 
 ---
 
-## Stage 4 — OpenVLA-OFT native-8 second-policy diagnostic — COMPLETE
+## Cross-Policy OpenVLA-OFT Diagnostic — OpenVLA-OFT native-8 second-policy diagnostic — COMPLETE
 
 ```text
 spatial_transport:
@@ -312,19 +312,19 @@ Interpretation: the π0.5 negative long-task interaction did not transfer cleanl
 
 ---
 
-## Active next experiment — Stage 5 OpenVLA-OFT temporal-coverage calibration
+## Active next experiment — OpenVLA-OFT Temporal-Coverage Calibration
 
-First determine whether the checkpoint legitimately exposes more than 8 future actions from one inference. If it does, run ID-only calibration and freeze a locally stable coverage before any OOD rerun. If 8 is the native maximum, do not fabricate a longer horizon; retain Stage 4 as the native-horizon diagnostic.
+First determine whether the checkpoint legitimately exposes more than 8 future actions from one inference. If it does, run ID-only calibration and freeze a locally stable coverage before any OOD rerun. If 8 is the native maximum, do not fabricate a longer horizon; retain Cross-Policy OpenVLA-OFT Diagnostic as the native-horizon diagnostic.
 
 ---
 
-## Stage 3 New — high-power replication — ACTIVE
+## High-Power OOD–Delay Replication — ACTIVE
 
 This is a prospective experiment and therefore has no result rows yet.
 
 Purpose:
 
-> Re-estimate the complete unique Stage 3 / Stage 3B interaction matrix at high
+> Re-estimate the complete unique Held-Out OOD–Delay Horizon Confirmation / Held-Out Object-Layout Cross-Task Replication interaction matrix at high
 > replication to determine whether the earlier sparse/heterogeneous pattern is
 > reproducible rather than a consequence of `n=8` rollout noise.
 
@@ -337,10 +337,10 @@ horizons = 20,25,30
 delay = Native,+200 ms
 seeds = 46..109
 n = 64 fresh seeds per unique cell
-old Stage 3/3B rows excluded from primary analysis
+old Held-Out OOD–Delay Horizon Confirmation and Held-Out Object-Layout Cross-Task Replication rows excluded from primary analysis
 shared ID controls across perturbations on the same task
 physical episodes = 3,456
 ```
 
-Do not add any Stage 3 New result to this ledger until the validation gates in
+Do not add any High-Power OOD–Delay Replication result to this ledger until the validation gates in
 `STAGE_3_NEW_HIGH_POWER_REPLICATION.md` pass.

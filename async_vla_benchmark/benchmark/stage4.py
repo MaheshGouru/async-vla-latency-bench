@@ -1,4 +1,4 @@
-"""Frozen Stage 4 OpenVLA-OFT second-policy diagnostic."""
+"""Frozen Cross-Policy OpenVLA-OFT Diagnostic OpenVLA-OFT second-policy diagnostic."""
 
 from __future__ import annotations
 
@@ -125,7 +125,7 @@ def stage4_manifest(provenance: Mapping[str, str]) -> list[Stage4Plan]:
 def validate_manifest(rows: Sequence[Stage4Plan | Mapping[str, str]]) -> None:
     def value(row, field): return getattr(row, field) if hasattr(row, field) else row[field]
     if len(rows) != 64 or len({value(r, "run_id") for r in rows}) != 64:
-        raise ValueError("Stage 4 requires exactly 64 unique physical episodes")
+        raise ValueError("Cross-Policy OpenVLA-OFT Diagnostic requires exactly 64 unique physical episodes")
     checks = {
         "task_key": set(TASKS), "scene": {"id", "ood"}, "added_delay_ms": set(DELAYS_MS),
         "seed": set(SEEDS), "policy_family": {POLICY_FAMILY}, "execution_method": {EXECUTION_METHOD},
@@ -136,7 +136,7 @@ def validate_manifest(rows: Sequence[Stage4Plan | Mapping[str, str]]) -> None:
     for field, expected in checks.items():
         numeric = bool(expected) and all(isinstance(item, int) for item in expected)
         actual = {int(value(row, field)) if numeric else value(row, field) for row in rows}
-        if actual != expected: raise ValueError(f"Stage 4 {field} changed: {actual!r}")
+        if actual != expected: raise ValueError(f"Cross-Policy OpenVLA-OFT Diagnostic {field} changed: {actual!r}")
     for row in rows:
         task = TASKS[value(row, "task_key")]
         if value(row, "scene") == "ood":

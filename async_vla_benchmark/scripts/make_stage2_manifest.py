@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Materialize the frozen 360-row Stage 2 manifest."""
+"""Materialize the frozen 360-row Confirmatory Horizon–Delay Operating Envelope manifest."""
 
 import argparse
 from pathlib import Path

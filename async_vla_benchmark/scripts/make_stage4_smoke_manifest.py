@@ -13,7 +13,7 @@ def main():
         for scene in ("id","ood"):
             row=_plan(provenance,task,scene,0,999)
             rows.append(asdict(replace(row,run_id=row.run_id+"__smoke",output_path=f"episodes/{row.run_id}__smoke.json",analysis_status="nonanalysis_smoke")))
-    write_csv(a.output,rows); print("PASS: frozen four-row seed-999 Stage 4 smoke manifest"); return 0
+    write_csv(a.output,rows); print("PASS: frozen four-row seed-999 Cross-Policy OpenVLA-OFT Diagnostic smoke manifest"); return 0
 
 
 if __name__=="__main__": raise SystemExit(main())

@@ -1,4 +1,4 @@
-"""Frozen Stage 3C reset-only initialization audit."""
+"""Frozen Initialization-State Audit reset-only initialization audit."""
 from __future__ import annotations
 
 TASKS = {
@@ -54,4 +54,4 @@ def assert_frozen_variants(rows) -> None:
         for row in rows if row.get("task_key") in TASKS and row.get("perturbation_key") == "object_layout"
     }
     if actual != expected_variant_rows():
-        raise ValueError("Stage 1 frozen object-layout identities do not exactly match Stage 3C")
+        raise ValueError("Exploratory OOD–Delay Screening frozen object-layout identities do not exactly match Initialization-State Audit")

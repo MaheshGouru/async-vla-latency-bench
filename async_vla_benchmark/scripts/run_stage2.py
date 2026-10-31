@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run the frozen Stage 2 matrix serially on one GPU."""
+"""Run the frozen Confirmatory Horizon–Delay Operating Envelope matrix serially on one GPU."""
 
 from __future__ import annotations
 
@@ -42,7 +42,7 @@ def _stage2_row(plan: dict[str, str], summary: dict, output: Path) -> dict:
         "difficulty_level": "",
         "n_action_steps": plan["configured_n_action_steps"],
     }, summary, output)
-    # Primary Stage 2 timing excludes the ideal startup request. That request is
+    # Primary Confirmatory Horizon–Delay Operating Envelope timing excludes the ideal startup request. That request is
     # retained in the canonical parquet so startup behavior remains auditable.
     import pandas as pd
     frame = pd.read_parquet(output / "requests" / f"{plan['run_id']}.parquet")

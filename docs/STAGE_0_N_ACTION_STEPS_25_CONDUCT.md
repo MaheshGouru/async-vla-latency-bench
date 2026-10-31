@@ -1,4 +1,4 @@
-# Stage 0 Conduct: `n_action_steps=25` Exploratory Rerun
+# Latency Calibration and Instrumentation Conduct: `n_action_steps=25` Exploratory Rerun
 
 ## Status and purpose
 
@@ -10,7 +10,7 @@ This document records how the result bundle at:
 
 was actually conducted. It is a retrospective methods record based on the run
 log, episode summaries, request traces, and action traces in that bundle. It
-must not be read as the original frozen Stage 0 protocol.
+must not be read as the original frozen Latency Calibration and Instrumentation protocol.
 
 The rerun changed the policy execution setting from `n_action_steps=10` to
 `n_action_steps=25` after the initial calibration in:
@@ -153,7 +153,7 @@ requests. At most one policy request was outstanding.
 
 When a delayed response became available, its action chunk was installed using
 the execution-method-specific queue logic. The queue was not cleared at an
-intervention because Stage 0 contains no interventions.
+intervention because Latency Calibration and Instrumentation contains no interventions.
 
 ## Naive async execution
 
@@ -248,7 +248,7 @@ However, it does not follow the original frozen two-seed selection protocol.
 Using only seeds 0 and 1 from this same bundle, `+200 ms` has 7/8 success, equal
 to Native, while `+300 ms` has 5/8 success and is the first observed qualifying
 delay. Therefore `200 ms` must be described as the result of the six-seed revised
-protocol, not as the output of the original Stage 0 specification.
+protocol, not as the output of the original Latency Calibration and Instrumentation specification.
 
 ## Validation limitations
 
@@ -256,7 +256,7 @@ The following limitations remain and must accompany use of this bundle:
 
 1. `n_action_steps=25` was selected after seeing poor ID performance at 10.
 2. The delay grid stops at 400 ms.
-3. The seed count differs from the frozen Stage 0 specification.
+3. The seed count differs from the frozen Latency Calibration and Instrumentation specification.
 4. Repository SHA, checkpoint revision, and environment fingerprint are absent
    from the episode summary table.
 5. Twenty-three hold/underrun actions in seven episodes have null chunk and
@@ -284,9 +284,9 @@ that the bundled `d*=200 ms` came from the original frozen two-seed rule.
 ## Follow-up consequence — 2026-08-16
 
 The 10-action versus 25-action difference is no longer treated only as a
-calibration nuisance. Stage 2 explicitly characterizes `n_action_steps × latency`
+calibration nuisance. Confirmatory Horizon–Delay Operating Envelope explicitly characterizes `n_action_steps × latency`
 on ID tasks.
 
-The 25-action Stage 1 operating point remains frozen and valid for Stage 1, but
+The 25-action Exploratory OOD–Delay Screening operating point remains frozen and valid for Exploratory OOD–Delay Screening, but
 the final paper must disclose that temporal action coverage is itself a major
 experimental variable.

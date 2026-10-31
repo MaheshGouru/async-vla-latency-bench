@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run one scene shard of the frozen Stage 3 New matrix serially with resume."""
+"""Run one scene shard of the frozen High-Power OOD–Delay Replication matrix serially with resume."""
 from __future__ import annotations
 import argparse, gc, hashlib, json, os, traceback
 from pathlib import Path
@@ -166,7 +166,7 @@ def main() -> int:
     bad_seeds = {int(r["seed"]) for r in all_plans} & _OLD_SEEDS
     if bad_seeds:
         raise RuntimeError(
-            f"Manifest contains forbidden old Stage 3/3B seeds: {sorted(bad_seeds)}")
+            f"Manifest contains forbidden old Held-Out OOD–Delay Horizon Confirmation/3B seeds: {sorted(bad_seeds)}")
 
     plans = _select(all_plans, "configured_n_action_steps", args.horizon)
     plans = _select(plans, "added_delay_ms", args.delay)

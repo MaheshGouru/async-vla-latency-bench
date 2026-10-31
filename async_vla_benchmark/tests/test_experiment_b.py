@@ -67,7 +67,7 @@ def test_dispatch_gate_fails_closed(tmp_path):
 def test_runner_requires_gate_and_explicit_zero_index():
     source = (Path(__file__).parents[1] / "scripts/run_stage3.py").read_text()
     assert '"experiment_b"' in source
-    assert "Experiment B requires --dispatch-gate" in source
+    assert "Multi-Stage Task Generalization requires --dispatch-gate" in source
     assert "episode_index=0" in source
     assert 'args.stage_label not in ("experiment_a","experiment_b")' in source
 
