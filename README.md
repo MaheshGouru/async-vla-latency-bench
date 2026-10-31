@@ -14,13 +14,14 @@ distribution shift affect asynchronous vision-language-action (VLA) execution.
 - [`docs/`](docs/) — experiment protocols, results ledger, reproducibility notes, and runbooks.
 - [`DataArchive/`](DataArchive/) — selected tracked benchmark artifacts; the large 64-seed episode archive is intentionally kept outside Git.
 
-## Public experiment names
+## Experiment naming guide
 
-The descriptive names below are used in documentation and progress reports.
-Machine-facing identifiers such as `stage3_new` remain unchanged in scripts,
-manifests, filenames, and archived results.
+The descriptive names below are used throughout the documentation and progress
+reports. Repository labels such as `stage3_new` remain unchanged in scripts,
+manifests, filenames, and archived results so existing reproduction commands
+continue to work.
 
-| Internal ID | Public name |
+| Repository label | Descriptive experiment name |
 |---|---|
 | Stage 0 | Latency Calibration and Instrumentation |
 | Stage 1 | Exploratory OOD–Delay Screening |
