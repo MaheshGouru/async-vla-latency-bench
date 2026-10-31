@@ -21,7 +21,7 @@ def write_csv(path: Path, rows: Sequence[dict[str, Any]]) -> None:
     if not rows:
         path.write_text("")
         return
-    fieldnames = list(rows[0].keys())
+    fieldnames = list(dict.fromkeys(key for row in rows for key in row))
     with path.open("w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()

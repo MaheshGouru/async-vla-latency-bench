@@ -1,0 +1,68 @@
+#!/usr/bin/env python3
+"""Resolve and freeze the 21 Stage 1 LIBERO-Plus variants."""
+
+import argparse
+import json
+import os
+import sys
+from pathlib import Path
+
+from async_vla_benchmark.benchmark.ood_tasks import find_task_classification_path
+from async_vla_benchmark.benchmark.stage0 import STAGE0_TASKS
+from async_vla_benchmark.benchmark.stage1 import resolve_variants, write_dataclass_csv
+
+
+def main() -> int:
+    # Jupyter exports its kernel-only inline backend to subprocesses. The
+    # isolated benchmark venv intentionally has no matplotlib-inline package.
+    os.environ["MPLBACKEND"] = "Agg"
+    native = Path.home() / "stage1-native"
+    if native.exists() and os.environ.get("STAGE1_NATIVE_REEXEC") != str(native):
+        # glibc reads LD_LIBRARY_PATH at process startup. Re-exec once so
+        # MagickWand's transitive libraries are discoverable before Wand loads.
+        environment = os.environ.copy()
+        environment["STAGE1_NATIVE_REEXEC"] = str(native)
+        environment["MAGICK_HOME"] = str(native)
+        environment["PATH"] = str(native / "bin") + os.pathsep + environment.get("PATH", "")
+        environment["LD_LIBRARY_PATH"] = str(native / "lib") + os.pathsep + environment.get("LD_LIBRARY_PATH", "")
+        os.execve(sys.executable, [sys.executable, "-m", "async_vla_benchmark.scripts.resolve_stage1_variants", *sys.argv[1:]], environment)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--overwrite", action="store_true")
+    args = parser.parse_args()
+    if args.output.exists() and not args.overwrite:
+        raise FileExistsError(f"refusing to overwrite frozen mapping: {args.output}")
+
+    # LIBERO prompts with input() when this file is absent, which fails in a
+    # detached/Jupyter subprocess. Resolve the pinned clone without importing
+    # libero.libero first, then create the same config as the container image.
+    classification_path = find_task_classification_path()
+    root = classification_path.parent.parent
+    config = Path.home() / ".libero" / "config.yaml"
+    config.parent.mkdir(parents=True, exist_ok=True)
+    config.write_text(
+        f"assets: {root / 'assets'}\n"
+        f"bddl_files: {root / 'bddl_files'}\n"
+        f"datasets: {root / '../datasets'}\n"
+        f"init_states: {root / 'init_files'}\n"
+    )
+
+    # Load Conda's MagickWand (and its newer C++ runtime) before LeRobot/PyTorch
+    # loads the host C++ runtime. Reversing this order makes dlopen fail even
+    # though the exact same MagickWand installation passes in a clean process.
+    from wand.api import library as _wand_library  # noqa: F401
+    from lerobot.envs.libero import _get_suite
+
+    classification = json.loads(classification_path.read_text())
+    suite_names = {}
+    for suite_name in sorted({task.suite for task in STAGE0_TASKS}):
+        suite = _get_suite(suite_name)
+        suite_names[suite_name] = list(suite.get_task_names())
+    rows = resolve_variants(classification, suite_names)
+    write_dataclass_csv(args.output, rows)
+    print(f"wrote {len(rows)} frozen variants to {args.output}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

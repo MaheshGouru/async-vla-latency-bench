@@ -98,7 +98,7 @@ def main():
         return s.get("action_age_ms", numeric_profile(s))
 
     for filename, x_key, y_key, group_key, title in [
-        ("success_vs_delay.png", "action_age_ms", "success", "strategy", "Success vs action age"),
+        ("success_vs_delay.png", "latency_profile", "success", "strategy", "Success vs latency profile"),
         ("action_age_vs_delay.png", "latency_profile", "mean_action_age_ms", "strategy", "Mean action age vs latency profile"),
         ("queue_underruns_vs_delay.png", "latency_profile", "queue_underrun_steps", "strategy", "Queue underruns vs latency profile"),
         ("completion_time_vs_delay.png", "latency_profile", "logical_completion_time_seconds", "strategy", "Completion time vs latency profile"),

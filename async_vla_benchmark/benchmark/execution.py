@@ -7,10 +7,11 @@ from typing import Any, Optional
 import numpy as np
 
 from .environment import get_max_episode_steps, resolve_control_frequency_hz
-from .latency import LatencyProfile, request_delay_steps
+from .latency import LatencyProfile, estimate_inference_delay_steps, request_delay_steps
 from .metrics import mean_continuity, percentile
 from .policy import timed_request
 from .queues import ActionQueue, QueuedAction
+from .rtc import rtc_action_counts
 
 
 @dataclass(frozen=True)
@@ -144,6 +145,8 @@ class EpisodeRunner:
         self._total_model_inference_ms = 0.0
         self._wall_clock_runtime_seconds = 0.0
         self._success = False
+        self._initial_state_fingerprint = None
+        self._initial_state_fingerprint_method = None
 
     def _new_observation_id(self) -> str:
         obs_id = f"{self.episode_id}_obs{self._observation_counter}"
@@ -170,19 +173,46 @@ class EpisodeRunner:
         self.observations.append(ref)
         return ref
 
+    def _estimate_inference_delay_steps(self) -> int:
+        """The value passed to RTC as `inference_delay` for the request about to run.
+
+        Spec section 15 forbids a global average here. Delegates to
+        `estimate_inference_delay_steps`, which uses only the most recent measured
+        request in this episode -- see that function for why the current request's
+        own latency cannot be used. Every RTC request logs this value alongside the
+        realized `delay_steps` so the gap between them is auditable.
+        """
+        return estimate_inference_delay_steps(
+            [r["measured_request_latency_ms"] for r in self.requests],
+            self.latency_profile,
+            self.control_period_seconds,
+        )
+
     def _start_request(self, obs: Any, source_obs: ObservationRef, prev_raw_remainder: Optional[np.ndarray] = None) -> PendingRequest:
         """Run the policy synchronously and schedule a logically-delayed response."""
         request_id = self._new_request_id()
         self.queue.begin_request(request_id)
 
         execution_horizon = self.rtc_execution_horizon if self.use_rtc else None
+        estimated_delay_steps = self._estimate_inference_delay_steps() if self.use_rtc else 0
+        # Spec section 15.7: count the overlapping and guided actions from the inputs
+        # actually handed to RTC on this request, before the call consumes them.
+        rtc_counts = (
+            rtc_action_counts(
+                inference_delay_steps=estimated_delay_steps,
+                overlap_actions=0 if prev_raw_remainder is None else int(prev_raw_remainder.shape[0]),
+                execution_horizon=execution_horizon,
+            )
+            if self.use_rtc
+            else None
+        )
         raw_chunk, processed_chunk, timing = timed_request(
             self.policy,
             self.preprocessor,
             self.postprocessor,
             obs,
             self.task_instruction,
-            delay_steps=0,  # delay is simulated after measurement
+            delay_steps=estimated_delay_steps,
             previous_chunk_remainder=prev_raw_remainder,
             execution_horizon=execution_horizon,
             use_rtc=self.use_rtc,
@@ -226,11 +256,74 @@ class EpisodeRunner:
                 "request_logical_time_seconds": source_obs.logical_time_seconds,
                 "response_available_step": available_step,
                 "measured_request_latency_ms": timing["request_latency_ms"],
+                "observation_capture_time": timing["observation_capture_time"],
+                "preprocessing_start_time": timing["preprocessing_start_time"],
+                "preprocessing_end_time": timing["preprocessing_end_time"],
+                "inference_start_time": timing["inference_start_time"],
+                "inference_end_time": timing["inference_end_time"],
+                "postprocessing_end_time": timing["postprocessing_end_time"],
+                "request_complete_time": timing["request_complete_time"],
                 "model_latency_ms": timing["model_latency_ms"],
                 "preprocessing_latency_ms": timing["preprocessing_latency_ms"],
                 "postprocessing_latency_ms": timing["postprocessing_latency_ms"],
+                # Spec §7/§21: GPU event time and the synchronization flag, so
+                # validate_results.py can confirm CUDA timing was synchronized.
+                "gpu_event_ms": timing.get("gpu_event_ms"),
+                "cuda_synchronized": timing.get("cuda_synchronized", False),
                 "added_latency_ms": self.latency_profile.added_latency_ms,
+                "total_logical_latency_ms": self.latency_profile.logical_latency_ms(
+                    timing["request_latency_ms"]
+                ),
                 "delay_steps": delay_steps,
+                "logical_delay_steps": delay_steps,
+                "configured_n_action_steps": self.fixed_horizon,
+                "prediction_horizon_actions": getattr(self.policy.config, "chunk_size", None),
+                "rtc_configured_execution_horizon": execution_horizon,
+                "request_threshold_actions": self.queue.request_threshold,
+                "control_period_ms": self.control_period_seconds * 1000.0,
+                "coverage_ratio_added": (
+                    (self.latency_profile.added_latency_ms / (self.control_period_seconds * 1000.0))
+                    / self.fixed_horizon
+                ),
+                "coverage_ratio_total": delay_steps / self.fixed_horizon,
+                "previous_chunk_remaining_at_request": (
+                    0 if prev_raw_remainder is None else int(prev_raw_remainder.shape[0])
+                ),
+                "previous_chunk_remaining_at_response": None,
+                # Spec section 15/21: the value actually passed to RTC as
+                # `inference_delay`, logged separately from the realized `delay_steps`
+                # above. Validation has to inspect what RTC received -- checking
+                # `delay_steps` alone passes even when `inference_delay` is a constant,
+                # which is how the pre-fix hardcoded zero went undetected. The error
+                # column quantifies the residual estimation gap spec section 15 cannot
+                # eliminate. None for non-RTC strategies, which pass no inference_delay.
+                "rtc_inference_delay_steps": estimated_delay_steps if self.use_rtc else None,
+                "rtc_inference_delay_error_steps": (
+                    estimated_delay_steps - delay_steps if self.use_rtc else None
+                ),
+                # Spec section 15.7.
+                "rtc_overlap_actions": rtc_counts["overlap_actions"] if rtc_counts else None,
+                "rtc_effective_execution_horizon": (
+                    rtc_counts["effective_execution_horizon"] if rtc_counts else None
+                ),
+                "rtc_frozen_prefix_actions": (
+                    rtc_counts["frozen_prefix_actions"] if rtc_counts else None
+                ),
+                "rtc_guided_actions": rtc_counts["guided_actions"] if rtc_counts else None,
+                "rtc_fresh_suffix_actions": (
+                    max(0, self.fixed_horizon - rtc_counts["effective_execution_horizon"])
+                    if rtc_counts else None
+                ),
+                # Stage 2 paper-facing aliases use "steps" while the legacy
+                # diagnostics above retain their established "actions" names.
+                "rtc_frozen_prefix_steps": (
+                    rtc_counts["frozen_prefix_actions"] if rtc_counts else None
+                ),
+                "rtc_guided_overlap_steps": rtc_counts["guided_actions"] if rtc_counts else None,
+                "rtc_fresh_suffix_steps": (
+                    max(0, self.fixed_horizon - rtc_counts["effective_execution_horizon"])
+                    if rtc_counts else None
+                ),
                 "strategy": self.strategy,
                 "latency_profile": self.latency_profile.name,
                 "fixed_horizon": self.fixed_horizon,
@@ -264,6 +357,13 @@ class EpisodeRunner:
         if pending is None:
             return None
         queued, chunk_ref, _ = pending.payload
+        # How much of the previous chunk is still actionable when this response
+        # becomes available. This differs from the request-time overlap whenever
+        # logical latency consumes queued actions while the request is in flight.
+        for request in reversed(self.requests):
+            if request["request_id"] == pending.request_id:
+                request["previous_chunk_remaining_at_response"] = len(self.queue)
+                break
         self.queue.replace(pending.request_id, queued)
         return chunk_ref
 
@@ -309,6 +409,8 @@ class EpisodeRunner:
             source_obs_id = queued.source_observation_id
             source_obs_step = queued.source_observation_step
         return action, {
+            "action_source": "hold" if is_hold else "policy",
+            "hold_reason": "queue_underrun" if is_underrun else None,
             "is_hold_action": is_hold,
             "is_queue_underrun": is_underrun,
             "queue_depth_before": queue_depth_before,
@@ -333,8 +435,8 @@ class EpisodeRunner:
     ) -> None:
         source_step = meta.get("source_observation_step")
         if source_step is None:
-            age_steps = 0
-            age_ms = 0.0
+            age_steps = None
+            age_ms = None
         else:
             age_steps = action_age_steps(control_step, source_step)
             age_ms = action_age_ms(age_steps, self.control_period_seconds)
@@ -346,6 +448,8 @@ class EpisodeRunner:
                 "strategy": self.strategy,
                 "latency_profile": self.latency_profile.name,
                 "fixed_horizon": self.fixed_horizon,
+                "action_source": meta["action_source"],
+                "hold_reason": meta["hold_reason"],
                 "chunk_id": meta.get("chunk_id"),
                 "chunk_action_index": meta.get("chunk_action_index"),
                 "source_observation_id": meta.get("source_observation_id"),
@@ -362,7 +466,25 @@ class EpisodeRunner:
         )
 
     def run(self, seed: int) -> dict[str, Any]:
+        # π0.5's flow-matching action sampling draws noise from torch's global RNG
+        # (lerobot.policies.common.flow_matching.sample_noise calls torch.normal with
+        # no `generator=`), independent of the environment seed. Without this, two
+        # runs of the identical (task, strategy, profile, horizon, seed) diverge from
+        # the very first policy request, even though env.reset(seed=...) is itself
+        # deterministic. Seeding here ties the whole episode's RNG stream to the same
+        # seed already used for env determinism, without touching LeRobot internals.
+        import torch
+        from .environment import seed_environment_rng
+
+        seed_environment_rng(seed)
         obs, info = self.env.reset(seed=seed)
+        # Reset environment RNGs first; then start π0.5's policy RNG stream from
+        # the same episode seed so environment internals cannot consume it.
+        torch.manual_seed(seed)
+        from .environment import initial_state_fingerprint
+        method, fingerprint = initial_state_fingerprint(self.env, obs)
+        self._initial_state_fingerprint_method = method
+        self._initial_state_fingerprint = fingerprint
         done = False
         success = False
         control_step = 1
@@ -427,7 +549,7 @@ class EpisodeRunner:
         import statistics
 
         request_latencies = [r["measured_request_latency_ms"] for r in self.requests]
-        action_ages = [a["action_age_ms"] for a in self.actions]
+        action_ages = [a["action_age_ms"] for a in self.actions if a["action_age_ms"] is not None]
         queue_depths = [a["queue_depth_before"] for a in self.actions]
         deltas = [np.linalg.norm(np.array(a["action_vector"][:6])) for a in self.actions]
 
@@ -441,6 +563,7 @@ class EpisodeRunner:
             "fixed_horizon": self.fixed_horizon,
             "success": success,
             "environment_steps": environment_steps,
+            "timed_out": environment_steps >= self.max_steps,
             "logical_completion_time_seconds": environment_steps * self.control_period_seconds,
             "wall_clock_runtime_seconds": self._wall_clock_runtime_seconds,
             "number_of_policy_requests": len(self.requests),
@@ -455,11 +578,58 @@ class EpisodeRunner:
             "queue_underrun_steps": sum(1 for a in self.actions if a["is_queue_underrun"]),
             "hold_action_steps": sum(1 for a in self.actions if a["is_hold_action"]),
             "discarded_old_actions": self.queue.discarded_old_actions,
+            "initialization_index_or_id": "libero_episode_index:0",
+            "initial_state_fingerprint": self._initial_state_fingerprint,
+            "initial_state_fingerprint_method": self._initial_state_fingerprint_method,
             "mean_action_delta_l2": statistics.mean(deltas) if deltas else float("nan"),
             "mean_action_acceleration_l2": mean_continuity([a["action_vector"] for a in self.actions], 2),
             "mean_action_jerk_l2": mean_continuity([a["action_vector"] for a in self.actions], 3),
         }
+        summary.update(self._summarize_rtc())
         return summary
+
+    def _summarize_rtc(self) -> dict[str, Any]:
+        """Episode-level rollup of the spec section 15 RTC diagnostics.
+
+        Kept as fixed keys (None off RTC) so `episodes.csv` stays a single rectangular
+        table across strategies. `inference_delay_mismatch_rate` is how often the
+        estimate passed to RTC disagreed with the delay the request actually incurred
+        -- the quantity that makes the section 15 deviation reportable rather than
+        merely disclosed.
+        """
+        import statistics
+
+        keys = (
+            "rtc_mean_overlap_actions",
+            "rtc_mean_guided_actions",
+            "rtc_total_guided_actions",
+            "rtc_mean_effective_execution_horizon",
+            "rtc_inference_delay_mismatch_rate",
+            "rtc_mean_absolute_inference_delay_error_steps",
+            "rtc_mean_frozen_prefix_actions",
+            "rtc_mean_fresh_suffix_actions",
+        )
+        if not self.use_rtc or not self.requests:
+            return dict.fromkeys(keys)
+
+        overlaps = [r["rtc_overlap_actions"] for r in self.requests]
+        guided = [r["rtc_guided_actions"] for r in self.requests]
+        effective_horizons = [r["rtc_effective_execution_horizon"] for r in self.requests]
+        errors = [r["rtc_inference_delay_error_steps"] for r in self.requests]
+        frozen = [r["rtc_frozen_prefix_actions"] for r in self.requests]
+        fresh = [r["rtc_fresh_suffix_actions"] for r in self.requests]
+        return {
+            "rtc_mean_overlap_actions": statistics.mean(overlaps),
+            "rtc_mean_guided_actions": statistics.mean(guided),
+            "rtc_total_guided_actions": sum(guided),
+            "rtc_mean_effective_execution_horizon": statistics.mean(effective_horizons),
+            "rtc_inference_delay_mismatch_rate": sum(1 for e in errors if e != 0) / len(errors),
+            "rtc_mean_absolute_inference_delay_error_steps": statistics.mean(
+                abs(e) for e in errors
+            ),
+            "rtc_mean_frozen_prefix_actions": statistics.mean(frozen),
+            "rtc_mean_fresh_suffix_actions": statistics.mean(fresh),
+        }
 
     def _write_outputs(self) -> None:
         from .logging import ensure_dir, write_json, write_parquet

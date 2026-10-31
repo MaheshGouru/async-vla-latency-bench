@@ -31,16 +31,50 @@ import modal
 # ---------------------------------------------------------------------------
 # Pin this before deploying. Image rebuild is required when it changes.
 # ---------------------------------------------------------------------------
-LEROOT_COMMIT = "main"          # e.g. "a1b2c3d"
+LEROOT_COMMIT = "2aba372b4e217cc47db28e0f836859b20d1456c9"  # resolved from main on 2026-07-30
+
+# Pin separately from LIBERO-plus's own history; only used by the
+# libero_plus-flavored image below, never by the default `image`. Matches the
+# SHA lerobot's own docker/Dockerfile.benchmark.libero_plus pins.
+LIBERO_PLUS_SHA = "4976dc3"
 
 VOLUME_NAME = "async-vla-benchmark-outputs"
 MOUNT_PATH = Path("/data/outputs")
 CONFIG_PATH = Path("/root/async-vla-latency-bench/async_vla_benchmark/configs/days1_3.yaml")
+STAGE0_CONFIG_PATH = Path(
+    "/root/async-vla-latency-bench/async_vla_benchmark/configs/stage0.yaml"
+)
+# Stage 0 writes under its own prefix on the shared volume. Raw artifacts are
+# keyed by episode_id alone, so a shared root would let calibration runs collide
+# with the Days 1-3 core/horizon outputs.
+STAGE0_PATH = MOUNT_PATH / "stage0"
+STAGE1_CONFIG_PATH = Path(
+    "/root/async-vla-latency-bench/async_vla_benchmark/configs/stage1.yaml"
+)
+STAGE1_PATH = MOUNT_PATH / "stage1"
+STAGE1_VARIANTS = STAGE1_PATH / "stage1_resolved_variants.csv"
+STAGE1_MANIFEST = STAGE1_PATH / "stage1_manifest.csv"
 
 image = modal.Image.from_dockerfile(
     Path(__file__).parent / "Dockerfile.modal",
     build_args={
         "LEROBOT_COMMIT": LEROOT_COMMIT,
+    },
+).add_local_dir(
+    "async_vla_benchmark/configs",
+    remote_path="/root/async-vla-latency-bench/async_vla_benchmark/configs",
+)
+
+# Separate image for LIBERO-plus (OOD perturbation) diagnostics/runs. Never
+# used as the default `app` image: hf-libero (used by `image` above) and the
+# LIBERO-plus fork both install as the top-level `libero` package, so they
+# cannot coexist in one image. Only functions that explicitly pass
+# `image=image_libero_plus` use this.
+image_libero_plus = modal.Image.from_dockerfile(
+    Path(__file__).parent / "Dockerfile.modal.libero_plus",
+    build_args={
+        "LEROBOT_COMMIT": LEROOT_COMMIT,
+        "LIBERO_PLUS_SHA": LIBERO_PLUS_SHA,
     },
 ).add_local_dir(
     "async_vla_benchmark/configs",
@@ -60,6 +94,12 @@ def _run_script(argv: list[str]):
     cmd = [sys.executable, "-m"] + argv
     print(f"running: {' '.join(cmd)}")
     result = subprocess.run(cmd, check=False)
+    if result.returncode != 0:
+        # Returning the code instead of raising makes Modal report the call as
+        # *succeeded* whatever the script did -- a crashed benchmark is then
+        # indistinguishable from a completed one in `modal app list`. Raise so the
+        # call is marked failed and the exit code is visible without reading logs.
+        raise RuntimeError(f"{argv[0]} exited with code {result.returncode}")
     return result.returncode
 
 
@@ -122,7 +162,7 @@ def profile_latency(warmup: int = 10, measured: int = 100):
     gpu="A100-40GB",
     volumes={str(MOUNT_PATH): volume},
     secrets=[modal.Secret.from_name("hf-token")],
-    timeout=6 * 60 * 60,
+    timeout=10 * 60 * 60,
 )
 def run_benchmark(
     experiment: str = "core",
@@ -244,6 +284,35 @@ def diagnose_raw_action_scale(
 
 
 @app.function(
+    image=image_libero_plus,
+    gpu="A100-40GB",
+    volumes={str(MOUNT_PATH): volume},
+    secrets=[modal.Secret.from_name("hf-token")],
+    timeout=20 * 60,
+)
+def diagnose_libero_plus(suite: str = "libero_spatial", task_id: int = 0, seed: int = 0):
+    """Smoke-test the LIBERO-plus (OOD perturbation) env build and check
+    whether task_classification.json's `id` field matches LeRobot's task_id
+    indexing, before trusting it for the OOD x delay factorial. Runs against
+    image_libero_plus, not the default image."""
+    return _run_script(
+        [
+            "async_vla_benchmark.scripts.diagnose_libero_plus",
+            "--config",
+            str(CONFIG_PATH),
+            "--output-dir",
+            str(MOUNT_PATH),
+            "--suite",
+            suite,
+            "--task-id",
+            str(task_id),
+            "--seed",
+            str(seed),
+        ]
+    )
+
+
+@app.function(
     gpu="A100-40GB",
     volumes={str(MOUNT_PATH): volume},
     secrets=[modal.Secret.from_name("hf-token")],
@@ -267,6 +336,165 @@ def run_single_episode(suite: str = "libero_spatial", task_id: int = 0, seed: in
             str(seed),
         ]
     )
+
+
+@app.function(
+    gpu="A100-40GB",
+    volumes={str(MOUNT_PATH): volume},
+    secrets=[modal.Secret.from_name("hf-token")],
+    timeout=60 * 60,
+)
+def stage0_preflight():
+    """Stage 0 gate: assert task names, control frequency, and n_action_steps.
+
+    Runs no episodes. Everything downstream of Stage 0 inherits these
+    assumptions, so this is the cheapest place to catch a wrong task index or a
+    checkpoint whose chunk length does not match the configured horizon.
+    """
+    return _run_script(
+        [
+            "async_vla_benchmark.scripts.run_stage0",
+            "--config",
+            str(STAGE0_CONFIG_PATH),
+            "--output-dir",
+            str(STAGE0_PATH),
+            "--preflight-only",
+        ]
+    )
+
+
+@app.function(
+    gpu="A100-40GB",
+    volumes={str(MOUNT_PATH): volume},
+    secrets=[modal.Secret.from_name("hf-token")],
+    timeout=10 * 60 * 60,
+)
+def run_stage0(native_only: bool = False, resume: bool = True, tasks: str = "", methods: str = ""):
+    """Run the Stage 0 latency calibration on a GPU worker.
+
+    `native_only=True` runs just the 36 Native episodes -- the viability smoke
+    test that decides whether the remaining 144 are worth running at all
+    (STAGE_0 section 8.1: a cell that already fails at Native gets no vote in
+    choosing d*).
+    """
+    cmd = [
+        "async_vla_benchmark.scripts.run_stage0",
+        "--config",
+        str(STAGE0_CONFIG_PATH),
+        "--output-dir",
+        str(STAGE0_PATH),
+    ]
+    if native_only:
+        cmd.append("--native-only")
+    if resume:
+        cmd.append("--resume")
+    for task in filter(None, (t.strip() for t in tasks.split(","))):
+        cmd.extend(["--task", task])
+    for method in filter(None, (m.strip() for m in methods.split(","))):
+        cmd.extend(["--method", method])
+    try:
+        return _run_script(cmd)
+    finally:
+        # Commit even on failure: a partial calibration is resumable, and
+        # losing 80 completed episodes to one crash is the expensive outcome.
+        volume.commit()
+
+
+@app.function(
+    volumes={str(MOUNT_PATH): volume},
+    timeout=30 * 60,
+)
+def select_high_delay(require_complete: bool = True):
+    """Apply the frozen d* rule and write `selected_high_delay.json`.
+
+    No GPU: this reads the calibration CSV and writes tables. Kept separate from
+    `run_stage0` so that producing the data and choosing the operating point are
+    distinct, individually auditable steps.
+    """
+    result = _run_script(
+        [
+            "async_vla_benchmark.scripts.select_high_delay",
+            "--results",
+            str(STAGE0_PATH / "latency_calibration_episode_results.csv"),
+            "--output-dir",
+            str(STAGE0_PATH),
+        ]
+        + (["--require-complete"] if require_complete else [])
+    )
+    volume.commit()
+    return result
+
+
+@app.function(image=image_libero_plus, gpu="A100-40GB", volumes={str(MOUNT_PATH): volume}, timeout=60 * 60)
+def resolve_stage1_variants():
+    result = _run_script(["async_vla_benchmark.scripts.resolve_stage1_variants", "--output", str(STAGE1_VARIANTS)])
+    volume.commit()
+    return result
+
+
+@app.function(volumes={str(MOUNT_PATH): volume}, timeout=30 * 60)
+def make_stage1_manifest(benchmark_git_sha: str):
+    if not benchmark_git_sha:
+        raise ValueError("benchmark_git_sha is required and must identify the deployed code")
+    result = _run_script([
+        "async_vla_benchmark.scripts.make_stage1_manifest", "--variants", str(STAGE1_VARIANTS),
+        "--selected-delay", str(STAGE0_PATH / "selected_high_delay.json"), "--output", str(STAGE1_MANIFEST),
+        "--git-sha", benchmark_git_sha, "--lerobot-git-sha", LEROOT_COMMIT,
+        "--libero-plus-git-sha", LIBERO_PLUS_SHA,
+        "--model-revision", "8e174154ef5f6c60a8da12ae99c303d8963138c1",
+    ])
+    volume.commit()
+    return result
+
+
+@app.function(volumes={str(MOUNT_PATH): volume}, timeout=30 * 60)
+def import_stage0_controls():
+    result = _run_script([
+        "async_vla_benchmark.scripts.import_stage0_controls", "--manifest", str(STAGE1_MANIFEST),
+        "--stage0-dir", str(STAGE0_PATH), "--stage1-dir", str(STAGE1_PATH),
+    ])
+    volume.commit()
+    return result
+
+
+def _stage1_run_command(scene: str, seeds: str, tasks: str, methods: str, perturbations: str, resume: bool):
+    cmd = ["async_vla_benchmark.scripts.run_stage1", "--config", str(STAGE1_CONFIG_PATH),
+           "--manifest", str(STAGE1_MANIFEST), "--output-dir", str(STAGE1_PATH), "--scene", scene]
+    for flag, values in (("--seed", seeds), ("--task", tasks), ("--method", methods), ("--perturbation", perturbations)):
+        for value in filter(None, (item.strip() for item in values.split(","))): cmd.extend([flag, value])
+    if resume: cmd.append("--resume")
+    return cmd
+
+
+@app.function(gpu="A100-40GB", volumes={str(MOUNT_PATH): volume}, secrets=[modal.Secret.from_name("hf-token")], timeout=10 * 60 * 60)
+def run_stage1_id(seeds: str = "2,3,4", tasks: str = "", methods: str = "", resume: bool = True):
+    try: return _run_script(_stage1_run_command("id", seeds, tasks, methods, "", resume))
+    finally: volume.commit()
+
+
+@app.function(image=image_libero_plus, gpu="A100-40GB", volumes={str(MOUNT_PATH): volume}, secrets=[modal.Secret.from_name("hf-token")], timeout=10 * 60 * 60)
+def run_stage1_ood(seeds: str = "", tasks: str = "", methods: str = "", perturbations: str = "", resume: bool = True):
+    try: return _run_script(_stage1_run_command("ood", seeds, tasks, methods, perturbations, resume))
+    finally: volume.commit()
+
+
+@app.function(volumes={str(MOUNT_PATH): volume}, timeout=30 * 60)
+def validate_stage1(allow_incomplete: bool = False):
+    cmd = ["async_vla_benchmark.scripts.validate_stage1", "--manifest", str(STAGE1_MANIFEST), "--output-dir", str(STAGE1_PATH)]
+    if allow_incomplete: cmd.append("--allow-incomplete")
+    return _run_script(cmd)
+
+
+@app.function(volumes={str(MOUNT_PATH): volume}, timeout=30 * 60)
+def analyze_stage1():
+    result = _run_script(["async_vla_benchmark.scripts.analyze_stage1", "--results", str(STAGE1_PATH / "stage1_episode_results.csv"), "--output-dir", str(STAGE1_PATH / "analysis")])
+    volume.commit(); return result
+
+
+@app.function(volumes={str(MOUNT_PATH): volume}, timeout=30 * 60)
+def plot_stage1():
+    result = _run_script(["async_vla_benchmark.scripts.plot_stage1", "--results", str(STAGE1_PATH / "stage1_episode_results.csv"), "--tables-dir", str(STAGE1_PATH / "analysis"), "--output-dir", str(STAGE1_PATH / "analysis")])
+    volume.commit(); return result
 
 
 @app.function(
@@ -303,6 +531,47 @@ def make_figures():
     )
 
 
+@app.function(
+    volumes={str(MOUNT_PATH): volume},
+    timeout=30 * 60,
+)
+def aggregate_results():
+    """Rebuild the spec §20 summary tables from per-episode artifacts.
+
+    No GPU: this only reads `episodes/*.json` and `requests/*.parquet` off the
+    volume and rewrites the summary tables, so it must not reserve an A100.
+    """
+    result = _run_script(
+        [
+            "async_vla_benchmark.scripts.aggregate_results",
+            "--config",
+            str(CONFIG_PATH),
+            "--output-dir",
+            str(MOUNT_PATH),
+        ]
+    )
+    volume.commit()
+    return result
+
+
+@app.function(
+    gpu="A100-40GB",
+    secrets=[modal.Secret.from_name("hf-token")],
+    timeout=30 * 60,
+)
+def diagnose_rtc():
+    """Report whether RTC guidance is active before and after configure_rtc.
+
+    No volume mount: this only loads the policy and inspects its RTC state, so
+    it writes nothing and cannot disturb benchmark artifacts. The hf-token
+    secret is not needed for auth (the checkpoint is public) but unauthenticated
+    Hub downloads are rate-limited, which is slow for a multi-GB checkpoint.
+    """
+    return _run_script(
+        ["async_vla_benchmark.scripts.diagnose_rtc", "--config", str(CONFIG_PATH)]
+    )
+
+
 @app.local_entrypoint()
 def main(
     command: str,
@@ -317,6 +586,13 @@ def main(
     suite: str = "libero_spatial",
     task_id: int = 0,
     seed: int = 0,
+    native_only: bool = False,
+    resume: bool = True,
+    methods: str = "",
+    require_complete: bool = True,
+    benchmark_git_sha: str = "",
+    perturbations: str = "",
+    allow_incomplete: bool = False,
 ):
     """Dispatch a benchmark pipeline step to Modal from your local machine.
 
@@ -336,8 +612,24 @@ def main(
         "validate": lambda: validate_results.spawn(),
         "figures": lambda: make_figures.spawn(),
         "diagnose": lambda: diagnose_observation.spawn(suite, task_id, seed),
+        "aggregate": lambda: aggregate_results.spawn(),
+        "diagnose_rtc": lambda: diagnose_rtc.spawn(),
         "diagnose_scale": lambda: diagnose_action_scale.spawn(suite, task_id, seed),
         "diagnose_raw_scale": lambda: diagnose_raw_action_scale.spawn(suite, task_id, seed),
+        "diagnose_libero_plus": lambda: diagnose_libero_plus.spawn(suite, task_id, seed),
+        # Stage 0 (docs/STAGE_0_LATENCY_CALIBRATION.md), in running order.
+        "stage0_preflight": lambda: stage0_preflight.spawn(),
+        "stage0": lambda: run_stage0.spawn(native_only, resume, tasks, methods),
+        "stage0_select": lambda: select_high_delay.spawn(require_complete),
+        # Stage 1, in required order.
+        "stage1_resolve": lambda: resolve_stage1_variants.spawn(),
+        "stage1_manifest": lambda: make_stage1_manifest.spawn(benchmark_git_sha),
+        "stage1_import_id": lambda: import_stage0_controls.spawn(),
+        "stage1_run_id": lambda: run_stage1_id.spawn(seeds or "2,3,4", tasks, methods, resume),
+        "stage1_run_ood": lambda: run_stage1_ood.spawn(seeds, tasks, methods, perturbations, resume),
+        "stage1_validate": lambda: validate_stage1.spawn(allow_incomplete),
+        "stage1_analyze": lambda: analyze_stage1.spawn(),
+        "stage1_plots": lambda: plot_stage1.spawn(),
     }
     if command == "status":
         if not call_id:
@@ -349,7 +641,9 @@ def main(
         raise ValueError(
             "unknown command "
             f"{command}; choose inspect/select/profile/run/validate/figures/"
-            "diagnose/diagnose_scale/diagnose_raw_scale/status"
+            "diagnose/diagnose_scale/diagnose_raw_scale/diagnose_libero_plus/"
+            "stage1_resolve/stage1_manifest/stage1_import_id/stage1_run_id/"
+            "stage1_run_ood/stage1_validate/stage1_analyze/stage1_plots/status"
         )
     call = dispatch[command]()
     print(f"dispatched {command}; call_id={call.object_id}")

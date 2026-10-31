@@ -1,0 +1,117 @@
+# Docker image for running LIBERO-plus (OOD perturbation) diagnostics/episodes
+# on Modal. Parallel to Dockerfile.modal, not a replacement for it: the two
+# images are never used by the same Modal function, since `hf-libero` and the
+# LIBERO-plus fork both install as the top-level `libero` package and cannot
+# coexist. Mirrors huggingface/lerobot's own
+# docker/Dockerfile.benchmark.libero_plus, adapted onto our from-scratch CUDA
+# base so the LEROBOT_COMMIT pin still applies (their version starts from the
+# `huggingface/lerobot-gpu:latest` nightly image instead).
+ARG CUDA_VERSION=12.1.0
+FROM nvidia/cuda:${CUDA_VERSION}-cudnn8-devel-ubuntu22.04
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    MUJOCO_GL=egl \
+    PYOPENGL_PLATFORM=egl
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    gnupg \
+    dirmngr \
+    software-properties-common \
+    build-essential \
+    cmake \
+    libgl1-mesa-glx \
+    libgl1-mesa-dev \
+    libegl1-mesa-dev \
+    libglew-dev \
+    libosmesa6-dev \
+    libglib2.0-0 \
+    patchelf \
+    unzip \
+    libexpat1 \
+    libfontconfig1-dev \
+    libmagickwand-dev \
+    && add-apt-repository -y ppa:deadsnakes/ppa \
+    && apt-get update && apt-get install -y --no-install-recommends \
+    python3.12 \
+    python3.12-dev \
+    python3.12-venv \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN python3.12 -m ensurepip --upgrade \
+    && update-alternatives --install /usr/bin/python python /usr/bin/python3.12 1 \
+    && update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.12 1 \
+    && python -m pip install --upgrade pip wheel setuptools
+
+ARG LEROBOT_COMMIT=main
+# Pinned upstream SHA from lerobot's own docker/Dockerfile.benchmark.libero_plus,
+# not "main", so this image stays reproducible the same way LEROBOT_COMMIT does.
+ARG LIBERO_PLUS_SHA=4976dc3
+
+# 1. Install LeRobot with only the pi0.5 extra, deliberately NOT `[libero]`:
+#    that extra pins hf-libero's robosuite==1.4.0, but the LIBERO-plus fork
+#    requires robosuite==1.4.1 (it uses `single_arm_env`, removed in
+#    robosuite 1.5+). LIBERO/robosuite/mujoco/bddl deps are pinned explicitly
+#    below instead, matching lerobot's own benchmark Dockerfile.
+RUN python -m pip install \
+    "lerobot[pi] @ git+https://github.com/huggingface/lerobot.git@${LEROBOT_COMMIT}"
+
+# `future` is an undeclared runtime dep of bddl==1.0.1 (its PyPI metadata
+# lists zero requires_dist, but bddl.backend_abc imports future.utils).
+RUN python -m pip install \
+    "robosuite==1.4.1" \
+    "bddl==1.0.1" \
+    "easydict==1.13" \
+    "mujoco==3.7.0" \
+    "matplotlib==3.10.8" \
+    "Wand==0.6.13" \
+    "scikit-image==0.25.2" \
+    "gym==0.26.2" \
+    "future"
+
+# 2. Clone LIBERO-plus and make it importable as `libero` via PYTHONPATH, not
+#    a real pip install. `pip install --no-deps -e .` below reports success
+#    but its wheel is empty: LIBERO-plus's setup.py has the same packaging
+#    bug as upstream Lifelong-Robot-Learning/LIBERO (its `libero` package
+#    directory has no __init__.py, so setuptools' find_packages() silently
+#    produces no importable code) — the exact bug Dockerfile.modal avoids for
+#    vanilla LIBERO by using hf-libero instead. There is no repackaged
+#    "hf-libero-plus"; putting the clone directly on PYTHONPATH is the actual
+#    fix (Python resolves `import libero` as an implicit namespace package),
+#    confirmed against lerobot's own Dockerfile.benchmark.libero_plus.
+ENV LIBERO_PLUS_ROOT=/opt/libero-plus/libero/libero
+RUN git clone https://github.com/sylvestf/LIBERO-plus.git /opt/libero-plus \
+    && git -C /opt/libero-plus checkout ${LIBERO_PLUS_SHA} \
+    && cd /opt/libero-plus && python -m pip install --no-deps -e "." \
+    && (python -m pip uninstall -y hf-libero || true)
+ENV PYTHONPATH="/opt/libero-plus:${PYTHONPATH}"
+
+# 3. LIBERO-plus's perturbation tasks reference assets that ship only in
+#    Sylvest/LIBERO-plus's assets.zip (~6.4 GB on HF), nested under an
+#    author-internal directory prefix inside the zip — find and flatten the
+#    actual `assets` dir into place under LIBERO_PLUS_ROOT.
+RUN python -m pip install huggingface_hub \
+    && python -c "\
+from huggingface_hub import hf_hub_download; \
+hf_hub_download(repo_id='Sylvest/LIBERO-plus', repo_type='dataset', \
+                filename='assets.zip', local_dir='/tmp/libero-plus-dl')" \
+    && unzip -q /tmp/libero-plus-dl/assets.zip -d /tmp/libero-plus-dl/extract \
+    && ASSETS_DIR=$(find /tmp/libero-plus-dl/extract -type d -name assets | head -1) \
+    && mv "${ASSETS_DIR}" "${LIBERO_PLUS_ROOT}/assets" \
+    && rm -rf /tmp/libero-plus-dl
+
+# libero.libero's __init__.py prompts interactively (`input()`) the first
+# time it runs if ~/.libero/config.yaml does not exist; pre-create it,
+# pointed at the clone. Key set matches lerobot's own
+# Dockerfile.benchmark.libero_plus (no `benchmark_root` key, unlike the
+# vanilla-LIBERO config in Dockerfile.modal).
+RUN mkdir -p /root/.libero \
+    && printf "assets: %s/assets\nbddl_files: %s/bddl_files\ndatasets: %s/../datasets\ninit_states: %s/init_files\n" \
+       "$LIBERO_PLUS_ROOT" "$LIBERO_PLUS_ROOT" "$LIBERO_PLUS_ROOT" "$LIBERO_PLUS_ROOT" \
+       > /root/.libero/config.yaml
+
+COPY . /root/async-vla-latency-bench
+WORKDIR /root/async-vla-latency-bench
+RUN python -m pip install .

@@ -1,6 +1,10 @@
 import pytest
 
-from async_vla_benchmark.benchmark.environment import EnvironmentUnavailable, make_libero_env
+from async_vla_benchmark.benchmark.environment import (
+    EnvironmentUnavailable,
+    initial_state_fingerprint,
+    make_libero_env,
+)
 
 
 def test_same_seed_yields_same_initial_state():
@@ -26,12 +30,22 @@ def test_same_seed_yields_same_initial_state():
     except EnvironmentUnavailable:
         pytest.skip("LeRobot/LIBERO not installed")
 
-    obs_a = env_a.reset(seed=42)
-    obs_b = env_b.reset(seed=42)
-    assert obs_a.keys() == obs_b.keys()
-    for key in obs_a:
-        if isinstance(obs_a[key], dict):
-            for sub in obs_a[key]:
-                assert (obs_a[key][sub] == obs_b[key][sub]).all()
-        else:
-            assert (obs_a[key] == obs_b[key]).all()
+    try:
+        reset_a = env_a.reset(seed=42)
+        reset_b = env_b.reset(seed=42)
+        # Gymnasium returns (observation, info); retain compatibility with older
+        # Gym-style wrappers that returned the observation directly.
+        obs_a = reset_a[0] if isinstance(reset_a, tuple) else reset_a
+        obs_b = reset_b[0] if isinstance(reset_b, tuple) else reset_b
+
+        method_a, fingerprint_a = initial_state_fingerprint(env_a, obs_a)
+        method_b, fingerprint_b = initial_state_fingerprint(env_b, obs_b)
+        # GPU rasterization can differ by a handful of ±1 pixel values even
+        # when the simulator state is identical. Pairing must therefore use the
+        # underlying MuJoCo reset state rather than rendered-image bytes.
+        assert method_a == method_b == "mujoco_reset_state_v2_sha256"
+        assert fingerprint_a == fingerprint_b
+    finally:
+        for env in (env_a, env_b):
+            if hasattr(env, "close"):
+                env.close()

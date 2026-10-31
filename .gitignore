@@ -11,15 +11,23 @@ venv/
 .env
 .env.*
 
-# Generated benchmark artifacts
-async_vla_benchmark/outputs/
-
 # Models and datasets
 checkpoints/
 datasets/
 *.pt
 *.pth
 *.safetensors
+
+# Large local result archives (keep provenance locally; do not commit episodes)
+DataArchive/stage3_new_64_seeds/
+
+# Paper-generation caches and local source/result mirrors
+paper_figures/.mplconfig/
+paper_figures/__pycache__/
+paper_figures/generated/
+paper_figures/local_*/
+paper_figures/source/
+tmp/
 
 # macOS and editors
 .DS_Store

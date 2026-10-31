@@ -3,22 +3,32 @@
 Before making changes, read these files completely:
 
 1. `docs/RESEARCH_CONTEXT.md`
-2. `docs/DAYS_1_3_SPEC.md`
+2. `docs/STAGE_1_EXPLORATORY_SCREEN.md`
+3. `docs/METRICS_AND_LOGGING.md`
 
 ## Current objective
 
-Implement only the Days 1–3 π0.5-LIBERO latency benchmark.
+Implement the frozen Stage 3 held-out OOD confirmation without modifying Stage 0
+or Stage 1 artifacts.
 
-Required execution conditions:
+Required Stage 3 execution conditions:
 
-- Ideal synchronous
-- Blocking synchronous
-- Naive asynchronous queue
-- RTC
-- Fixed execution-horizon sweep
+- RTC only
+- `n_action_steps = {20,25,30}`
+- Native and Native + 200 ms
+- held-out seeds `14..21`
+- exact Stage 1 OOD variants frozen in `STAGE_3_OOD_HORIZON_CONFIRMATION.md`
+- 96 logically shared ID controls and 192 OOD episodes
+- sensor noise labeled only as `posthoc_replication`
+- strict initialization pairing across the six horizon/delay cells for each
+  `(task, variant, seed, scene)` key
 
-Do not implement VLASH, FASTER, DEHP, SmolVLA, OpenVLA, OOD
-perturbations, dynamic interventions, or policy training yet.
+Stage 2 is supporting sensitivity evidence only. It must not alter the frozen
+Stage 3 horizons, delays, seeds, or exact Stage 1 OOD variant identities. Surface
+documentation inconsistencies for review rather than changing the experiment.
+
+Do not implement VLASH, FASTER, DEHP, SmolVLA, OpenVLA, dynamic interventions,
+additional models, or policy training.
 
 ## Working rules
 

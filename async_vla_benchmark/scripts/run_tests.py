@@ -13,8 +13,9 @@ class Skipped(Exception):
 
 
 class _FakeRaises:
-    def __init__(self, expected):
+    def __init__(self, expected, match=None):
         self.expected = expected
+        self.match = match
 
     def __enter__(self):
         return self
@@ -24,6 +25,10 @@ class _FakeRaises:
             raise AssertionError(f"expected {self.expected.__name__} but no exception was raised")
         if not issubclass(exc_type, self.expected):
             return False
+        if self.match is not None:
+            import re
+            if re.search(self.match, str(exc_value)) is None:
+                raise AssertionError(f"exception message {exc_value!r} did not match {self.match!r}")
         return True
 
 
@@ -67,6 +72,13 @@ class _FakePytest:
     @staticmethod
     def skip(reason=""):
         raise Skipped(reason)
+
+    @staticmethod
+    def importorskip(name):
+        try:
+            return __import__(name)
+        except ImportError as exc:
+            raise Skipped(f"{name} not installed") from exc
 
 
 def _run_all_tests():
