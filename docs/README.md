@@ -9,6 +9,7 @@ Stage 2  COMPLETE
 Stage 3  COMPLETE
 Stage 3B COMPLETE
 Stage 3C COMPLETE — benchmark initialization-diversity gate failed closed
+Stage 3 New COMPLETE — 64-seed high-power replication
 Experiment A COMPLETE
 Experiment B COMPLETE
 Stage 4 ACTIVE NEXT — second-policy OpenVLA-OFT replication
@@ -29,6 +30,7 @@ Stage 2 local operating-point sensitivity: complete
 Stage 3 fresh-rollout OOD confirmation: complete
 Stage 3B targeted cross-task object-layout replication: complete
 Stage 3C initialization audit: complete; failed closed
+Stage 3 New high-power replication: complete; 3,456 valid rows
 Experiment A within-task layout-variant generalization: complete
 Experiment B second multi-stage task generalization: complete
 Next: Stage 4 second-policy OpenVLA-OFT diagnostic
@@ -39,7 +41,7 @@ Next: Stage 4 second-policy OpenVLA-OFT diagnostic
 > **How does temporal action coverage determine asynchronous VLA robustness to
 > inference delay, and do distribution shifts move that robustness boundary?**
 
-Stage 1 did **not** show broad OOD amplification of +200 ms delay. The completed follow-ups show a strong temporal-action-coverage effect and sparse, task/layout-dependent OOD × delay interactions. Stage 4 now tests cross-policy external validity.
+Stage 1 did **not** show broad OOD amplification of +200 ms delay. The completed follow-ups show a strong temporal-action-coverage effect and sparse, task/layout-dependent OOD × delay interactions. The 64-seed Stage 3 New replication is the final primary-policy evidence; the preliminary Stage 4 diagnostic is separate cross-policy evidence.
 
 ## Completed Stage 0
 
@@ -186,7 +188,7 @@ Stage 3C performed no policy rollouts. It audited indices `{0..7}` by three repe
 | `EXPERIMENT_B_ADDITIONAL_MULTI_STAGE_TASK_GENERALIZATION.md` | completed second multi-stage task replication |
 | `STAGE_4_SECOND_POLICY_OPENVLA_OFT.md` | completed native-8 second-policy preliminary diagnostic |
 | `STAGE_5_OPENVLA_OFT_COVERAGE_CALIBRATION_AND_FINAL_REPLICATION.md` | canceled before execution; retained for provenance |
-| `STAGE_3_NEW_HIGH_POWER_REPLICATION.md` | **active final experiment: fresh 64-seed rerun of the Stage 3/3B matrix** |
+| `STAGE_3_NEW_HIGH_POWER_REPLICATION.md` | **completed final 64-seed rerun of the Stage 3/3B matrix** |
 | `STAGE_2_CONFIRMATORY_FOLLOWUP.md` | deprecated pointer retained for provenance |
 | `EXPERIMENT_MATRIX_POST_STAGE1.md` | concise new-run matrix |
 | `METRICS_AND_LOGGING.md` | canonical metrics/logging |

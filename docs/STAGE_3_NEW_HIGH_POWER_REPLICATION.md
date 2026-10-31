@@ -2,7 +2,10 @@
 
 ## 0. Status
 
-**ACTIVE NEXT EXPERIMENT**
+**COMPLETE**
+
+The 64-seed run completed with 3,456 valid episode rows. See
+`docs/STAGE3_NEW_RESULTS_README.md` for the archive and analysis outputs.
 
 Canonical filename:
 
